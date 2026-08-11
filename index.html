@@ -1,27 +1,149 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>明月帝國證券交易所</title>
+
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-    <h1>明月帝國證券交易所</h1>
+<header>
 
-    <h2>明月綜合指數</h2>
-    <p>12,584.32 ▲ 1.37%</p>
+    <h1>明月證券</h1>
 
-    <h2>我的資產</h2>
-    <p>¥ 1,000,000</p>
+    <p>明月帝國證券交易所</p>
+
+</header>
+
+
+<main>
+
+    <!-- 明月指數 -->
+
+    <div class="card">
+
+        <p>明月綜合指數</p>
+
+        <div class="index">
+            12,584.32
+        </div>
+
+        <p class="up">
+            ▲ +1.37%
+        </p>
+
+    </div>
+
+
+    <!-- 我的資產 -->
+
+    <div class="card">
+
+        <p>我的資產</p>
+
+        <h2>
+            ¥ 1,000,000
+        </h2>
+
+        <p class="up">
+            +¥ 0
+        </p>
+
+    </div>
+
+
+    <!-- 熱門股票 -->
 
     <h2>今日熱門</h2>
 
-    <p>明月銀行　¥125.40　▲3.21%</p>
-    <p>京城鋼鐵　¥87.20　▲1.82%</p>
-    <p>東海航運　¥63.80　▼2.13%</p>
+
+    <div class="stock">
+
+        <strong>明月銀行</strong>
+
+        <br>
+
+        <small>MBC</small>
+
+        <p>
+            ¥125.40
+            <span class="up">▲3.21%</span>
+        </p>
+
+    </div>
+
+
+    <div class="stock">
+
+        <strong>京城鋼鐵</strong>
+
+        <br>
+
+        <small>KST</small>
+
+        <p>
+            ¥87.20
+            <span class="up">▲1.82%</span>
+        </p>
+
+    </div>
+
+
+    <div class="stock">
+
+        <strong>東海航運</strong>
+
+        <br>
+
+        <small>EAS</small>
+
+        <p>
+            ¥63.80
+            <span class="down">▼2.13%</span>
+        </p>
+
+    </div>
+
+</main>
+
+
+<!-- 底部導航 -->
+
+<nav class="bottom-nav">
+
+    <button>
+        🏠
+        <span>首頁</span>
+    </button>
+
+    <button>
+        📈
+        <span>行情</span>
+    </button>
+
+    <button>
+        💼
+        <span>投資</span>
+    </button>
+
+    <button>
+        📰
+        <span>新聞</span>
+    </button>
+
+    <button>
+        👤
+        <span>我的</span>
+    </button>
+
+</nav>
+
 
 </body>
+
 </html>
