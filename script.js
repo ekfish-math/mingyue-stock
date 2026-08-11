@@ -32,4 +32,40 @@ const stocks = [
     }
 ];
 
-console.log(stocks);
+
+function displayStocks() {
+
+    const list = document.getElementById("stock-list");
+
+    list.innerHTML = "";
+
+    stocks.forEach(stock => {
+
+        const div = document.createElement("div");
+
+        div.className = "stock";
+
+        const direction = stock.change >= 0 ? "up" : "down";
+
+        const arrow = stock.change >= 0 ? "▲" : "▼";
+
+        div.innerHTML = `
+            <strong>${stock.name}</strong>
+            <br>
+
+            <small>${stock.id} ・ ${stock.industry}</small>
+
+            <p>
+                ¥${stock.price.toFixed(2)}
+                <span class="${direction}">
+                    ${arrow} ${Math.abs(stock.change).toFixed(2)}%
+                </span>
+            </p>
+        `;
+
+        list.appendChild(div);
+    });
+}
+
+
+displayStocks();
