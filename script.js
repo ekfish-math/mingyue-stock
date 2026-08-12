@@ -39,7 +39,6 @@ let player = JSON.parse(
 );
 
 if (!player) {
-
     player = {
         cash: 1000000,
         holdings: {}
@@ -78,13 +77,12 @@ function updateAccountDisplay() {
                 minimumFractionDigits: 0,
                 maximumFractionDigits: 2
             })}`;
-
     }
 }
 
 
 // =========================
-// 股票列表
+// 顯示股票列表
 // =========================
 
 function displayStocks() {
@@ -106,14 +104,10 @@ function displayStocks() {
         div.className = "stock";
 
         const color =
-            stock.change >= 0
-                ? "red"
-                : "green";
+            stock.change >= 0 ? "red" : "green";
 
         const arrow =
-            stock.change >= 0
-                ? "▲"
-                : "▼";
+            stock.change >= 0 ? "▲" : "▼";
 
         div.innerHTML = `
             <strong>${stock.name}</strong>
@@ -134,9 +128,7 @@ function displayStocks() {
         `;
 
         div.addEventListener("click", function () {
-
             showStock(stock.id);
-
         });
 
         list.appendChild(div);
@@ -166,23 +158,18 @@ function showStock(stockId) {
     const investment =
         document.getElementById("investment-page");
 
-
     list.style.display = "none";
-
     detail.style.display = "block";
 
-    investment.style.display = "none";
-
+    if (investment) {
+        investment.style.display = "none";
+    }
 
     const color =
-        stock.change >= 0
-            ? "red"
-            : "green";
+        stock.change >= 0 ? "red" : "green";
 
     const arrow =
-        stock.change >= 0
-            ? "▲"
-            : "▼";
+        stock.change >= 0 ? "▲" : "▼";
 
 
     detail.innerHTML = `
@@ -247,174 +234,37 @@ function showStock(stockId) {
     `;
 
 
+    // 返回
+
     document
         .getElementById("back-button")
-        .addEventListener("click", closeStock);
+        .addEventListener("click", function () {
 
+            closeStock();
+
+        });
+
+
+    // 買入
 
     document
         .getElementById("buy-button")
         .addEventListener("click", function () {
 
             buyStock(stock.id);
-// =========================
-// 賣出股票
-// =========================
 
-function sellStock(stockId) {
-
-    const stock =
-        stocks.find(s => s.id === stockId);
-
-    if (!stock) {
-        return;
-    }
-
-
-    // 查詢目前持股
-
-    const ownedShares =
-        player.holdings[stockId] || 0;
-
-
-    // 沒有股票
-
-    if (ownedShares <= 0) {
-
-        alert(
-            `你沒有持有 ${stock.name}。`
-        );
-
-        return;
-    }
-
-
-    // 輸入賣出股數
-
-    const quantity = prompt(
-
-        `賣出 ${stock.name}\n\n` +
-
-        `目前股價：¥${stock.price.toFixed(2)}\n` +
-
-        `目前持有：${ownedShares} 股\n\n` +
-
-        `請輸入賣出股數：`
-
-    );
-
-
-    // 取消
-
-    if (quantity === null) {
-        return;
-    }
-
-
-    const shares =
-        Number(quantity);
-
-
-    // 檢查輸入
-
-    if (
-        !Number.isInteger(shares) ||
-        shares <= 0
-    ) {
-
-        alert(
-            "請輸入正整數股數。"
-        );
-
-        return;
-    }
-
-
-    // 檢查是否超過持股
-
-    if (shares > ownedShares) {
-
-        alert(
-
-            `持股不足！\n\n` +
-
-            `目前持有：${ownedShares} 股\n` +
-
-            `你想賣出：${shares} 股`
-
-        );
-
-        return;
-    }
-
-
-    // 計算成交金額
-
-    const total =
-        stock.price * shares;
-
-
-    // 減少持股
-
-    player.holdings[stockId] -= shares;
-
-
-    // 增加現金
-
-    player.cash += total;
-
-
-    // 如果已經全部賣掉
-
-    if (player.holdings[stockId] === 0) {
-
-        delete player.holdings[stockId];
-
-    }
-
-
-    // 保存
-
-    savePlayer();
-
-
-    // 更新首頁資產
-
-    updateAccountDisplay();
-
-
-    // 顯示結果
-
-    alert(
-
-        `賣出成功！\n\n` +
-
-        `${stock.name}\n` +
-
-        `${shares} 股\n` +
-
-        `成交價格：¥${stock.price.toFixed(2)}\n` +
-
-        `成交金額：¥${total.toFixed(2)}\n\n` +
-
-        `剩餘持股：` +
-
-        `${player.holdings[stockId] || 0} 股\n\n` +
-
-        `可用資金：¥${player.cash.toFixed(2)}`
-
-    );
-}
         });
 
 
-document
-    .getElementById("sell-button")
-    .addEventListener("click", function () {
+    // 賣出
 
-        sellStock(stock.id);
+    document
+        .getElementById("sell-button")
+        .addEventListener("click", function () {
 
-    });
+            sellStock(stock.id);
+
+        });
 }
 
 
@@ -424,19 +274,27 @@ document
 
 function closeStock() {
 
-    document.getElementById("stock-list")
-        .style.display = "block";
+    const list =
+        document.getElementById("stock-list");
 
-    document.getElementById("stock-detail")
-        .style.display = "none";
+    const detail =
+        document.getElementById("stock-detail");
 
-    document.getElementById("investment-page")
-        .style.display = "none";
+    const investment =
+        document.getElementById("investment-page");
+
+    list.style.display = "block";
+
+    detail.style.display = "none";
+
+    if (investment) {
+        investment.style.display = "none";
+    }
 }
 
 
 // =========================
-// 買入
+// 買入股票
 // =========================
 
 function buyStock(stockId) {
@@ -450,10 +308,12 @@ function buyStock(stockId) {
 
 
     const quantity = prompt(
+
         `買入 ${stock.name}\n\n` +
         `目前股價：¥${stock.price.toFixed(2)}\n\n` +
         `可用資金：¥${player.cash.toFixed(2)}\n\n` +
         `請輸入購買股數：`
+
     );
 
 
@@ -462,7 +322,8 @@ function buyStock(stockId) {
     }
 
 
-    const shares = Number(quantity);
+    const shares =
+        Number(quantity);
 
 
     if (
@@ -492,15 +353,16 @@ function buyStock(stockId) {
     }
 
 
+    // 扣除現金
+
     player.cash -= total;
 
 
+    // 增加持股
+
     if (!player.holdings[stockId]) {
-
         player.holdings[stockId] = 0;
-
     }
-
 
     player.holdings[stockId] += shares;
 
@@ -511,11 +373,147 @@ function buyStock(stockId) {
 
 
     alert(
+
         `買入成功！\n\n` +
         `${stock.name}\n` +
         `${shares} 股\n` +
+        `成交價格：¥${stock.price.toFixed(2)}\n` +
         `成交金額：¥${total.toFixed(2)}\n\n` +
         `剩餘資金：¥${player.cash.toFixed(2)}`
+
+    );
+}
+
+
+// =========================
+// 賣出股票
+// =========================
+
+function sellStock(stockId) {
+
+    const stock =
+        stocks.find(s => s.id === stockId);
+
+    if (!stock) {
+        return;
+    }
+
+
+    // 目前持股
+
+    const ownedShares =
+        player.holdings[stockId] || 0;
+
+
+    // 沒有持股
+
+    if (ownedShares <= 0) {
+
+        alert(
+            `你沒有持有 ${stock.name}。`
+        );
+
+        return;
+    }
+
+
+    // 輸入賣出數量
+
+    const quantity = prompt(
+
+        `賣出 ${stock.name}\n\n` +
+        `目前股價：¥${stock.price.toFixed(2)}\n` +
+        `目前持有：${ownedShares} 股\n\n` +
+        `請輸入賣出股數：`
+
+    );
+
+
+    if (quantity === null) {
+        return;
+    }
+
+
+    const shares =
+        Number(quantity);
+
+
+    // 檢查數字
+
+    if (
+        !Number.isInteger(shares) ||
+        shares <= 0
+    ) {
+
+        alert(
+            "請輸入正整數股數。"
+        );
+
+        return;
+    }
+
+
+    // 檢查持股
+
+    if (shares > ownedShares) {
+
+        alert(
+
+            `持股不足！\n\n` +
+            `目前持有：${ownedShares} 股\n` +
+            `你想賣出：${shares} 股`
+
+        );
+
+        return;
+    }
+
+
+    // 計算成交金額
+
+    const total =
+        stock.price * shares;
+
+
+    // 減少持股
+
+    player.holdings[stockId] -= shares;
+
+
+    // 增加現金
+
+    player.cash += total;
+
+
+    // 全部賣出就刪除持股資料
+
+    if (player.holdings[stockId] === 0) {
+
+        delete player.holdings[stockId];
+
+    }
+
+
+    // 保存
+
+    savePlayer();
+
+
+    // 更新首頁
+
+    updateAccountDisplay();
+
+
+    alert(
+
+        `賣出成功！\n\n` +
+        `${stock.name}\n` +
+        `${shares} 股\n` +
+        `成交價格：¥${stock.price.toFixed(2)}\n` +
+        `成交金額：¥${total.toFixed(2)}\n\n` +
+        `剩餘持股：${player.holdings[stockId] || 0} 股\n\n` +
+        `可用資金：¥${player.cash.toFixed(2)}`
+
     );
 }
 
@@ -534,6 +532,11 @@ function showInvestment() {
 
     const page =
         document.getElementById("investment-page");
+
+
+    if (!page) {
+        return;
+    }
 
 
     list.style.display = "none";
@@ -563,14 +566,10 @@ function showInvestment() {
 
 
             const color =
-                stock.change >= 0
-                    ? "red"
-                    : "green";
+                stock.change >= 0 ? "red" : "green";
 
             const arrow =
-                stock.change >= 0
-                    ? "▲"
-                    : "▼";
+                stock.change >= 0 ? "▲" : "▼";
 
 
             holdingsHTML += `
@@ -592,8 +591,7 @@ function showInvestment() {
                     </p>
 
                     <p>
-                        市值
-                        ¥${value.toFixed(2)}
+                        市值 ¥${value.toFixed(2)}
                     </p>
 
                     <p style="color:${color};">
@@ -635,7 +633,6 @@ function showInvestment() {
 
         <h2>我的投資</h2>
 
-
         <div class="investment-card">
 
             <p>總資產</p>
@@ -645,7 +642,6 @@ function showInvestment() {
             </div>
 
         </div>
-
 
         <div class="investment-card">
 
@@ -657,7 +653,6 @@ function showInvestment() {
 
         </div>
 
-
         <div class="investment-card">
 
             <p>股票市值</p>
@@ -668,9 +663,7 @@ function showInvestment() {
 
         </div>
 
-
         <h2>持有股票</h2>
-
 
         <div class="investment-card">
 
@@ -709,7 +702,10 @@ if (investmentButton) {
 
     investmentButton.addEventListener(
         "click",
-        showInvestment
-    );
+        function () {
 
+            showInvestment();
+
+        }
+    );
 }
