@@ -1215,5 +1215,4 @@ document
 // ========================================
 
 displayStocks();
-
 updateAccountDisplay();
