@@ -257,17 +257,164 @@ function showStock(stockId) {
         .addEventListener("click", function () {
 
             buyStock(stock.id);
+// =========================
+// 賣出股票
+// =========================
 
+function sellStock(stockId) {
+
+    const stock =
+        stocks.find(s => s.id === stockId);
+
+    if (!stock) {
+        return;
+    }
+
+
+    // 查詢目前持股
+
+    const ownedShares =
+        player.holdings[stockId] || 0;
+
+
+    // 沒有股票
+
+    if (ownedShares <= 0) {
+
+        alert(
+            `你沒有持有 ${stock.name}。`
+        );
+
+        return;
+    }
+
+
+    // 輸入賣出股數
+
+    const quantity = prompt(
+
+        `賣出 ${stock.name}\n\n` +
+
+        `目前股價：¥${stock.price.toFixed(2)}\n` +
+
+        `目前持有：${ownedShares} 股\n\n` +
+
+        `請輸入賣出股數：`
+
+    );
+
+
+    // 取消
+
+    if (quantity === null) {
+        return;
+    }
+
+
+    const shares =
+        Number(quantity);
+
+
+    // 檢查輸入
+
+    if (
+        !Number.isInteger(shares) ||
+        shares <= 0
+    ) {
+
+        alert(
+            "請輸入正整數股數。"
+        );
+
+        return;
+    }
+
+
+    // 檢查是否超過持股
+
+    if (shares > ownedShares) {
+
+        alert(
+
+            `持股不足！\n\n` +
+
+            `目前持有：${ownedShares} 股\n` +
+
+            `你想賣出：${shares} 股`
+
+        );
+
+        return;
+    }
+
+
+    // 計算成交金額
+
+    const total =
+        stock.price * shares;
+
+
+    // 減少持股
+
+    player.holdings[stockId] -= shares;
+
+
+    // 增加現金
+
+    player.cash += total;
+
+
+    // 如果已經全部賣掉
+
+    if (player.holdings[stockId] === 0) {
+
+        delete player.holdings[stockId];
+
+    }
+
+
+    // 保存
+
+    savePlayer();
+
+
+    // 更新首頁資產
+
+    updateAccountDisplay();
+
+
+    // 顯示結果
+
+    alert(
+
+        `賣出成功！\n\n` +
+
+        `${stock.name}\n` +
+
+        `${shares} 股\n` +
+
+        `成交價格：¥${stock.price.toFixed(2)}\n` +
+
+        `成交金額：¥${total.toFixed(2)}\n\n` +
+
+        `剩餘持股：` +
+
+        `${player.holdings[stockId] || 0} 股\n\n` +
+
+        `可用資金：¥${player.cash.toFixed(2)}`
+
+    );
+}
         });
 
 
-    document
-        .getElementById("sell-button")
-        .addEventListener("click", function () {
+document
+    .getElementById("sell-button")
+    .addEventListener("click", function () {
 
-            alert("賣出功能即將推出！");
+        sellStock(stock.id);
 
-        });
+    });
 }
 
 
