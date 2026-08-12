@@ -31,7 +31,7 @@ const stocks = [
 
 
 // =========================
-// 玩家帳戶
+// 玩家資料
 // =========================
 
 let player = JSON.parse(
@@ -50,7 +50,7 @@ if (!player) {
 
 
 // =========================
-// 保存玩家資料
+// 保存資料
 // =========================
 
 function savePlayer() {
@@ -68,7 +68,8 @@ function savePlayer() {
 
 function updateAccountDisplay() {
 
-    const cashDisplay = document.getElementById("cash-display");
+    const cashDisplay =
+        document.getElementById("cash-display");
 
     if (cashDisplay) {
 
@@ -83,12 +84,13 @@ function updateAccountDisplay() {
 
 
 // =========================
-// 顯示股票列表
+// 股票列表
 // =========================
 
 function displayStocks() {
 
-    const list = document.getElementById("stock-list");
+    const list =
+        document.getElementById("stock-list");
 
     if (!list) {
         return;
@@ -98,15 +100,20 @@ function displayStocks() {
 
     stocks.forEach(stock => {
 
-        const div = document.createElement("div");
+        const div =
+            document.createElement("div");
 
         div.className = "stock";
 
         const color =
-            stock.change >= 0 ? "red" : "green";
+            stock.change >= 0
+                ? "red"
+                : "green";
 
         const arrow =
-            stock.change >= 0 ? "▲" : "▼";
+            stock.change >= 0
+                ? "▲"
+                : "▼";
 
         div.innerHTML = `
             <strong>${stock.name}</strong>
@@ -156,30 +163,37 @@ function showStock(stockId) {
     const detail =
         document.getElementById("stock-detail");
 
-    if (!list || !detail) {
-        return;
-    }
+    const investment =
+        document.getElementById("investment-page");
+
 
     list.style.display = "none";
 
     detail.style.display = "block";
 
+    investment.style.display = "none";
+
 
     const color =
-        stock.change >= 0 ? "red" : "green";
+        stock.change >= 0
+            ? "red"
+            : "green";
 
     const arrow =
-        stock.change >= 0 ? "▲" : "▼";
+        stock.change >= 0
+            ? "▲"
+            : "▼";
 
 
     detail.innerHTML = `
 
-        <button id="back-button" style="
-            border:none;
-            background:none;
-            font-size:18px;
-            margin-bottom:15px;
-        ">
+        <button id="back-button"
+            style="
+                border:none;
+                background:none;
+                font-size:18px;
+                margin-bottom:15px;
+            ">
             ← 返回行情
         </button>
 
@@ -219,15 +233,13 @@ function showStock(stockId) {
 
             <button
                 id="buy-button"
-                class="buy-button"
-            >
+                class="buy-button">
                 買入
             </button>
 
             <button
                 id="sell-button"
-                class="sell-button"
-            >
+                class="sell-button">
                 賣出
             </button>
 
@@ -235,18 +247,10 @@ function showStock(stockId) {
     `;
 
 
-    // 返回行情
-
     document
         .getElementById("back-button")
-        .addEventListener("click", function () {
+        .addEventListener("click", closeStock);
 
-            closeStock();
-
-        });
-
-
-    // 買入
 
     document
         .getElementById("buy-button")
@@ -256,8 +260,6 @@ function showStock(stockId) {
 
         });
 
-
-    // 賣出暫時還沒做
 
     document
         .getElementById("sell-button")
@@ -275,24 +277,19 @@ function showStock(stockId) {
 
 function closeStock() {
 
-    const list =
-        document.getElementById("stock-list");
+    document.getElementById("stock-list")
+        .style.display = "block";
 
-    const detail =
-        document.getElementById("stock-detail");
+    document.getElementById("stock-detail")
+        .style.display = "none";
 
-    if (!list || !detail) {
-        return;
-    }
-
-    list.style.display = "block";
-
-    detail.style.display = "none";
+    document.getElementById("investment-page")
+        .style.display = "none";
 }
 
 
 // =========================
-// 買入股票
+// 買入
 // =========================
 
 function buyStock(stockId) {
@@ -306,30 +303,20 @@ function buyStock(stockId) {
 
 
     const quantity = prompt(
-
         `買入 ${stock.name}\n\n` +
-
         `目前股價：¥${stock.price.toFixed(2)}\n\n` +
-
-        `目前可用資金：¥${player.cash.toFixed(2)}\n\n` +
-
+        `可用資金：¥${player.cash.toFixed(2)}\n\n` +
         `請輸入購買股數：`
-
     );
 
-
-    // 按取消
 
     if (quantity === null) {
         return;
     }
 
 
-    const shares =
-        Number(quantity);
+    const shares = Number(quantity);
 
-
-    // 檢查股數
 
     if (
         !Number.isInteger(shares) ||
@@ -342,22 +329,15 @@ function buyStock(stockId) {
     }
 
 
-    // 計算成交金額
-
     const total =
         stock.price * shares;
 
 
-    // 檢查資金
-
     if (total > player.cash) {
 
         alert(
-
             `資金不足！\n\n` +
-
             `需要：¥${total.toFixed(2)}\n` +
-
             `可用：¥${player.cash.toFixed(2)}`
         );
 
@@ -365,12 +345,8 @@ function buyStock(stockId) {
     }
 
 
-    // 扣除現金
-
     player.cash -= total;
 
-
-    // 增加持股
 
     if (!player.holdings[stockId]) {
 
@@ -378,63 +354,28 @@ function buyStock(stockId) {
 
     }
 
+
     player.holdings[stockId] += shares;
 
 
-    // 保存資料
-
     savePlayer();
-
-
-    // 更新首頁現金
 
     updateAccountDisplay();
 
 
-    // 顯示交易結果
-
     alert(
-
         `買入成功！\n\n` +
-
         `${stock.name}\n` +
-
         `${shares} 股\n` +
-
-        `成交價格：¥${stock.price.toFixed(2)}\n` +
-
         `成交金額：¥${total.toFixed(2)}\n\n` +
-
         `剩餘資金：¥${player.cash.toFixed(2)}`
     );
 }
 
 
 // =========================
-// 啟動 APP
+// 我的投資
 // =========================
-
-displayStocks();
-
-updateAccountDisplay();
-
-setupInvestmentButton();
-
-function setupInvestmentButton() {
-
-    const button =
-        document.getElementById("investment-button");
-
-    if (!button) {
-        return;
-    }
-
-    button.addEventListener("click", function () {
-
-        showInvestment();
-
-    });
-}
 
 function showInvestment() {
 
@@ -479,7 +420,6 @@ function showInvestment() {
                     ? "red"
                     : "green";
 
-
             const arrow =
                 stock.change >= 0
                     ? "▲"
@@ -501,7 +441,7 @@ function showInvestment() {
                     </small>
 
                     <p>
-                        ${shares} 股
+                        持有 ${shares} 股
                     </p>
 
                     <p>
@@ -521,18 +461,17 @@ function showInvestment() {
     });
 
 
-    const totalAssets =
-        player.cash + stockValue;
-
-
     if (holdingsHTML === "") {
 
         holdingsHTML = `
-            <p>
-                目前沒有持有任何股票。
-            </p>
+            <p>目前沒有持有任何股票。</p>
         `;
+
     }
+
+
+    const totalAssets =
+        player.cash + stockValue;
 
 
     page.innerHTML = `
@@ -547,17 +486,12 @@ function showInvestment() {
             ← 返回首頁
         </button>
 
-
-        <h2>
-            我的投資
-        </h2>
+        <h2>我的投資</h2>
 
 
         <div class="investment-card">
 
-            <p>
-                總資產
-            </p>
+            <p>總資產</p>
 
             <div class="investment-value">
                 ¥${totalAssets.toFixed(2)}
@@ -568,9 +502,7 @@ function showInvestment() {
 
         <div class="investment-card">
 
-            <p>
-                可用現金
-            </p>
+            <p>可用現金</p>
 
             <h2>
                 ¥${player.cash.toFixed(2)}
@@ -581,9 +513,7 @@ function showInvestment() {
 
         <div class="investment-card">
 
-            <p>
-                股票市值
-            </p>
+            <p>股票市值</p>
 
             <h2>
                 ¥${stockValue.toFixed(2)}
@@ -592,9 +522,7 @@ function showInvestment() {
         </div>
 
 
-        <h2>
-            持有股票
-        </h2>
+        <h2>持有股票</h2>
 
 
         <div class="investment-card">
@@ -602,7 +530,6 @@ function showInvestment() {
             ${holdingsHTML}
 
         </div>
-
     `;
 
 
@@ -617,4 +544,25 @@ function showInvestment() {
         });
 }
 
-console.log("目前現金：", player.cash);
+
+// =========================
+// 啟動 APP
+// =========================
+
+displayStocks();
+
+updateAccountDisplay();
+
+
+const investmentButton =
+    document.getElementById("investment-button");
+
+
+if (investmentButton) {
+
+    investmentButton.addEventListener(
+        "click",
+        showInvestment
+    );
+
+}
