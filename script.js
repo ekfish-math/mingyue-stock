@@ -6,7 +6,6 @@ const stocks = [
         change: 3.21,
         industry: "金融"
     },
-
     {
         id: "KST",
         name: "京城鋼鐵",
@@ -14,7 +13,6 @@ const stocks = [
         change: 1.82,
         industry: "工業"
     },
-
     {
         id: "EAS",
         name: "東海航運",
@@ -22,7 +20,6 @@ const stocks = [
         change: -2.13,
         industry: "交通"
     },
-
     {
         id: "MTR",
         name: "明月鐵路",
@@ -45,9 +42,7 @@ function displayStocks() {
 
         div.className = "stock";
 
-        // 漲紅、跌綠
         const color = stock.change >= 0 ? "red" : "green";
-
         const arrow = stock.change >= 0 ? "▲" : "▼";
 
         div.innerHTML = `
@@ -59,14 +54,13 @@ function displayStocks() {
             <p>
                 ¥${stock.price.toFixed(2)}
 
-                <span style="color: ${color};">
+                <span style="color:${color};">
                     ${arrow} ${Math.abs(stock.change).toFixed(2)}%
                 </span>
             </p>
         `;
 
-        // 點擊股票
-        div.addEventListener("click", function() {
+        div.addEventListener("click", function () {
             showStock(stock.id);
         });
 
@@ -75,7 +69,6 @@ function displayStocks() {
 }
 
 
-// 顯示股票資料
 function showStock(stockId) {
 
     const stock = stocks.find(s => s.id === stockId);
@@ -88,7 +81,6 @@ function showStock(stockId) {
     const detail = document.getElementById("stock-detail");
 
     list.style.display = "none";
-
     detail.style.display = "block";
 
     const color = stock.change >= 0 ? "red" : "green";
@@ -96,10 +88,10 @@ function showStock(stockId) {
 
     detail.innerHTML = `
         <button onclick="closeStock()" style="
-            border:none;
-            background:none;
-            font-size:18px;
-            margin-bottom:15px;
+            border: none;
+            background: none;
+            font-size: 18px;
+            margin-bottom: 15px;
         ">
             ← 返回行情
         </button>
@@ -146,14 +138,15 @@ function showStock(stockId) {
     `;
 }
 
+
 function closeStock() {
 
     const list = document.getElementById("stock-list");
     const detail = document.getElementById("stock-detail");
 
     list.style.display = "block";
-
     detail.style.display = "none";
 }
+
 
 displayStocks();
