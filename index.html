@@ -12,168 +12,274 @@
 
     <title>明月證券</title>
 
-    <link rel="stylesheet" href="style.css">
+    <link
+        rel="stylesheet"
+        href="css/style.css"
+    >
 
 </head>
 
 
 <body>
 
+    <!-- ================================= -->
+    <!-- APP -->
+    <!-- ================================= -->
 
-<header>
+    <div id="app">
 
-    <h1>明月證券</h1>
 
-    <p>明月帝國證券交易所</p>
+        <!-- ================================= -->
+        <!-- 首頁 -->
+        <!-- ================================= -->
 
-</header>
+        <main
+            id="home-page"
+            class="page"
+        >
 
+            <header class="app-header">
 
-<main>
+                <h1>
+                    明月證券
+                </h1>
 
+                <p>
+                    明月帝國證券交易所
+                </p>
 
-    <!-- =========================
-         首頁
-    ========================== -->
+            </header>
 
-    <section id="home-page">
 
-        <div class="card">
+            <!-- 明月指數 -->
 
-            <p>明月綜合指數</p>
+            <section class="card">
 
-            <div class="index">
-                12,584.32
-            </div>
+                <p>
+                    明月綜合指數
+                </p>
 
-            <p class="up">
-                ▲ +1.37%
-            </p>
+                <h2>
+                    12,584.32
+                </h2>
 
-        </div>
+                <span class="up">
+                    ▲ +1.37%
+                </span>
 
+            </section>
 
-        <div class="card">
 
-            <p>我的資產</p>
+            <!-- 我的資產 -->
 
-            <h2 id="cash-display">
-                ¥ 1,000,000
-            </h2>
+            <section class="card">
 
-            <p class="up">
-                +¥ 0
-            </p>
+                <p>
+                    我的資產
+                </p>
 
-        </div>
+                <h2 id="cash-display">
+                    ¥ 1,000,000.00
+                </h2>
 
+            </section>
 
-        <h2>今日熱門</h2>
 
+            <!-- 今日熱門 -->
 
-        <div id="stock-list"></div>
+            <section>
 
-    </section>
+                <h2>
+                    今日熱門
+                </h2>
 
+                <div id="stock-list">
 
-    <!-- =========================
-         股票詳細頁
-    ========================== -->
+                    <!-- JavaScript 自動產生股票 -->
 
-    <section
-        id="stock-detail"
-        class="stock-detail"
-        style="display:none;"
-    ></section>
+                </div>
 
+            </section>
 
-    <!-- =========================
-         我的投資
-    ========================== -->
+        </main>
 
-<section
-    id="investment-page"
-    style="display:none;"
-></section>
 
-<section
-    id="transaction-page"
-    style="display:none;"
-></section>
+        <!-- ================================= -->
+        <!-- 股票詳細頁 -->
+        <!-- ================================= -->
 
-<section
-    id="news-page"
-    style="display:none;"
-></section>
+        <main
+            id="stock-detail"
+            class="page"
+            style="display:none;"
+        >
 
-</main>
+            <!-- JavaScript 自動產生 -->
 
+        </main>
 
-<!-- =========================
-     底部導航
-========================== -->
 
-<nav class="bottom-nav">
+        <!-- ================================= -->
+        <!-- 我的投資 -->
+        <!-- ================================= -->
 
+        <main
+            id="investment-page"
+            class="page"
+            style="display:none;"
+        >
 
-    <button id="home-button">
+            <!-- JavaScript 自動產生 -->
 
-        🏠
+        </main>
 
-        <span>
-            首頁
-        </span>
 
-    </button>
+        <!-- ================================= -->
+        <!-- 交易紀錄 -->
+        <!-- ================================= -->
 
+        <main
+            id="transaction-page"
+            class="page"
+            style="display:none;"
+        >
 
-    <button id="market-button">
+            <!-- JavaScript 自動產生 -->
 
-        📈
+        </main>
 
-        <span>
-            行情
-        </span>
 
-    </button>
+        <!-- ================================= -->
+        <!-- 新聞 -->
+        <!-- ================================= -->
 
+        <main
+            id="news-page"
+            class="page"
+            style="display:none;"
+        >
 
-    <button id="investment-button">
+            <!-- JavaScript 自動產生 -->
 
-        💼
+        </main>
 
-        <span>
-            投資
-        </span>
 
-    </button>
+        <!-- ================================= -->
+        <!-- 底部導航 -->
+        <!-- ================================= -->
 
+        <nav class="bottom-nav">
 
-    <button id="news-button">
 
-        📰
+            <!-- 首頁 -->
 
-        <span>
-            新聞
-        </span>
+            <button
+                id="home-button"
+                class="nav-button"
+                type="button"
+            >
 
-    </button>
+                <span class="nav-icon">
+                    🏠
+                </span>
 
+                <span>
+                    首頁
+                </span>
 
-    <button id="profile-button">
+            </button>
 
-        👤
 
-        <span>
-            我的
-        </span>
+            <!-- 行情 -->
 
-    </button>
+            <button
+                id="market-button"
+                class="nav-button"
+                type="button"
+            >
 
+                <span class="nav-icon">
+                    📈
+                </span>
 
-</nav>
+                <span>
+                    行情
+                </span>
 
-<script src="script.js?v=14"></script>
+            </button>
+
+
+            <!-- 投資 -->
+
+            <button
+                id="investment-button"
+                class="nav-button"
+                type="button"
+            >
+
+                <span class="nav-icon">
+                    💼
+                </span>
+
+                <span>
+                    投資
+                </span>
+
+            </button>
+
+
+            <!-- 新聞 -->
+
+            <button
+                id="news-button"
+                class="nav-button"
+                type="button"
+            >
+
+                <span class="nav-icon">
+                    📰
+                </span>
+
+                <span>
+                    新聞
+                </span>
+
+            </button>
+
+
+            <!-- 我的 -->
+
+            <button
+                id="profile-button"
+                class="nav-button"
+                type="button"
+            >
+
+                <span class="nav-icon">
+                    👤
+                </span>
+
+                <span>
+                    我的
+                </span>
+
+            </button>
+
+
+        </nav>
+
+
+    </div>
+
+
+    <!-- ================================= -->
+    <!-- JavaScript -->
+    <!-- ================================= -->
+
+    <script
+        src="script.js"
+    ></script>
+
 
 </body>
 
