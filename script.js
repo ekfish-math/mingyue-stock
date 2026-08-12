@@ -63,12 +63,36 @@ function savePlayer() {
 
 
 // =========================
-// 顯示股票
+// 更新首頁資產
+// =========================
+
+function updateAccountDisplay() {
+
+    const cashDisplay = document.getElementById("cash-display");
+
+    if (cashDisplay) {
+
+        cashDisplay.textContent =
+            `¥ ${player.cash.toLocaleString("en-US", {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 2
+            })}`;
+
+    }
+}
+
+
+// =========================
+// 顯示股票列表
 // =========================
 
 function displayStocks() {
 
     const list = document.getElementById("stock-list");
+
+    if (!list) {
+        return;
+    }
 
     list.innerHTML = "";
 
@@ -78,26 +102,34 @@ function displayStocks() {
 
         div.className = "stock";
 
-        const color = stock.change >= 0 ? "red" : "green";
-        const arrow = stock.change >= 0 ? "▲" : "▼";
+        const color =
+            stock.change >= 0 ? "red" : "green";
+
+        const arrow =
+            stock.change >= 0 ? "▲" : "▼";
 
         div.innerHTML = `
             <strong>${stock.name}</strong>
             <br>
 
-            <small>${stock.id} ・ ${stock.industry}</small>
+            <small>
+                ${stock.id} ・ ${stock.industry}
+            </small>
 
             <p>
                 ¥${stock.price.toFixed(2)}
 
                 <span style="color:${color};">
-                    ${arrow} ${Math.abs(stock.change).toFixed(2)}%
+                    ${arrow}
+                    ${Math.abs(stock.change).toFixed(2)}%
                 </span>
             </p>
         `;
 
         div.addEventListener("click", function () {
+
             showStock(stock.id);
+
         });
 
         list.appendChild(div);
@@ -111,22 +143,37 @@ function displayStocks() {
 
 function showStock(stockId) {
 
-    const stock = stocks.find(s => s.id === stockId);
+    const stock =
+        stocks.find(s => s.id === stockId);
 
     if (!stock) {
         return;
     }
 
-    const list = document.getElementById("stock-list");
-    const detail = document.getElementById("stock-detail");
+    const list =
+        document.getElementById("stock-list");
+
+    const detail =
+        document.getElementById("stock-detail");
+
+    if (!list || !detail) {
+        return;
+    }
 
     list.style.display = "none";
+
     detail.style.display = "block";
 
-    const color = stock.change >= 0 ? "red" : "green";
-    const arrow = stock.change >= 0 ? "▲" : "▼";
+
+    const color =
+        stock.change >= 0 ? "red" : "green";
+
+    const arrow =
+        stock.change >= 0 ? "▲" : "▼";
+
 
     detail.innerHTML = `
+
         <button id="back-button" style="
             border:none;
             background:none;
@@ -146,8 +193,12 @@ function showStock(stockId) {
             ¥${stock.price.toFixed(2)}
         </div>
 
-        <div class="stock-change" style="color:${color};">
-            ${arrow} ${Math.abs(stock.change).toFixed(2)}%
+        <div
+            class="stock-change"
+            style="color:${color};"
+        >
+            ${arrow}
+            ${Math.abs(stock.change).toFixed(2)}%
         </div>
 
         <hr>
@@ -166,17 +217,25 @@ function showStock(stockId) {
 
         <div class="stock-buttons">
 
-            <button id="buy-button" class="buy-button">
+            <button
+                id="buy-button"
+                class="buy-button"
+            >
                 買入
             </button>
 
-            <button id="sell-button" class="sell-button">
+            <button
+                id="sell-button"
+                class="sell-button"
+            >
                 賣出
             </button>
 
         </div>
     `;
 
+
+    // 返回行情
 
     document
         .getElementById("back-button")
@@ -187,6 +246,8 @@ function showStock(stockId) {
         });
 
 
+    // 買入
+
     document
         .getElementById("buy-button")
         .addEventListener("click", function () {
@@ -195,6 +256,8 @@ function showStock(stockId) {
 
         });
 
+
+    // 賣出暫時還沒做
 
     document
         .getElementById("sell-button")
@@ -212,10 +275,18 @@ function showStock(stockId) {
 
 function closeStock() {
 
-    const list = document.getElementById("stock-list");
-    const detail = document.getElementById("stock-detail");
+    const list =
+        document.getElementById("stock-list");
+
+    const detail =
+        document.getElementById("stock-detail");
+
+    if (!list || !detail) {
+        return;
+    }
 
     list.style.display = "block";
+
     detail.style.display = "none";
 }
 
@@ -226,28 +297,44 @@ function closeStock() {
 
 function buyStock(stockId) {
 
-    const stock = stocks.find(s => s.id === stockId);
+    const stock =
+        stocks.find(s => s.id === stockId);
 
     if (!stock) {
         return;
     }
 
+
     const quantity = prompt(
+
         `買入 ${stock.name}\n\n` +
+
         `目前股價：¥${stock.price.toFixed(2)}\n\n` +
+
+        `目前可用資金：¥${player.cash.toFixed(2)}\n\n` +
+
         `請輸入購買股數：`
+
     );
 
+
+    // 按取消
 
     if (quantity === null) {
         return;
     }
 
 
-    const shares = Number(quantity);
+    const shares =
+        Number(quantity);
 
 
-    if (!Number.isInteger(shares) || shares <= 0) {
+    // 檢查股數
+
+    if (
+        !Number.isInteger(shares) ||
+        shares <= 0
+    ) {
 
         alert("請輸入正整數股數。");
 
@@ -255,14 +342,22 @@ function buyStock(stockId) {
     }
 
 
-    const total = stock.price * shares;
+    // 計算成交金額
 
+    const total =
+        stock.price * shares;
+
+
+    // 檢查資金
 
     if (total > player.cash) {
 
         alert(
+
             `資金不足！\n\n` +
+
             `需要：¥${total.toFixed(2)}\n` +
+
             `可用：¥${player.cash.toFixed(2)}`
         );
 
@@ -270,30 +365,46 @@ function buyStock(stockId) {
     }
 
 
-    // 扣錢
+    // 扣除現金
+
     player.cash -= total;
 
 
     // 增加持股
+
     if (!player.holdings[stockId]) {
 
         player.holdings[stockId] = 0;
 
     }
 
-
     player.holdings[stockId] += shares;
 
 
-    // 保存
+    // 保存資料
+
     savePlayer();
 
 
+    // 更新首頁現金
+
+    updateAccountDisplay();
+
+
+    // 顯示交易結果
+
     alert(
+
         `買入成功！\n\n` +
+
         `${stock.name}\n` +
+
         `${shares} 股\n` +
+
+        `成交價格：¥${stock.price.toFixed(2)}\n` +
+
         `成交金額：¥${total.toFixed(2)}\n\n` +
+
         `剩餘資金：¥${player.cash.toFixed(2)}`
     );
 }
@@ -304,3 +415,5 @@ function buyStock(stockId) {
 // =========================
 
 displayStocks();
+
+updateAccountDisplay();
