@@ -45,11 +45,10 @@ function displayStocks() {
 
         div.className = "stock";
 
-const direction = stock.change >= 0 ? "up" : "down";
+        // 漲紅、跌綠
+        const color = stock.change >= 0 ? "red" : "green";
 
-const color = stock.change >= 0 ? "red" : "green";
-
-const arrow = stock.change >= 0 ? "▲" : "▼";
+        const arrow = stock.change >= 0 ? "▲" : "▼";
 
         div.innerHTML = `
             <strong>${stock.name}</strong>
@@ -58,13 +57,15 @@ const arrow = stock.change >= 0 ? "▲" : "▼";
             <small>${stock.id} ・ ${stock.industry}</small>
 
             <p>
-            <span class="${direction}" style="color: ${color};">
-    ${arrow} ${Math.abs(stock.change).toFixed(2)}%
-</span>
+                ¥${stock.price.toFixed(2)}
+
+                <span style="color: ${color};">
+                    ${arrow} ${Math.abs(stock.change).toFixed(2)}%
+                </span>
             </p>
         `;
 
-        // 點擊整張股票卡片
+        // 點擊股票
         div.addEventListener("click", function() {
             showStock(stock.id);
         });
@@ -74,6 +75,7 @@ const arrow = stock.change >= 0 ? "▲" : "▼";
 }
 
 
+// 顯示股票資料
 function showStock(stockId) {
 
     const stock = stocks.find(s => s.id === stockId);
