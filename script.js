@@ -84,14 +84,76 @@ function showStock(stockId) {
         return;
     }
 
-    alert(
-        `${stock.name}\n\n` +
-        `股票代號：${stock.id}\n` +
-        `現價：¥${stock.price.toFixed(2)}\n` +
-        `漲跌：${stock.change >= 0 ? "▲" : "▼"} ${Math.abs(stock.change).toFixed(2)}%\n` +
-        `產業：${stock.industry}`
-    );
+    const list = document.getElementById("stock-list");
+    const detail = document.getElementById("stock-detail");
+
+    list.style.display = "none";
+
+    detail.style.display = "block";
+
+    const color = stock.change >= 0 ? "red" : "green";
+    const arrow = stock.change >= 0 ? "▲" : "▼";
+
+    detail.innerHTML = `
+        <button onclick="closeStock()" style="
+            border:none;
+            background:none;
+            font-size:18px;
+            margin-bottom:15px;
+        ">
+            ← 返回行情
+        </button>
+
+        <h2>${stock.name}</h2>
+
+        <div class="stock-code">
+            ${stock.id} ・ ${stock.industry}
+        </div>
+
+        <div class="stock-price">
+            ¥${stock.price.toFixed(2)}
+        </div>
+
+        <div class="stock-change" style="color:${color};">
+            ${arrow} ${Math.abs(stock.change).toFixed(2)}%
+        </div>
+
+        <hr>
+
+        <p>
+            今日最高
+            <br>
+            ¥${(stock.price * 1.02).toFixed(2)}
+        </p>
+
+        <p>
+            今日最低
+            <br>
+            ¥${(stock.price * 0.97).toFixed(2)}
+        </p>
+
+        <div class="stock-buttons">
+
+            <button class="buy-button">
+                買入
+            </button>
+
+            <button class="sell-button">
+                賣出
+            </button>
+
+        </div>
+    `;
 }
 
+function closeStock() {
+
+    const list = document.getElementById("stock-list");
+    const detail = document.getElementById("stock-detail");
+
+    list.style.display = "block";
+
+    detail.style.display = "none";
+}
 
 displayStocks();
