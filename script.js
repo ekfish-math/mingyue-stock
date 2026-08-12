@@ -1285,5 +1285,5 @@ function updateStockPrices() {
 // 每 30 秒更新一次
 setInterval(
     updateStockPrices,
-    30000
+    3000
 );
