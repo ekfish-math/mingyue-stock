@@ -415,5 +415,6 @@ function buyStock(stockId) {
 // =========================
 
 displayStocks();
-
 updateAccountDisplay();
+
+console.log("目前現金：", player.cash);
