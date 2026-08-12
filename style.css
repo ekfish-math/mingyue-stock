@@ -175,3 +175,35 @@ main {
 .holding:last-child {
     border-bottom: none;
 }
+
+.transaction {
+    background: white;
+    padding: 16px;
+    margin-bottom: 12px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.holding {
+    background: white;
+    padding: 16px;
+    margin-bottom: 12px;
+    border-radius: 12px;
+}
+
+.back-button {
+    border: none;
+    background: none;
+    font-size: 18px;
+    padding: 8px 0;
+    cursor: pointer;
+}
+
+.transaction-button {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    cursor: pointer;
+}
