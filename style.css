@@ -95,3 +95,54 @@ main {
     display: block;
     font-size: 11px;
 }
+.stock-detail {
+    display: none;
+    background: white;
+    padding: 20px;
+    border-radius: 18px;
+    margin-top: 16px;
+}
+
+.stock-detail h2 {
+    margin-bottom: 4px;
+}
+
+.stock-detail .stock-code {
+    color: #888;
+}
+
+.stock-detail .stock-price {
+    font-size: 32px;
+    font-weight: bold;
+    margin-top: 20px;
+}
+
+.stock-detail .stock-change {
+    font-size: 18px;
+    margin-top: 5px;
+}
+
+.stock-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 25px;
+}
+
+.stock-buttons button {
+    flex: 1;
+    padding: 14px;
+    border: none;
+    border-radius: 12px;
+    font-size: 17px;
+    font-weight: bold;
+}
+
+.buy-button {
+    background: #e53935;
+    color: white;
+}
+
+.sell-button {
+    background: #2e7d32;
+    color: white;
+}
