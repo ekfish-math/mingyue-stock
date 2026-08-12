@@ -1,23 +1,22 @@
 // ========================================
-// 明月證券
+// 明月證券 v1.4
+// 動態股價 + 買賣 + 投資 + 交易紀錄
 // ========================================
 
 
 // ========================================
 // 股票資料
 // ========================================
-const savedStocks = JSON.parse(
-    localStorage.getItem("mingyueStocks") || "null"
-);
-const stocks = [
+
+const defaultStocks = [
 
     {
         id: "MBC",
         name: "明月銀行",
         price: 125.40,
         change: 3.21,
-        industry: "金融"
-        volatility: 0.008
+        industry: "金融",
+        volatility: 0.004
     },
 
     {
@@ -25,8 +24,8 @@ const stocks = [
         name: "京城鋼鐵",
         price: 87.20,
         change: 1.82,
-        industry: "工業"
-        volatility: 0.012
+        industry: "工業",
+        volatility: 0.006
     },
 
     {
@@ -34,8 +33,8 @@ const stocks = [
         name: "東海航運",
         price: 63.80,
         change: -2.13,
-        industry: "交通"
-        volatility: 0.018
+        industry: "交通",
+        volatility: 0.009
     },
 
     {
@@ -43,26 +42,30 @@ const stocks = [
         name: "明月鐵路",
         price: 142.70,
         change: 5.10,
-        industry: "交通"
-        volatility: 0.010
+        industry: "交通",
+        volatility: 0.005
     }
 
-];if (savedStocks) {
+];
 
-    savedStocks.forEach(saved => {
 
-        const stock = stocks.find(
-            s => s.id === saved.id
-        );
+// ========================================
+// 載入股票價格
+// ========================================
 
-        if (stock) {
+let stocks = JSON.parse(
+    localStorage.getItem("mingyueStocks")
+);
 
-            stock.price = saved.price;
-            stock.change = saved.change;
 
-        }
+if (!stocks) {
 
-    });
+    stocks = defaultStocks;
+
+    localStorage.setItem(
+        "mingyueStocks",
+        JSON.stringify(stocks)
+    );
 
 }
 
@@ -88,12 +91,10 @@ if (!player) {
 
     };
 
-    savePlayer();
-
 }
 
 
-// 如果是舊版本資料
+// 舊版本資料相容
 
 if (!player.holdings) {
 
@@ -106,23 +107,35 @@ if (!player.transactions) {
 
     player.transactions = [];
 
-    savePlayer();
-
 }
 
 
+savePlayer();
+
+
 // ========================================
-// 儲存資料
+// 儲存玩家
 // ========================================
 
 function savePlayer() {
 
     localStorage.setItem(
-
         "mingyuePlayer",
-
         JSON.stringify(player)
+    );
 
+}
+
+
+// ========================================
+// 儲存股票
+// ========================================
+
+function saveStocks() {
+
+    localStorage.setItem(
+        "mingyueStocks",
+        JSON.stringify(stocks)
     );
 
 }
@@ -142,7 +155,7 @@ function getStock(stockId) {
 
 
 // ========================================
-// 更新首頁資產
+// 更新首頁現金
 // ========================================
 
 function updateAccountDisplay() {
@@ -161,7 +174,6 @@ function updateAccountDisplay() {
 
 
     display.textContent =
-
         `¥ ${player.cash.toLocaleString(
             "en-US",
             {
@@ -179,24 +191,49 @@ function updateAccountDisplay() {
 
 function hideAllPages() {
 
-    document.getElementById(
-        "home-page"
-    ).style.display = "none";
+    const home =
+        document.getElementById("home-page");
+
+    const detail =
+        document.getElementById("stock-detail");
+
+    const investment =
+        document.getElementById(
+            "investment-page"
+        );
+
+    const transaction =
+        document.getElementById(
+            "transaction-page"
+        );
 
 
-    document.getElementById(
-        "stock-detail"
-    ).style.display = "none";
+    if (home) {
+
+        home.style.display = "none";
+
+    }
 
 
-    document.getElementById(
-        "investment-page"
-    ).style.display = "none";
+    if (detail) {
+
+        detail.style.display = "none";
+
+    }
 
 
-    document.getElementById(
-        "transaction-page"
-    ).style.display = "none";
+    if (investment) {
+
+        investment.style.display = "none";
+
+    }
+
+
+    if (transaction) {
+
+        transaction.style.display = "none";
+
+    }
 
 }
 
@@ -210,12 +247,22 @@ function showHome() {
     hideAllPages();
 
 
-    document.getElementById(
-        "home-page"
-    ).style.display = "block";
+    const home =
+        document.getElementById(
+            "home-page"
+        );
+
+
+    if (home) {
+
+        home.style.display = "block";
+
+    }
 
 
     displayStocks();
+
+    updateAccountDisplay();
 
 }
 
@@ -232,11 +279,17 @@ function displayStocks() {
         );
 
 
+    if (!list) {
+
+        return;
+
+    }
+
+
     list.innerHTML = "";
 
 
     stocks.forEach(stock => {
-
 
         const div =
             document.createElement(
@@ -282,7 +335,6 @@ function displayStocks() {
                 >
 
                     ${arrow}
-
                     ${Math.abs(
                         stock.change
                     ).toFixed(2)}%
@@ -298,9 +350,7 @@ function displayStocks() {
             "click",
             function () {
 
-                showStock(
-                    stock.id
-                );
+                showStock(stock.id);
 
             }
         );
@@ -318,7 +368,6 @@ function displayStocks() {
 // ========================================
 
 function showStock(stockId) {
-
 
     const stock =
         getStock(stockId);
@@ -340,8 +389,14 @@ function showStock(stockId) {
         );
 
 
-    detail.style.display =
-        "block";
+    if (!detail) {
+
+        return;
+
+    }
+
+
+    detail.style.display = "block";
 
 
     const color =
@@ -357,9 +412,7 @@ function showStock(stockId) {
 
 
     const owned =
-        player.holdings[
-            stockId
-        ] || 0;
+        player.holdings[stockId] || 0;
 
 
     detail.innerHTML = `
@@ -399,7 +452,6 @@ function showStock(stockId) {
         >
 
             ${arrow}
-
             ${Math.abs(
                 stock.change
             ).toFixed(2)}%
@@ -413,7 +465,6 @@ function showStock(stockId) {
         <p>
 
             今日最高
-
             <br>
 
             <strong>
@@ -428,7 +479,6 @@ function showStock(stockId) {
         <p>
 
             今日最低
-
             <br>
 
             <strong>
@@ -443,7 +493,6 @@ function showStock(stockId) {
         <p>
 
             我的持股
-
             <br>
 
             <strong>
@@ -488,9 +537,7 @@ function showStock(stockId) {
         )
         .onclick = function () {
 
-            buyStock(
-                stockId
-            );
+            buyStock(stockId);
 
         };
 
@@ -501,9 +548,7 @@ function showStock(stockId) {
         )
         .onclick = function () {
 
-            sellStock(
-                stockId
-            );
+            sellStock(stockId);
 
         };
 
@@ -511,14 +556,20 @@ function showStock(stockId) {
 
 
 // ========================================
-// 買入
+// 買入股票
 // ========================================
 
 function buyStock(stockId) {
 
-
     const stock =
         getStock(stockId);
+
+
+    if (!stock) {
+
+        return;
+
+    }
 
 
     const quantity =
@@ -526,7 +577,7 @@ function buyStock(stockId) {
 
             `買入 ${stock.name}\n\n` +
 
-            `股價：¥${stock.price.toFixed(2)}\n` +
+            `目前股價：¥${stock.price.toFixed(2)}\n` +
 
             `可用資金：¥${player.cash.toFixed(2)}\n\n` +
 
@@ -581,32 +632,24 @@ function buyStock(stockId) {
     }
 
 
-    // 扣錢
+    // 扣除現金
 
     player.cash -= total;
 
 
     // 增加持股
 
-    if (
-        !player.holdings[
-            stockId
-        ]
-    ) {
+    if (!player.holdings[stockId]) {
 
-        player.holdings[
-            stockId
-        ] = 0;
+        player.holdings[stockId] = 0;
 
     }
 
 
-    player.holdings[
-        stockId
-    ] += shares;
+    player.holdings[stockId] += shares;
 
 
-    // 交易紀錄
+    // 建立交易紀錄
 
     player.transactions.push({
 
@@ -623,10 +666,9 @@ function buyStock(stockId) {
         total: total,
 
         time:
-            new Date()
-                .toLocaleString(
-                    "zh-TW"
-                )
+            new Date().toLocaleString(
+                "zh-TW"
+            )
 
     });
 
@@ -644,6 +686,8 @@ function buyStock(stockId) {
 
         `${shares} 股\n` +
 
+        `成交價格：¥${stock.price.toFixed(2)}\n` +
+
         `成交金額：¥${total.toFixed(2)}\n\n` +
 
         `剩餘資金：¥${player.cash.toFixed(2)}`
@@ -657,20 +701,24 @@ function buyStock(stockId) {
 
 
 // ========================================
-// 賣出
+// 賣出股票
 // ========================================
 
 function sellStock(stockId) {
-
 
     const stock =
         getStock(stockId);
 
 
+    if (!stock) {
+
+        return;
+
+    }
+
+
     const owned =
-        player.holdings[
-            stockId
-        ] || 0;
+        player.holdings[stockId] || 0;
 
 
     if (owned <= 0) {
@@ -689,7 +737,7 @@ function sellStock(stockId) {
 
             `賣出 ${stock.name}\n\n` +
 
-            `股價：¥${stock.price.toFixed(2)}\n` +
+            `目前股價：¥${stock.price.toFixed(2)}\n` +
 
             `目前持有：${owned} 股\n\n` +
 
@@ -744,9 +792,7 @@ function sellStock(stockId) {
 
     // 減少持股
 
-    player.holdings[
-        stockId
-    ] -= shares;
+    player.holdings[stockId] -= shares;
 
 
     // 增加現金
@@ -755,19 +801,15 @@ function sellStock(stockId) {
 
 
     if (
-        player.holdings[
-            stockId
-        ] === 0
+        player.holdings[stockId] === 0
     ) {
 
-        delete player.holdings[
-            stockId
-        ];
+        delete player.holdings[stockId];
 
     }
 
 
-    // 交易紀錄
+    // 建立交易紀錄
 
     player.transactions.push({
 
@@ -784,10 +826,9 @@ function sellStock(stockId) {
         total: total,
 
         time:
-            new Date()
-                .toLocaleString(
-                    "zh-TW"
-                )
+            new Date().toLocaleString(
+                "zh-TW"
+            )
 
     });
 
@@ -805,12 +846,12 @@ function sellStock(stockId) {
 
         `${shares} 股\n` +
 
+        `成交價格：¥${stock.price.toFixed(2)}\n` +
+
         `成交金額：¥${total.toFixed(2)}\n\n` +
 
         `剩餘持股：${
-            player.holdings[
-                stockId
-            ] || 0
+            player.holdings[stockId] || 0
         } 股\n\n` +
 
         `可用資金：¥${player.cash.toFixed(2)}`
@@ -829,7 +870,6 @@ function sellStock(stockId) {
 
 function showInvestment() {
 
-
     hideAllPages();
 
 
@@ -839,27 +879,28 @@ function showInvestment() {
         );
 
 
-    page.style.display =
-        "block";
+    if (!page) {
+
+        return;
+
+    }
+
+
+    page.style.display = "block";
 
 
     let stockValue = 0;
-
 
     let html = "";
 
 
     stocks.forEach(stock => {
 
-
         const shares =
-            player.holdings[
-                stock.id
-            ] || 0;
+            player.holdings[stock.id] || 0;
 
 
         if (shares > 0) {
-
 
             const value =
                 stock.price * shares;
@@ -898,7 +939,7 @@ function showInvestment() {
 
 
                     <p>
-                        ${shares} 股
+                        持有 ${shares} 股
                     </p>
 
 
@@ -913,7 +954,6 @@ function showInvestment() {
                     >
 
                         ${arrow}
-
                         ${Math.abs(
                             stock.change
                         ).toFixed(2)}%
@@ -1012,9 +1052,7 @@ function showInvestment() {
             id="transactions-button"
             class="transaction-button"
         >
-
             🧾 查看交易紀錄
-
         </button>
 
     `;
@@ -1042,7 +1080,6 @@ function showInvestment() {
 
 function showTransactions() {
 
-
     hideAllPages();
 
 
@@ -1052,8 +1089,14 @@ function showTransactions() {
         );
 
 
-    page.style.display =
-        "block";
+    if (!page) {
+
+        return;
+
+    }
+
+
+    page.style.display = "block";
 
 
     let html = "";
@@ -1078,7 +1121,6 @@ function showTransactions() {
     transactions.forEach(
         transaction => {
 
-
             const color =
                 transaction.type === "買入"
                     ? "red"
@@ -1087,16 +1129,12 @@ function showTransactions() {
 
             html += `
 
-                <div
-                    class="transaction"
-                >
+                <div class="transaction">
 
                     <strong
                         style="color:${color};"
                     >
-
                         ${transaction.type}
-
                     </strong>
 
 
@@ -1106,40 +1144,29 @@ function showTransactions() {
 
 
                     <small>
-
                         ${transaction.stockId}
-
                     </small>
 
 
                     <p>
-
-                        ${transaction.shares}
-                        股
-
+                        ${transaction.shares} 股
                     </p>
 
 
                     <p>
-
                         成交價
                         ¥${transaction.price.toFixed(2)}
-
                     </p>
 
 
                     <p>
-
                         成交金額
                         ¥${transaction.total.toFixed(2)}
-
                     </p>
 
 
                     <small>
-
                         ${transaction.time}
-
                     </small>
 
                 </div>
@@ -1156,9 +1183,7 @@ function showTransactions() {
             id="transactions-back"
             class="back-button"
         >
-
             ← 返回投資
-
         </button>
 
 
@@ -1182,66 +1207,7 @@ function showTransactions() {
 
 
 // ========================================
-// 導航按鈕
-// ========================================
-
-
-document
-    .getElementById(
-        "home-button"
-    )
-    .onclick = showHome;
-
-
-document
-    .getElementById(
-        "market-button"
-    )
-    .onclick = showHome;
-
-
-document
-    .getElementById(
-        "investment-button"
-    )
-    .onclick = showInvestment;
-
-
-document
-    .getElementById(
-        "news-button"
-    )
-    .onclick = function () {
-
-        alert(
-            "新聞系統即將推出！"
-        );
-
-    };
-
-
-document
-    .getElementById(
-        "profile-button"
-    )
-    .onclick = function () {
-
-        alert(
-            "個人中心即將推出！"
-        );
-
-    };
-
-
-// ========================================
-// 啟動
-// ========================================
-
-displayStocks();
-updateAccountDisplay();
-
-// ========================================
-// 動態股價系統 v1.4
+// 動態股價系統
 // ========================================
 
 function updateStockPrices() {
@@ -1251,30 +1217,41 @@ function updateStockPrices() {
         // 隨機產生漲跌
         const movement =
             (Math.random() - 0.5)
-            * stock.volatility
-            * 2;
+            * 2
+            * stock.volatility;
+
 
         // 更新價格
-        stock.price *= (1 + movement);
 
-        // 避免價格太低
+        stock.price =
+            stock.price *
+            (1 + movement);
+
+
+        // 價格最低 ¥1
+
         if (stock.price < 1) {
+
             stock.price = 1;
+
         }
 
+
         // 更新漲跌幅
+
         stock.change =
             movement * 100;
 
     });
 
-    // 保存目前股價
-    localStorage.setItem(
-        "mingyueStocks",
-        JSON.stringify(stocks)
-    );
 
-    // 更新畫面
+    // 儲存最新股價
+
+    saveStocks();
+
+
+    // 更新首頁
+
     displayStocks();
 
     updateAccountDisplay();
@@ -1282,8 +1259,101 @@ function updateStockPrices() {
 }
 
 
-// 每 30 秒更新一次
+// ========================================
+// 導航
+// ========================================
+
+const homeButton =
+    document.getElementById(
+        "home-button"
+    );
+
+if (homeButton) {
+
+    homeButton.onclick =
+        showHome;
+
+}
+
+
+const marketButton =
+    document.getElementById(
+        "market-button"
+    );
+
+if (marketButton) {
+
+    marketButton.onclick =
+        showHome;
+
+}
+
+
+const investmentButton =
+    document.getElementById(
+        "investment-button"
+    );
+
+if (investmentButton) {
+
+    investmentButton.onclick =
+        showInvestment;
+
+}
+
+
+const newsButton =
+    document.getElementById(
+        "news-button"
+    );
+
+if (newsButton) {
+
+    newsButton.onclick =
+        function () {
+
+            alert(
+                "新聞系統即將推出！"
+            );
+
+        };
+
+}
+
+
+const profileButton =
+    document.getElementById(
+        "profile-button"
+    );
+
+if (profileButton) {
+
+    profileButton.onclick =
+        function () {
+
+            alert(
+                "個人中心即將推出！"
+            );
+
+        };
+
+}
+
+
+// ========================================
+// 啟動 APP
+// ========================================
+
+displayStocks();
+
+updateAccountDisplay();
+
+
+// ========================================
+// 每 30 秒更新一次股價
+// ========================================
+
 setInterval(
     updateStockPrices,
-    3000
+    30000
 );
