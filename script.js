@@ -41,7 +41,7 @@ let player = {
 
 
 // =========================
-// 顯示股票列表
+// 顯示股票
 // =========================
 
 function displayStocks() {
@@ -105,7 +105,7 @@ function showStock(stockId) {
     const arrow = stock.change >= 0 ? "▲" : "▼";
 
     detail.innerHTML = `
-        <button onclick="closeStock()" style="
+        <button id="back-button" style="
             border:none;
             background:none;
             font-size:18px;
@@ -144,24 +144,39 @@ function showStock(stockId) {
 
         <div class="stock-buttons">
 
-            <button
-                class="buy-button"
-                onclick="buyStock('${stock.id}')">
+            <button id="buy-button" class="buy-button">
                 買入
             </button>
 
-            <button
-                class="sell-button">
+            <button id="sell-button" class="sell-button">
                 賣出
             </button>
 
         </div>
     `;
+
+
+    // 返回行情
+    document.getElementById("back-button").addEventListener("click", function () {
+        closeStock();
+    });
+
+
+    // 買入
+    document.getElementById("buy-button").addEventListener("click", function () {
+        buyStock(stock.id);
+    });
+
+
+    // 賣出暫時還沒有功能
+    document.getElementById("sell-button").addEventListener("click", function () {
+        alert("賣出功能即將推出！");
+    });
 }
 
 
 // =========================
-// 返回股票列表
+// 返回行情
 // =========================
 
 function closeStock() {
@@ -192,14 +207,12 @@ function buyStock(stockId) {
         `請輸入購買股數：`
     );
 
-    // 使用者按取消
     if (quantity === null) {
         return;
     }
 
     const shares = Number(quantity);
 
-    // 檢查股數
     if (!Number.isInteger(shares) || shares <= 0) {
 
         alert("請輸入正整數股數。");
@@ -207,10 +220,8 @@ function buyStock(stockId) {
         return;
     }
 
-    // 計算交易金額
     const total = stock.price * shares;
 
-    // 檢查資金
     if (total > player.cash) {
 
         alert(
@@ -222,17 +233,14 @@ function buyStock(stockId) {
         return;
     }
 
-    // 扣除現金
     player.cash -= total;
 
-    // 建立持股紀錄
     if (!player.holdings[stockId]) {
         player.holdings[stockId] = 0;
     }
 
     player.holdings[stockId] += shares;
 
-    // 顯示交易結果
     alert(
         `買入成功！\n\n` +
         `${stock.name}\n` +
@@ -244,7 +252,7 @@ function buyStock(stockId) {
 
 
 // =========================
-// 啟動 APP
+// 啟動
 // =========================
 
 displayStocks();
