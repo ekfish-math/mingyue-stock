@@ -31,7 +31,7 @@ const defaultStocks = [
     {
         id: "MTR",
         name: "明月鐵路",
-        price: 142.70,
+        price: 500.70,
         change: 5.10,
         industry: "交通"
     }
