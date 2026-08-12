@@ -415,6 +415,206 @@ function buyStock(stockId) {
 // =========================
 
 displayStocks();
+
 updateAccountDisplay();
+
+setupInvestmentButton();
+
+function setupInvestmentButton() {
+
+    const button =
+        document.getElementById("investment-button");
+
+    if (!button) {
+        return;
+    }
+
+    button.addEventListener("click", function () {
+
+        showInvestment();
+
+    });
+}
+
+function showInvestment() {
+
+    const list =
+        document.getElementById("stock-list");
+
+    const detail =
+        document.getElementById("stock-detail");
+
+    const page =
+        document.getElementById("investment-page");
+
+
+    list.style.display = "none";
+
+    detail.style.display = "none";
+
+    page.style.display = "block";
+
+
+    let stockValue = 0;
+
+    let holdingsHTML = "";
+
+
+    stocks.forEach(stock => {
+
+        const shares =
+            player.holdings[stock.id] || 0;
+
+
+        if (shares > 0) {
+
+            const value =
+                stock.price * shares;
+
+            stockValue += value;
+
+
+            const color =
+                stock.change >= 0
+                    ? "red"
+                    : "green";
+
+
+            const arrow =
+                stock.change >= 0
+                    ? "▲"
+                    : "▼";
+
+
+            holdingsHTML += `
+
+                <div class="holding">
+
+                    <strong>
+                        ${stock.name}
+                    </strong>
+
+                    <br>
+
+                    <small>
+                        ${stock.id} ・ ${stock.industry}
+                    </small>
+
+                    <p>
+                        ${shares} 股
+                    </p>
+
+                    <p>
+                        市值
+                        ¥${value.toFixed(2)}
+                    </p>
+
+                    <p style="color:${color};">
+                        ${arrow}
+                        ${Math.abs(stock.change).toFixed(2)}%
+                    </p>
+
+                </div>
+
+            `;
+        }
+    });
+
+
+    const totalAssets =
+        player.cash + stockValue;
+
+
+    if (holdingsHTML === "") {
+
+        holdingsHTML = `
+            <p>
+                目前沒有持有任何股票。
+            </p>
+        `;
+    }
+
+
+    page.innerHTML = `
+
+        <button id="investment-back"
+            style="
+                border:none;
+                background:none;
+                font-size:18px;
+                margin-bottom:15px;
+            ">
+            ← 返回首頁
+        </button>
+
+
+        <h2>
+            我的投資
+        </h2>
+
+
+        <div class="investment-card">
+
+            <p>
+                總資產
+            </p>
+
+            <div class="investment-value">
+                ¥${totalAssets.toFixed(2)}
+            </div>
+
+        </div>
+
+
+        <div class="investment-card">
+
+            <p>
+                可用現金
+            </p>
+
+            <h2>
+                ¥${player.cash.toFixed(2)}
+            </h2>
+
+        </div>
+
+
+        <div class="investment-card">
+
+            <p>
+                股票市值
+            </p>
+
+            <h2>
+                ¥${stockValue.toFixed(2)}
+            </h2>
+
+        </div>
+
+
+        <h2>
+            持有股票
+        </h2>
+
+
+        <div class="investment-card">
+
+            ${holdingsHTML}
+
+        </div>
+
+    `;
+
+
+    document
+        .getElementById("investment-back")
+        .addEventListener("click", function () {
+
+            page.style.display = "none";
+
+            list.style.display = "block";
+
+        });
+}
 
 console.log("目前現金：", player.cash);
