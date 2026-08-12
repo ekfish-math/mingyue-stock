@@ -146,3 +146,32 @@ main {
     background: #2e7d32;
     color: white;
 }
+
+.investment-page {
+    display: none;
+    background: white;
+    padding: 20px;
+    border-radius: 18px;
+    margin-top: 16px;
+}
+
+.investment-card {
+    background: #f7f7f7;
+    padding: 16px;
+    border-radius: 15px;
+    margin-top: 12px;
+}
+
+.investment-value {
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.holding {
+    padding: 15px 0;
+    border-bottom: 1px solid #ddd;
+}
+
+.holding:last-child {
+    border-bottom: none;
+}
