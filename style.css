@@ -40,12 +40,14 @@ main {
     font-weight: bold;
 }
 
+/* 明月帝國股市：漲紅、跌綠 */
+
 .up {
-    color: red;
+    color: red !important;
 }
 
 .down {
-    color: green;
+    color: green !important;
 }
 
 .stock {
@@ -56,11 +58,13 @@ main {
     cursor: pointer;
     touch-action: manipulation;
 }
-.stock {
-    background: white;
-    padding: 16px;
-    margin-bottom: 10px;
-    border-radius: 15px;
+
+.stock strong {
+    font-size: 17px;
+}
+
+.stock p {
+    margin-bottom: 0;
 }
 
 .bottom-nav {
@@ -77,6 +81,8 @@ main {
     display: flex;
     justify-content: space-around;
     align-items: center;
+
+    z-index: 100;
 }
 
 .bottom-nav button {
