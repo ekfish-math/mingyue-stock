@@ -2,15 +2,23 @@
 <html lang="zh-TW">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>明月帝國證券交易所</title>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>明月證券</title>
 
     <link rel="stylesheet" href="style.css">
+
 </head>
 
+
 <body>
+
 
 <header>
 
@@ -23,85 +31,152 @@
 
 <main>
 
-    <!-- 明月指數 -->
 
-    <div class="card">
+    <!-- =========================
+         首頁
+    ========================== -->
 
-        <p>明月綜合指數</p>
+    <section id="home-page">
 
-        <div class="index">
-            12,584.32
+        <div class="card">
+
+            <p>明月綜合指數</p>
+
+            <div class="index">
+                12,584.32
+            </div>
+
+            <p class="up">
+                ▲ +1.37%
+            </p>
+
         </div>
 
-        <p class="up">
-            ▲ +1.37%
-        </p>
 
-    </div>
+        <div class="card">
 
+            <p>我的資產</p>
 
-    <!-- 我的資產 -->
+            <h2 id="cash-display">
+                ¥ 1,000,000
+            </h2>
 
-<div class="card">
+            <p class="up">
+                +¥ 0
+            </p>
 
-    <p>我的資產</p>
-
-    <h2 id="cash-display">
-        ¥ 1,000,000
-    </h2>
-
-    <p id="profit-display" class="up">
-        +¥ 0
-    </p>
-
-</div>
+        </div>
 
 
-    <!-- 熱門股票 -->
-<h2>今日熱門</h2>
+        <h2>今日熱門</h2>
 
-<div id="stock-list"></div>
-    
-    <div id="stock-detail" class="stock-detail"></div>
-    
-    <div id="investment-page" class="investment-page"></div>
-    
+
+        <div id="stock-list"></div>
+
+    </section>
+
+
+    <!-- =========================
+         股票詳細頁
+    ========================== -->
+
+    <section
+        id="stock-detail"
+        class="stock-detail"
+        style="display:none;"
+    ></section>
+
+
+    <!-- =========================
+         我的投資
+    ========================== -->
+
+    <section
+        id="investment-page"
+        style="display:none;"
+    ></section>
+
+
+    <!-- =========================
+         交易紀錄
+    ========================== -->
+
+    <section
+        id="transaction-page"
+        style="display:none;"
+    ></section>
+
+
 </main>
 
 
-<!-- 底部導航 -->
+<!-- =========================
+     底部導航
+========================== -->
 
 <nav class="bottom-nav">
 
-    <button>
+
+    <button id="home-button">
+
         🏠
-        <span>首頁</span>
+
+        <span>
+            首頁
+        </span>
+
     </button>
 
-    <button>
+
+    <button id="market-button">
+
         📈
-        <span>行情</span>
+
+        <span>
+            行情
+        </span>
+
     </button>
 
-<button id="investment-button">
-    💼
-    <span>投資</span>
-</button>
 
-    <button>
+    <button id="investment-button">
+
+        💼
+
+        <span>
+            投資
+        </span>
+
+    </button>
+
+
+    <button id="news-button">
+
         📰
-        <span>新聞</span>
+
+        <span>
+            新聞
+        </span>
+
     </button>
 
-    <button>
+
+    <button id="profile-button">
+
         👤
-        <span>我的</span>
+
+        <span>
+            我的
+        </span>
+
     </button>
+
 
 </nav>
 
+
 <script src="script.js"></script>
-    
+
 </body>
 
 </html>
