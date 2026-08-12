@@ -45,9 +45,6 @@ function displayStocks() {
 
         div.className = "stock";
 
-        // 點擊股票
-        div.onclick = () => showStock(stock.id);
-
         const direction = stock.change >= 0 ? "up" : "down";
 
         const arrow = stock.change >= 0 ? "▲" : "▼";
@@ -60,19 +57,22 @@ function displayStocks() {
 
             <p>
                 ¥${stock.price.toFixed(2)}
-
                 <span class="${direction}">
                     ${arrow} ${Math.abs(stock.change).toFixed(2)}%
                 </span>
             </p>
         `;
 
+        // 點擊整張股票卡片
+        div.addEventListener("click", function() {
+            showStock(stock.id);
+        });
+
         list.appendChild(div);
     });
 }
 
 
-// 顯示股票詳細資料
 function showStock(stockId) {
 
     const stock = stocks.find(s => s.id === stockId);
@@ -82,7 +82,7 @@ function showStock(stockId) {
     }
 
     alert(
-        `${stock.name}\n` +
+        `${stock.name}\n\n` +
         `股票代號：${stock.id}\n` +
         `現價：¥${stock.price.toFixed(2)}\n` +
         `漲跌：${stock.change >= 0 ? "▲" : "▼"} ${Math.abs(stock.change).toFixed(2)}%\n` +
