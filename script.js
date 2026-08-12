@@ -176,12 +176,14 @@ function money(value) {
 function hideAllPages() {
 
     const pages = [
-        "home-page",
-        "stock-detail",
-        "investment-page",
-        "transaction-page",
-        "news-page"
-    ];
+
+    "home-page",
+    "stock-detail",
+    "investment-page",
+    "transaction-page",
+    "news-page"
+
+];
 
     pages.forEach(id => {
 
@@ -200,19 +202,105 @@ function hideAllPages() {
 // 首頁
 // ========================================
 
-function showHome() {
+// ========================================
+// 新聞頁
+// ========================================
+
+function showNews() {
 
     hideAllPages();
 
-    const home =
-        document.getElementById("home-page");
+    const page =
+        document.getElementById(
+            "news-page"
+        );
 
-    if (home) {
-        home.style.display = "block";
+    if (!page) {
+        alert("找不到新聞頁面！");
+        return;
     }
 
-    displayStocks();
-    updateAccountDisplay();
+    page.style.display = "block";
+
+    let html = "";
+
+    news.forEach(item => {
+
+        const stock =
+            getStock(item.stockId);
+
+        if (!stock) {
+            return;
+        }
+
+        const color =
+            item.impact >= 0
+                ? "red"
+                : "green";
+
+        const arrow =
+            item.impact >= 0
+                ? "▲"
+                : "▼";
+
+        html += `
+
+            <div
+                class="card"
+                style="cursor:pointer;"
+                onclick="showNewsDetail(${item.id})"
+            >
+
+                <small>
+                    ${item.time}
+                </small>
+
+                <h3>
+                    ${item.title}
+                </h3>
+
+                <p>
+                    ${stock.name}
+
+                    <span
+                        style="color:${color};"
+                    >
+                        ${arrow}
+                        ${Math.abs(
+                            item.impact
+                        ).toFixed(1)}%
+                    </span>
+                </p>
+
+            </div>
+
+        `;
+
+    });
+
+    page.innerHTML = `
+
+        <button
+            id="news-back"
+            class="back-button"
+        >
+            ← 返回首頁
+        </button>
+
+        <h2>
+            📰 市場新聞
+        </h2>
+
+        ${html}
+
+    `;
+
+    document
+        .getElementById(
+            "news-back"
+        )
+        .onclick = showHome;
+
 }
 
 
@@ -758,6 +846,7 @@ function showTransactions() {
         );
 
     if (!page) {
+        alert("找不到交易紀錄頁面！");
         return;
     }
 
@@ -786,9 +875,12 @@ function showTransactions() {
                     : "green";
 
             html += `
+
                 <div class="transaction">
 
-                    <strong style="color:${color};">
+                    <strong
+                        style="color:${color};"
+                    >
                         ${transaction.type}
                     </strong>
 
@@ -819,8 +911,11 @@ function showTransactions() {
                     </small>
 
                 </div>
+
             `;
+
         });
+
     }
 
     page.innerHTML = `
@@ -837,18 +932,14 @@ function showTransactions() {
         </h2>
 
         ${html}
+
     `;
 
     document.getElementById(
         "transactions-back"
     ).onclick = showInvestment;
+
 }
-
-
-// ========================================
-// 新聞
-// ========================================
-
 function showNews() {
 
     hideAllPages();
