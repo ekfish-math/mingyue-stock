@@ -1538,19 +1538,84 @@ if (profileButton) {
 
 
 // ========================================
-// 啟動
+// 啟動 APP
 // ========================================
 
-displayStocks();
+function startApp() {
 
-updateAccountDisplay();
+    displayStocks();
+
+    updateAccountDisplay();
 
 
-// ========================================
-// 每 30 秒更新股價
-// ========================================
+    // 首頁
 
-setInterval(
-    updateStockPrices,
-    30000
-);
+    const homeButton =
+        document.getElementById("home-button");
+
+    if (homeButton) {
+        homeButton.onclick = showHome;
+    }
+
+
+    // 行情
+
+    const marketButton =
+        document.getElementById("market-button");
+
+    if (marketButton) {
+        marketButton.onclick = showMarket;
+    }
+
+
+    // 投資
+
+    const investmentButton =
+        document.getElementById("investment-button");
+
+    if (investmentButton) {
+        investmentButton.onclick = showInvestment;
+    }
+
+
+    // 新聞
+
+    const newsButton =
+        document.getElementById("news-button");
+
+    if (newsButton) {
+
+        newsButton.onclick = function () {
+
+            showNews();
+
+        };
+
+    }
+
+
+    // 我的
+
+    const profileButton =
+        document.getElementById("profile-button");
+
+    if (profileButton) {
+
+        profileButton.onclick = function () {
+
+            alert("個人中心即將推出！");
+
+        };
+
+    }
+
+
+    // 每 30 秒更新股價
+
+    setInterval(
+        updateStockPrices,
+        30000
+    );
+
+}
+
