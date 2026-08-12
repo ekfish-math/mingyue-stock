@@ -34,10 +34,32 @@ const stocks = [
 // 玩家帳戶
 // =========================
 
-let player = {
-    cash: 1000000,
-    holdings: {}
-};
+let player = JSON.parse(
+    localStorage.getItem("mingyuePlayer")
+);
+
+if (!player) {
+
+    player = {
+        cash: 1000000,
+        holdings: {}
+    };
+
+    savePlayer();
+}
+
+
+// =========================
+// 保存玩家資料
+// =========================
+
+function savePlayer() {
+
+    localStorage.setItem(
+        "mingyuePlayer",
+        JSON.stringify(player)
+    );
+}
 
 
 // =========================
@@ -156,22 +178,31 @@ function showStock(stockId) {
     `;
 
 
-    // 返回行情
-    document.getElementById("back-button").addEventListener("click", function () {
-        closeStock();
-    });
+    document
+        .getElementById("back-button")
+        .addEventListener("click", function () {
+
+            closeStock();
+
+        });
 
 
-    // 買入
-    document.getElementById("buy-button").addEventListener("click", function () {
-        buyStock(stock.id);
-    });
+    document
+        .getElementById("buy-button")
+        .addEventListener("click", function () {
+
+            buyStock(stock.id);
+
+        });
 
 
-    // 賣出暫時還沒有功能
-    document.getElementById("sell-button").addEventListener("click", function () {
-        alert("賣出功能即將推出！");
-    });
+    document
+        .getElementById("sell-button")
+        .addEventListener("click", function () {
+
+            alert("賣出功能即將推出！");
+
+        });
 }
 
 
@@ -207,11 +238,14 @@ function buyStock(stockId) {
         `請輸入購買股數：`
     );
 
+
     if (quantity === null) {
         return;
     }
 
+
     const shares = Number(quantity);
+
 
     if (!Number.isInteger(shares) || shares <= 0) {
 
@@ -220,7 +254,9 @@ function buyStock(stockId) {
         return;
     }
 
+
     const total = stock.price * shares;
+
 
     if (total > player.cash) {
 
@@ -233,13 +269,25 @@ function buyStock(stockId) {
         return;
     }
 
+
+    // 扣錢
     player.cash -= total;
 
+
+    // 增加持股
     if (!player.holdings[stockId]) {
+
         player.holdings[stockId] = 0;
+
     }
 
+
     player.holdings[stockId] += shares;
+
+
+    // 保存
+    savePlayer();
+
 
     alert(
         `買入成功！\n\n` +
@@ -252,7 +300,7 @@ function buyStock(stockId) {
 
 
 // =========================
-// 啟動
+// 啟動 APP
 // =========================
 
 displayStocks();
