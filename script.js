@@ -1177,7 +1177,7 @@ function startApp() {
 
     setInterval(
         updateStockPrices,
-        30000
+        15000
     );
 }
 
