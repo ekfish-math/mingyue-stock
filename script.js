@@ -45,9 +45,11 @@ function displayStocks() {
 
         div.className = "stock";
 
-        const direction = stock.change >= 0 ? "up" : "down";
+const direction = stock.change >= 0 ? "up" : "down";
 
-        const arrow = stock.change >= 0 ? "▲" : "▼";
+const color = stock.change >= 0 ? "red" : "green";
+
+const arrow = stock.change >= 0 ? "▲" : "▼";
 
         div.innerHTML = `
             <strong>${stock.name}</strong>
@@ -56,10 +58,9 @@ function displayStocks() {
             <small>${stock.id} ・ ${stock.industry}</small>
 
             <p>
-                ¥${stock.price.toFixed(2)}
-                <span class="${direction}">
-                    ${arrow} ${Math.abs(stock.change).toFixed(2)}%
-                </span>
+            <span class="${direction}" style="color: ${color};">
+    ${arrow} ${Math.abs(stock.change).toFixed(2)}%
+</span>
             </p>
         `;
 
