@@ -6,7 +6,9 @@
 // ========================================
 // 股票資料
 // ========================================
-
+const savedStocks = JSON.parse(
+    localStorage.getItem("mingyueStocks") || "null"
+);
 const stocks = [
 
     {
@@ -15,6 +17,7 @@ const stocks = [
         price: 125.40,
         change: 3.21,
         industry: "金融"
+        volatility: 0.008
     },
 
     {
@@ -23,6 +26,7 @@ const stocks = [
         price: 87.20,
         change: 1.82,
         industry: "工業"
+        volatility: 0.012
     },
 
     {
@@ -31,6 +35,7 @@ const stocks = [
         price: 63.80,
         change: -2.13,
         industry: "交通"
+        volatility: 0.018
     },
 
     {
@@ -39,9 +44,27 @@ const stocks = [
         price: 142.70,
         change: 5.10,
         industry: "交通"
+        volatility: 0.010
     }
 
-];
+];if (savedStocks) {
+
+    savedStocks.forEach(saved => {
+
+        const stock = stocks.find(
+            s => s.id === saved.id
+        );
+
+        if (stock) {
+
+            stock.price = saved.price;
+            stock.change = saved.change;
+
+        }
+
+    });
+
+}
 
 
 // ========================================
@@ -1216,3 +1239,51 @@ document
 
 displayStocks();
 updateAccountDisplay();
+
+// ========================================
+// 動態股價系統 v1.4
+// ========================================
+
+function updateStockPrices() {
+
+    stocks.forEach(stock => {
+
+        // 隨機產生漲跌
+        const movement =
+            (Math.random() - 0.5)
+            * stock.volatility
+            * 2;
+
+        // 更新價格
+        stock.price *= (1 + movement);
+
+        // 避免價格太低
+        if (stock.price < 1) {
+            stock.price = 1;
+        }
+
+        // 更新漲跌幅
+        stock.change =
+            movement * 100;
+
+    });
+
+    // 保存目前股價
+    localStorage.setItem(
+        "mingyueStocks",
+        JSON.stringify(stocks)
+    );
+
+    // 更新畫面
+    displayStocks();
+
+    updateAccountDisplay();
+
+}
+
+
+// 每 30 秒更新一次
+setInterval(
+    updateStockPrices,
+    30000
+);
