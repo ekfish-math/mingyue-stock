@@ -5590,7 +5590,69 @@ window.showToast =
 /* =========================================================
    64. 完成
    ========================================================= */
+/* =========================================================
+   HTML onclick 全域函式橋接
+   因為 script.js 使用 type="module"
+   ========================================================= */
 
+window.depositMoney = function () {
+    const amountInput = document.getElementById("depositAmount");
+
+    if (!amountInput) {
+        console.error("找不到 depositAmount");
+        return;
+    }
+
+    const amount = Number(amountInput.value);
+
+    if (!Number.isFinite(amount) || amount <= 0) {
+        toast("請輸入有效金額");
+        return;
+    }
+
+    if (amount > Number(user.wallet || 0)) {
+        toast("遊戲錢包餘額不足");
+        return;
+    }
+
+    user.wallet -= amount;
+    user.balance += amount;
+
+    saveAll();
+
+    closeModal("depositModal");
+
+    amountInput.value = "";
+
+    if (typeof renderHome === "function") {
+        renderHome();
+    }
+
+    if (typeof renderPortfolio === "function") {
+        renderPortfolio();
+    }
+
+    toast("儲值成功");
+};
+window.deposit = deposit;
+
+window.openDepositModal = openDeposit;
+window.closeModal = closeModal;
+
+window.showPage = showPage;
+
+window.openStock = openStock;
+window.buyStock = buyStock;
+window.sellStock = sellStock;
+
+window.openCompany = openCompany;
+window.registerCompany = registerCompany;
+window.myCompanies = myCompanies;
+window.publishNews = publishNews;
+
+window.toast = toast;
+
+console.log("明月證券 v4.0 全域函式已掛載");
 console.log(
     "明月證券 v4.0 script.js 載入完成"
 );
