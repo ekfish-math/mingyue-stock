@@ -1,42 +1,36 @@
 /* =========================================================
-   明月證券 v3.0
+   明月證券 v2.1
+   市場系統 / K線 / 折線圖 / 公司 / 新聞 / 儲值
    ========================================================= */
 
 
 /* =========================================================
-   預設股票
+   1. 初始股票資料
    ========================================================= */
 
 const DEFAULT_STOCKS = [
-
     {
         id: "MTR",
         name: "明月鐵路",
         company: "明月鐵路",
         industry: "交通",
         type: "既有企業",
-
         price: 142.70,
-        previous: 135.77,
-
+        previous: 140.76,
         volume: 24580,
-
         capital: 120000000,
         shares: 10000000
     },
 
     {
         id: "KMB",
-        name: "附設生醫",
+        name: "國立京城大學附設生醫",
         company: "國立京城大學附設生醫股份有限公司",
         industry: "醫療",
         type: "大學附設企業",
-
         price: 86.40,
-        previous: 84.95,
-
+        previous: 85.12,
         volume: 8320,
-
         capital: 60000000,
         shares: 6000000
     },
@@ -47,12 +41,9 @@ const DEFAULT_STOCKS = [
         company: "鎬子餐飲股份有限公司",
         industry: "餐飲",
         type: "民營企業",
-
         price: 52.80,
-        previous: 54.12,
-
+        previous: 53.46,
         volume: 11540,
-
         capital: 35000000,
         shares: 3500000
     },
@@ -63,39 +54,34 @@ const DEFAULT_STOCKS = [
         company: "國營上杉林業股份有限公司",
         industry: "農林",
         type: "國營企業",
-
         price: 73.60,
-        previous: 72.10,
-
+        previous: 72.82,
         volume: 6240,
-
         capital: 80000000,
         shares: 8000000
     }
-
 ];
 
 
 /* =========================================================
-   LocalStorage
+   2. LocalStorage
    ========================================================= */
 
 function loadData(key, fallback) {
 
-    const raw = localStorage.getItem(key);
+    const data = localStorage.getItem(key);
 
-    if (!raw) {
+    if (!data) {
         return fallback;
     }
 
     try {
-        return JSON.parse(raw);
+        return JSON.parse(data);
     }
 
     catch {
         return fallback;
     }
-
 }
 
 
@@ -110,125 +96,86 @@ function saveData(key, data) {
 
 
 /* =========================================================
-   使用者
-   ========================================================= */
-
-let user = loadData(
-    "mingyue_user_v3",
-    {
-        name: "Fisher",
-        accountId: "MYS-000184",
-
-        balance: 1000000,
-
-        wallet: 500000,
-
-        googleVerified: false
-    }
-);
-
-
-/* =========================================================
-   股票
+   3. 資料初始化
    ========================================================= */
 
 let stocks = loadData(
-    "mingyue_stocks_v3",
+    "mingyue_stocks_v2",
     DEFAULT_STOCKS
 );
 
 
-/* =========================================================
-   持股
-   ========================================================= */
+let user = loadData(
+    "mingyue_user_v2",
+    {
+        name: "Fisher",
+        accountId: "MYS-000184",
+        balance: 1000000,
+        wallet: 500000
+    }
+);
+
 
 let portfolio = loadData(
-    "mingyue_portfolio_v3",
+    "mingyue_portfolio_v2",
     {}
 );
 
 
-/* =========================================================
-   交易紀錄
-   ========================================================= */
-
 let transactions = loadData(
-    "mingyue_transactions_v3",
+    "mingyue_transactions_v2",
     []
 );
 
-
-/* =========================================================
-   公司
-   ========================================================= */
 
 let companies = loadData(
-    "mingyue_companies_v3",
+    "mingyue_companies_v2",
     []
 );
 
 
 /* =========================================================
-   新聞
+   4. 初始新聞
    ========================================================= */
 
 let news = loadData(
-    "mingyue_news_v3",
+    "mingyue_news_v2",
     [
         {
             id: 1,
-
             companyCode: "MTR",
             companyName: "明月鐵路",
-
             category: "company",
-
             title: "明月鐵路今日維持正常營運",
-
-            content:
-                "明月鐵路今日各主要路線維持正常營運。",
-
-            time: "今天 08:00"
+            content: "明月鐵路今日各主要路線維持正常營運。",
+            time: "2026/08/13 08:00"
         },
 
         {
             id: 2,
-
             companyCode: "KMB",
             companyName: "國立京城大學附設生醫",
-
             category: "company",
-
             title: "附設生醫公布最新研究進度",
-
-            content:
-                "國立京城大學附設生醫股份有限公司公布最新研究計畫進度。",
-
-            time: "今天 07:40"
+            content: "國立京城大學附設生醫股份有限公司公布最新研究計畫進度。",
+            time: "2026/08/13 07:40"
         },
 
         {
             id: 3,
-
             companyCode: "HZI",
             companyName: "鎬子餐飲",
-
             category: "company",
-
             title: "鎬子餐飲公布新門市計畫",
-
-            content:
-                "鎬子餐飲股份有限公司宣布規劃新的餐飲據點。",
-
-            time: "昨天 18:20"
+            content: "鎬子餐飲股份有限公司宣布規劃新的餐飲據點。",
+            time: "2026/08/12 18:20"
         }
-
     ]
 );
 
 
 /* =========================================================
-   歷史資料
+   5. 歷史市場資料
    ========================================================= */
 
 let historyData = loadData(
@@ -238,83 +185,244 @@ let historyData = loadData(
 
 
 /* =========================================================
-   產生歷史資料
+   6. 日期工具
+   ========================================================= */
+
+function formatDate(date) {
+
+    const year = date.getFullYear();
+
+    const month = String(
+        date.getMonth() + 1
+    ).padStart(2, "0");
+
+    const day = String(
+        date.getDate()
+    ).padStart(2, "0");
+
+    return `${year}/${month}/${day}`;
+}
+
+
+function formatDateTime(date) {
+
+    const dateText = formatDate(date);
+
+    const timeText = date.toLocaleTimeString(
+        "zh-TW",
+        {
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit"
+        }
+    );
+
+    return `${dateText} ${timeText}`;
+}
+
+
+/* =========================================================
+   7. 交易日判斷
+   ========================================================= */
+
+function isTradingDay(date) {
+
+    const day = date.getDay();
+
+    return day !== 0 && day !== 6;
+
+}
+
+
+/* =========================================================
+   8. 找上一個交易日
+   ========================================================= */
+
+function previousTradingDay(date) {
+
+    const result = new Date(date);
+
+    do {
+
+        result.setDate(
+            result.getDate() - 1
+        );
+
+    }
+
+    while (!isTradingDay(result));
+
+    return result;
+
+}
+
+
+/* =========================================================
+   9. 產生歷史 K 線
    ========================================================= */
 
 function generateHistory(stock) {
 
-    if (historyData[stock.id]) {
+    if (
+        historyData[stock.id] &&
+        historyData[stock.id].length >= 30
+    ) {
         return;
     }
 
+
     const result = [];
 
-    let current = stock.previous;
+    const today = new Date();
 
-    for (let i = 0; i < 30; i++) {
+    let date = new Date(today);
+
+    date.setDate(
+        date.getDate() - 45
+    );
+
+
+    let current = stock.price * (
+        0.90 + Math.random() * 0.08
+    );
+
+
+    while (result.length < 30) {
+
+        if (!isTradingDay(date)) {
+
+            date.setDate(
+                date.getDate() + 1
+            );
+
+            continue;
+
+        }
+
 
         const open = current;
 
-        const movement =
-            (Math.random() - 0.48)
-            * current
-            * 0.035;
 
-        const close =
-            Math.max(
-                1,
-                open + movement
-            );
+        /*
+         * 每日波動率
+         *
+         * 不再使用固定倍數。
+         * 每一天都有自己的隨機波動。
+         */
 
-        const high =
-            Math.max(open, close)
-            * (
-                1
-                + Math.random() * 0.018
-            );
+        const volatility =
+            0.006 +
+            Math.random() * 0.025;
 
-        const low =
-            Math.min(open, close)
-            * (
-                1
-                - Math.random() * 0.018
-            );
+
+        const direction =
+            Math.random() > 0.5
+                ? 1
+                : -1;
+
+
+        const close = Math.max(
+            1,
+            open +
+            open *
+            volatility *
+            direction
+        );
+
+
+        const high = Math.max(
+            open,
+            close
+        ) * (
+            1 +
+            Math.random() * 0.015
+        );
+
+
+        const low = Math.min(
+            open,
+            close
+        ) * (
+            1 -
+            Math.random() * 0.015
+        );
+
+
+        const volume = Math.floor(
+            5000 +
+            Math.random() * 25000
+        );
+
 
         result.push({
 
-            time:
-                `08/${String(i + 1).padStart(2, "0")}`,
+            date: formatDate(date),
 
-            open:
-                Number(open.toFixed(2)),
+            open: Number(
+                open.toFixed(2)
+            ),
 
-            high:
-                Number(high.toFixed(2)),
+            high: Number(
+                high.toFixed(2)
+            ),
 
-            low:
-                Number(low.toFixed(2)),
+            low: Number(
+                low.toFixed(2)
+            ),
 
-            close:
-                Number(close.toFixed(2)),
+            close: Number(
+                close.toFixed(2)
+            ),
 
-            volume:
-                Math.floor(
-                    3000
-                    + Math.random() * 20000
-                )
+            volume
 
         });
 
+
         current = close;
 
+
+        date.setDate(
+            date.getDate() + 1
+        );
+
     }
+
+
+    /*
+     * 最後一天校正成目前股價附近
+     */
+
+    const latest =
+        result[result.length - 1];
+
+
+    latest.close = stock.price;
+
+    latest.high = Math.max(
+        latest.open,
+        latest.close
+    );
+
+    latest.low = Math.min(
+        latest.open,
+        latest.close
+    );
+
 
     historyData[stock.id] = result;
 
 }
 
 
-stocks.forEach(generateHistory);
+/* =========================================================
+   10. 初始化所有歷史資料
+   ========================================================= */
+
+stocks.forEach(
+    generateHistory
+);
+
 
 saveData(
     "mingyue_history_v3",
@@ -323,53 +431,7 @@ saveData(
 
 
 /* =========================================================
-   格式化金額
-   ========================================================= */
-
-function money(value) {
-
-    return "¥" +
-        Number(value).toLocaleString(
-            "zh-TW",
-            {
-                maximumFractionDigits: 2
-            }
-        );
-
-}
-
-
-/* =========================================================
-   漲跌
-   ========================================================= */
-
-function getChange(stock) {
-
-    return (
-        (stock.price - stock.previous)
-        / stock.previous
-    ) * 100;
-
-}
-
-
-function changeText(stock) {
-
-    const change = getChange(stock);
-
-    if (change >= 0) {
-
-        return `▲ +${change.toFixed(2)}%`;
-
-    }
-
-    return `▼ ${change.toFixed(2)}%`;
-
-}
-
-
-/* =========================================================
-   頁面切換
+   11. 頁面切換
    ========================================================= */
 
 function showPage(page) {
@@ -378,7 +440,9 @@ function showPage(page) {
         .querySelectorAll(".page")
         .forEach(element => {
 
-            element.classList.remove("active");
+            element.classList.remove(
+                "active"
+            );
 
         });
 
@@ -391,7 +455,9 @@ function showPage(page) {
 
     if (target) {
 
-        target.classList.add("active");
+        target.classList.add(
+            "active"
+        );
 
     }
 
@@ -400,13 +466,18 @@ function showPage(page) {
         .querySelectorAll(".nav-item")
         .forEach(item => {
 
-            item.classList.remove("active");
+            item.classList.remove(
+                "active"
+            );
+
 
             if (
                 item.dataset.page === page
             ) {
 
-                item.classList.add("active");
+                item.classList.add(
+                    "active"
+                );
 
             }
 
@@ -433,15 +504,65 @@ function showPage(page) {
         renderProfile();
     }
 
-    if (page === "company") {
-        openMyCompany();
-    }
+}
+
+
+/* =========================================================
+   12. 金額格式
+   ========================================================= */
+
+function money(value) {
+
+    return "¥" +
+        Number(value).toLocaleString(
+            "zh-TW",
+            {
+                maximumFractionDigits: 2
+            }
+        );
 
 }
 
 
 /* =========================================================
-   首頁
+   13. 漲跌計算
+   ========================================================= */
+
+function getChange(stock) {
+
+    return (
+        (stock.price - stock.previous) /
+        stock.previous
+    ) * 100;
+
+}
+
+
+function changeText(stock) {
+
+    const change =
+        getChange(stock);
+
+
+    const symbol =
+        change >= 0
+            ? "▲"
+            : "▼";
+
+
+    const sign =
+        change >= 0
+            ? "+"
+            : "";
+
+
+    return `${symbol} ${sign}${change.toFixed(2)}%`;
+
+}
+
+
+/* =========================================================
+   14. 首頁
    ========================================================= */
 
 function renderHome() {
@@ -454,108 +575,120 @@ function renderHome() {
         ) / stocks.length;
 
 
-    const index =
-        12500 + average * 1.7;
+    /*
+     * 指數不直接等於股價倍數。
+     *
+     * 使用加權概念：
+     * 各公司市值 → 市場總值 → 指數
+     */
 
-
-    document.getElementById(
-        "index-value"
-    ).textContent =
-        index.toLocaleString(
-            "zh-TW",
-            {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-            }
+    const marketValue =
+        stocks.reduce(
+            (sum, stock) =>
+                sum +
+                stock.price *
+                stock.shares,
+            0
         );
 
 
-    document.getElementById(
-        "top-balance"
-    ).textContent =
-        money(user.balance);
+    const index =
+        10000 +
+        marketValue / 100000;
 
 
-    document.getElementById(
-        "home-balance"
-    ).textContent =
-        money(user.balance);
+    const indexElement =
+        document.getElementById(
+            "index-value"
+        );
 
 
-    document.getElementById(
-        "home-wallet"
-    ).textContent =
-        money(user.wallet);
+    if (indexElement) {
+
+        indexElement.textContent =
+            index.toLocaleString(
+                "zh-TW",
+                {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                }
+            );
+
+    }
+
+
+    const assetElement =
+        document.getElementById(
+            "home-assets"
+        );
+
+
+    if (assetElement) {
+
+        assetElement.textContent =
+            money(user.balance);
+
+    }
 
 
     const hot =
         [...stocks]
             .sort(
                 (a, b) =>
-                    Math.abs(getChange(b))
-                    -
-                    Math.abs(getChange(a))
+                    Math.abs(
+                        getChange(b)
+                    ) -
+                    Math.abs(
+                        getChange(a)
+                    )
             )
             .slice(0, 4);
 
 
-    document.getElementById(
-        "home-hot-stocks"
-    ).innerHTML = hot.map(stock => {
-
-        const change =
-            getChange(stock);
-
-        const direction =
-            change >= 0
-                ? "up"
-                : "down";
+    const hotElement =
+        document.getElementById(
+            "home-hot-stocks"
+        );
 
 
-        return `
+    if (hotElement) {
 
-            <div
-                class="stock-card"
-                onclick="openStock('${stock.id}')">
+        hotElement.innerHTML =
+            hot.map(stock => {
 
-                <div class="stock-card-head">
+                return `
+
+                <div class="stock-card"
+                     onclick="openStock('${stock.id}')">
 
                     <div>
-
-                        <div class="stock-name">
+                        <strong>
                             ${stock.name}
-                        </div>
+                        </strong>
 
-                        <div class="stock-code">
-                            ${stock.id}
-                        </div>
-
-                        <div class="stock-industry">
+                        <small>
+                            ${stock.id} ·
                             ${stock.industry}
-                        </div>
+                        </small>
+                    </div>
 
+                    <div>
+                        <strong>
+                            ${money(stock.price)}
+                        </strong>
+
+                        <small>
+                            ${changeText(stock)}
+                        </small>
                     </div>
 
                 </div>
 
+                `;
 
-                <div class="stock-price">
-                    ${money(stock.price)}
-                </div>
+            }).join("");
 
-                <div class="stock-change ${direction}">
-                    ${changeText(stock)}
-                </div>
-
-                <div class="stock-diff">
-                    ${money(stock.price - stock.previous)}
-                </div>
-
-            </div>
-
-        `;
-
-    }).join("");
+    }
 
 
     updateStats();
@@ -564,61 +697,105 @@ function renderHome() {
 
 
 /* =========================================================
-   統計
+   15. 市場統計
    ========================================================= */
 
 function updateStats() {
 
     let up = 0;
+
     let down = 0;
+
     let volume = 0;
 
 
     stocks.forEach(stock => {
 
-        if (stock.price >= stock.previous) {
+        if (
+            stock.price >
+            stock.previous
+        ) {
 
             up++;
 
-        } else {
+        }
+
+        else if (
+            stock.price <
+            stock.previous
+        ) {
 
             down++;
 
         }
+
 
         volume += stock.volume;
 
     });
 
 
-    document.getElementById(
-        "stat-companies"
-    ).textContent =
-        stocks.length;
+    const companiesElement =
+        document.getElementById(
+            "stat-companies"
+        );
 
 
-    document.getElementById(
-        "stat-up"
-    ).textContent =
-        up;
+    if (companiesElement) {
+
+        companiesElement.textContent =
+            stocks.length +
+            companies.length;
+
+    }
 
 
-    document.getElementById(
-        "stat-down"
-    ).textContent =
-        down;
+    const upElement =
+        document.getElementById(
+            "stat-up"
+        );
 
 
-    document.getElementById(
-        "stat-volume"
-    ).textContent =
-        volume.toLocaleString();
+    if (upElement) {
+
+        upElement.textContent =
+            up;
+
+    }
+
+
+    const downElement =
+        document.getElementById(
+            "stat-down"
+        );
+
+
+    if (downElement) {
+
+        downElement.textContent =
+            down;
+
+    }
+
+
+    const volumeElement =
+        document.getElementById(
+            "stat-volume"
+        );
+
+
+    if (volumeElement) {
+
+        volumeElement.textContent =
+            volume.toLocaleString();
+
+    }
 
 }
 
 
 /* =========================================================
-   行情
+   16. 行情
    ========================================================= */
 
 let marketFilter = "all";
@@ -633,7 +810,9 @@ function filterMarket(
 
 
     document
-        .querySelectorAll(".market-tab")
+        .querySelectorAll(
+            ".market-tab"
+        )
         .forEach(element => {
 
             element.classList.remove(
@@ -643,7 +822,13 @@ function filterMarket(
         });
 
 
-    button.classList.add("active");
+    if (button) {
+
+        button.classList.add(
+            "active"
+        );
+
+    }
 
 
     renderMarket();
@@ -653,7 +838,8 @@ function filterMarket(
 
 function renderMarket() {
 
-    let list = [...stocks];
+    let list =
+        [...stocks];
 
 
     if (marketFilter === "up") {
@@ -678,66 +864,69 @@ function renderMarket() {
     }
 
 
-    document.getElementById(
-        "market-list"
-    ).innerHTML = list.map(stock => {
-
-        const direction =
-            getChange(stock) >= 0
-                ? "up"
-                : "down";
+    const container =
+        document.getElementById(
+            "market-list"
+        );
 
 
-        return `
+    if (!container) {
+        return;
+    }
 
-            <div
-                class="market-row"
-                onclick="openStock('${stock.id}')">
+
+    container.innerHTML =
+        list.map(stock => {
+
+            return `
+
+            <div class="market-row"
+                 onclick="openStock('${stock.id}')">
 
                 <div>
 
-                    <div class="market-name">
+                    <strong>
                         ${stock.name}
-                    </div>
+                    </strong>
 
-                    <div class="market-meta">
-                        ${stock.id}
-                        ·
+                    <small>
+                        ${stock.id} ·
                         ${stock.industry}
-                    </div>
+                    </small>
 
                 </div>
 
 
                 <div>
 
-                    <div class="market-price">
+                    <strong>
                         ${money(stock.price)}
-                    </div>
+                    </strong>
 
-                    <div
-                        class="stock-change ${direction}">
+                    <small>
                         ${changeText(stock)}
-                    </div>
+                    </small>
 
                 </div>
 
 
-                <div class="market-volume">
+                <div>
+
                     ${stock.volume.toLocaleString()}
+
                 </div>
 
             </div>
 
-        `;
+            `;
 
-    }).join("");
+        }).join("");
 
 }
 
 
 /* =========================================================
-   股票詳細
+   17. 股票詳細
    ========================================================= */
 
 let currentStockId = null;
@@ -776,6 +965,30 @@ function getLatest(stock) {
     const data =
         historyData[stock.id];
 
+
+    if (!data || data.length === 0) {
+
+        return {
+
+            date: formatDate(
+                new Date()
+            ),
+
+            open: stock.price,
+
+            high: stock.price,
+
+            low: stock.price,
+
+            close: stock.price,
+
+            volume: stock.volume
+
+        };
+
+    }
+
+
     return data[
         data.length - 1
     ];
@@ -789,129 +1002,163 @@ function renderStockDetail(stock) {
         getLatest(stock);
 
 
-    const direction =
-        getChange(stock) >= 0
-            ? "up"
-            : "down";
+    const detail =
+        document.getElementById(
+            "stock-detail"
+        );
 
 
-    document.getElementById(
-        "stock-detail"
-    ).innerHTML = `
+    if (!detail) {
+        return;
+    }
 
-        <div class="detail-card">
 
-            <div class="detail-company">
-                ${stock.company}
+    detail.innerHTML = `
+
+        <div class="stock-detail-header">
+
+            <div>
+
+                <h2>
+                    ${stock.company}
+                </h2>
+
+                <p>
+                    ${stock.id}
+                    ·
+                    ${stock.industry}
+                </p>
+
             </div>
 
-            <div class="detail-meta">
-                ${stock.id}
-                ·
-                ${stock.industry}
-            </div>
 
-            <div class="detail-price">
-                ${money(stock.price)}
-            </div>
+            <div>
 
-            <div class="detail-change ${direction}">
-                ${changeText(stock)}
-            </div>
+                <strong>
+                    ${money(stock.price)}
+                </strong>
 
-
-            <div class="detail-stats">
-
-                <div class="detail-stat">
-                    <label>開盤</label>
-                    <strong>
-                        ${money(latest.open)}
-                    </strong>
-                </div>
-
-                <div class="detail-stat">
-                    <label>最高</label>
-                    <strong>
-                        ${money(latest.high)}
-                    </strong>
-                </div>
-
-                <div class="detail-stat">
-                    <label>最低</label>
-                    <strong>
-                        ${money(latest.low)}
-                    </strong>
-                </div>
-
-                <div class="detail-stat">
-                    <label>成交量</label>
-                    <strong>
-                        ${stock.volume.toLocaleString()}
-                    </strong>
-                </div>
+                <span>
+                    ${changeText(stock)}
+                </span>
 
             </div>
 
         </div>
 
 
-        <div class="chart-card">
+        <div class="stock-stat-grid">
 
-            <div class="chart-head">
+            <div>
 
-                <div class="chart-title">
-                    ${stock.name} 股價走勢
-                </div>
+                <span>日期</span>
 
-                <div class="chart-tabs">
-
-                    <button
-                        class="chart-tab ${
-                            currentChartType === "line"
-                                ? "active"
-                                : ""
-                        }"
-                        onclick="switchChart('line')">
-                        折線圖
-                    </button>
-
-                    <button
-                        class="chart-tab ${
-                            currentChartType === "candle"
-                                ? "active"
-                                : ""
-                        }"
-                        onclick="switchChart('candle')">
-                        K線圖
-                    </button>
-
-                </div>
+                <strong>
+                    ${latest.date}
+                </strong>
 
             </div>
 
 
-            <div class="chart-container">
+            <div>
 
-                <canvas id="stock-chart"></canvas>
+                <span>開盤</span>
+
+                <strong>
+                    ${money(latest.open)}
+                </strong>
+
+            </div>
+
+
+            <div>
+
+                <span>最高</span>
+
+                <strong>
+                    ${money(latest.high)}
+                </strong>
 
             </div>
 
 
-            <div class="trade-buttons">
+            <div>
 
-                <button
-                    class="buy-button"
-                    onclick="buyStock('${stock.id}')">
-                    買入
-                </button>
+                <span>最低</span>
 
-                <button
-                    class="sell-button"
-                    onclick="sellStock('${stock.id}')">
-                    賣出
-                </button>
+                <strong>
+                    ${money(latest.low)}
+                </strong>
 
             </div>
+
+
+            <div>
+
+                <span>收盤</span>
+
+                <strong>
+                    ${money(latest.close)}
+                </strong>
+
+            </div>
+
+
+            <div>
+
+                <span>成交量</span>
+
+                <strong>
+                    ${latest.volume.toLocaleString()}
+                </strong>
+
+            </div>
+
+        </div>
+
+
+        <h3>
+            ${stock.name} 股價走勢
+        </h3>
+
+
+        <div class="chart-tabs">
+
+            <button
+                onclick="switchChart('line')"
+                class="${currentChartType === "line" ? "active" : ""}">
+                折線圖
+            </button>
+
+
+            <button
+                onclick="switchChart('candle')"
+                class="${currentChartType === "candle" ? "active" : ""}">
+                K線圖
+            </button>
+
+        </div>
+
+
+        <div class="chart-container">
+
+            <canvas id="stock-chart"></canvas>
+
+        </div>
+
+
+        <div class="stock-actions">
+
+            <button
+                onclick="buyStock('${stock.id}')">
+                買入
+            </button>
+
+
+            <button
+                onclick="sellStock('${stock.id}')">
+                賣出
+            </button>
 
         </div>
 
@@ -924,7 +1171,7 @@ function renderStockDetail(stock) {
 
 
 /* =========================================================
-   圖表
+   18. 圖表切換
    ========================================================= */
 
 function switchChart(type) {
@@ -949,11 +1196,17 @@ function switchChart(type) {
 }
 
 
+/* =========================================================
+   19. 畫圖
+   ========================================================= */
+
 function drawChart(stock) {
 
     if (currentChart) {
 
         currentChart.destroy();
+
+        currentChart = null;
 
     }
 
@@ -973,19 +1226,31 @@ function drawChart(stock) {
         historyData[stock.id];
 
 
+    if (!data || data.length === 0) {
+        return;
+    }
+
+
     const labels =
         data.map(
             item =>
-                item.time
+                item.date
         );
 
 
-    if (currentChartType === "line") {
+    /*
+     * 折線圖
+     */
+
+    if (
+        currentChartType === "line"
+    ) {
 
         currentChart =
             new Chart(
                 canvas,
                 {
+
                     type: "line",
 
                     data: {
@@ -1017,6 +1282,7 @@ function drawChart(stock) {
 
                     },
 
+
                     options: {
 
                         responsive: true,
@@ -1034,9 +1300,19 @@ function drawChart(stock) {
                         scales: {
 
                             x: {
+
+                                ticks: {
+
+                                    maxTicksLimit: 8
+
+                                },
+
                                 grid: {
+
                                     display: false
+
                                 }
+
                             }
 
                         }
@@ -1047,85 +1323,322 @@ function drawChart(stock) {
             );
 
         return;
+
     }
 
 
     /*
-     * Demo K線：
-     * 使用 OHLC 四組資料。
+     * K線圖
      *
-     * 這裡先用 High / Low / Open / Close
-     * 的折線方式呈現。
+     * Chart.js 沒有內建 Candlestick。
      *
-     * 正式後端版可以換成真正
-     * Candlestick library。
+     * 所以這裡使用 HTML Canvas
+     * 自己畫真正的 OHLC K 線。
      */
 
-    currentChart =
-        new Chart(
-            canvas,
-            {
-                type: "line",
-
-                data: {
-
-                    labels,
-
-                    datasets: [
-
-                        {
-                            label: "最高",
-                            data:
-                                data.map(
-                                    item =>
-                                        item.high
-                                ),
-                            borderWidth: 1,
-                            pointRadius: 0
-                        },
-
-                        {
-                            label: "收盤",
-                            data:
-                                data.map(
-                                    item =>
-                                        item.close
-                                ),
-                            borderWidth: 2,
-                            pointRadius: 0
-                        },
-
-                        {
-                            label: "最低",
-                            data:
-                                data.map(
-                                    item =>
-                                        item.low
-                                ),
-                            borderWidth: 1,
-                            pointRadius: 0
-                        }
-
-                    ]
-
-                },
-
-                options: {
-
-                    responsive: true,
-
-                    maintainAspectRatio: false
-
-                }
-
-            }
-        );
+    drawCandlestick(canvas, data);
 
 }
 
 
 /* =========================================================
-   買入
+   20. 真正 K 線 Canvas
+   ========================================================= */
+
+function drawCandlestick(
+    canvas,
+    data
+) {
+
+    const ctx =
+        canvas.getContext("2d");
+
+
+    const rect =
+        canvas.getBoundingClientRect();
+
+
+    const width =
+        canvas.width =
+            rect.width *
+            window.devicePixelRatio;
+
+
+    const height =
+        canvas.height =
+            rect.height *
+            window.devicePixelRatio;
+
+
+    ctx.scale(
+        window.devicePixelRatio,
+        window.devicePixelRatio
+    );
+
+
+    const w =
+        rect.width;
+
+    const h =
+        rect.height;
+
+
+    ctx.clearRect(
+        0,
+        0,
+        w,
+        h
+    );
+
+
+    const prices =
+        data.flatMap(
+            item => [
+                item.high,
+                item.low
+            ]
+        );
+
+
+    const maxPrice =
+        Math.max(...prices);
+
+
+    const minPrice =
+        Math.min(...prices);
+
+
+    const padding =
+        35;
+
+
+    const chartHeight =
+        h - padding * 2;
+
+
+    function y(price) {
+
+        return padding +
+            (
+                maxPrice -
+                price
+            ) /
+            (
+                maxPrice -
+                minPrice || 1
+            ) *
+            chartHeight;
+
+    }
+
+
+    /*
+     * 網格
+     */
+
+    ctx.beginPath();
+
+
+    for (
+        let i = 0;
+        i <= 4;
+        i++
+    ) {
+
+        const gy =
+            padding +
+            chartHeight *
+            i /
+            4;
+
+
+        ctx.moveTo(
+            0,
+            gy
+        );
+
+
+        ctx.lineTo(
+            w,
+            gy
+        );
+
+    }
+
+
+    ctx.strokeStyle =
+        "rgba(128,128,128,0.15)";
+
+
+    ctx.stroke();
+
+
+    /*
+     * K線
+     */
+
+    const spacing =
+        w / data.length;
+
+
+    const candleWidth =
+        Math.max(
+            3,
+            spacing * 0.55
+        );
+
+
+    data.forEach(
+        (item, index) => {
+
+            const x =
+                spacing *
+                index +
+                spacing / 2;
+
+
+            const openY =
+                y(item.open);
+
+
+            const closeY =
+                y(item.close);
+
+
+            const highY =
+                y(item.high);
+
+
+            const lowY =
+                y(item.low);
+
+
+            const rising =
+                item.close >=
+                item.open;
+
+
+            /*
+             * 台股習慣：
+             *
+             * 上漲 = 紅
+             * 下跌 = 綠
+             */
+
+            ctx.strokeStyle =
+                rising
+                    ? "#ef4444"
+                    : "#22c55e";
+
+
+            ctx.fillStyle =
+                rising
+                    ? "#ef4444"
+                    : "#22c55e";
+
+
+            /*
+             * 上下影線
+             */
+
+            ctx.beginPath();
+
+            ctx.moveTo(
+                x,
+                highY
+            );
+
+            ctx.lineTo(
+                x,
+                lowY
+            );
+
+            ctx.stroke();
+
+
+            /*
+             * 實體
+             */
+
+            const bodyTop =
+                Math.min(
+                    openY,
+                    closeY
+                );
+
+
+            const bodyHeight =
+                Math.max(
+                    1,
+                    Math.abs(
+                        closeY -
+                        openY
+                    )
+                );
+
+
+            ctx.fillRect(
+                x -
+                candleWidth / 2,
+
+                bodyTop,
+
+                candleWidth,
+
+                bodyHeight
+            );
+
+        }
+    );
+
+
+    /*
+     * 價格文字
+     */
+
+    ctx.fillStyle =
+        "#666";
+
+    ctx.font =
+        "12px sans-serif";
+
+
+    for (
+        let i = 0;
+        i <= 4;
+        i++
+    ) {
+
+        const price =
+            maxPrice -
+            (
+                maxPrice -
+                minPrice
+            ) *
+            i /
+            4;
+
+
+        const py =
+            padding +
+            chartHeight *
+            i /
+            4;
+
+
+        ctx.fillText(
+            price.toFixed(2),
+            5,
+            py - 4
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   21. 買入
    ========================================================= */
 
 function buyStock(id) {
@@ -1144,7 +1657,9 @@ function buyStock(id) {
 
     const amount =
         prompt(
-            `目前股價 ${money(stock.price)}\n\n請輸入購買股數：`
+            `目前股價 ${money(stock.price)}
+
+請輸入購買股數：`
         );
 
 
@@ -1153,8 +1668,7 @@ function buyStock(id) {
 
 
     if (
-        !Number.isInteger(shares)
-        ||
+        !Number.isInteger(shares) ||
         shares <= 0
     ) {
 
@@ -1168,10 +1682,14 @@ function buyStock(id) {
 
 
     const cost =
-        shares * stock.price;
+        shares *
+        stock.price;
 
 
-    if (cost > user.balance) {
+    if (
+        cost >
+        user.balance
+    ) {
 
         showToast(
             "證券餘額不足"
@@ -1188,8 +1706,11 @@ function buyStock(id) {
     if (!portfolio[id]) {
 
         portfolio[id] = {
+
             shares: 0,
+
             average: 0
+
         };
 
     }
@@ -1209,11 +1730,10 @@ function buyStock(id) {
 
     portfolio[id].average =
         (
-            oldShares * oldAverage
-            +
+            oldShares *
+            oldAverage +
             cost
-        )
-        /
+        ) /
         portfolio[id].shares;
 
 
@@ -1232,10 +1752,9 @@ function buyStock(id) {
         amount: cost,
 
         time:
-            new Date()
-                .toLocaleString(
-                    "zh-TW"
-                )
+            formatDateTime(
+                new Date()
+            )
 
     });
 
@@ -1254,7 +1773,7 @@ function buyStock(id) {
 
 
 /* =========================================================
-   賣出
+   22. 賣出
    ========================================================= */
 
 function sellStock(id) {
@@ -1279,7 +1798,9 @@ function sellStock(id) {
 
     const amount =
         prompt(
-            `目前持有 ${portfolio[id].shares.toLocaleString()} 股\n\n請輸入賣出股數：`
+            `目前持有 ${portfolio[id].shares.toLocaleString()} 股
+
+請輸入賣出股數：`
         );
 
 
@@ -1288,8 +1809,7 @@ function sellStock(id) {
 
 
     if (
-        !Number.isInteger(shares)
-        ||
+        !Number.isInteger(shares) ||
         shares <= 0
     ) {
 
@@ -1317,7 +1837,8 @@ function sellStock(id) {
 
 
     const revenue =
-        shares * stock.price;
+        shares *
+        stock.price;
 
 
     user.balance +=
@@ -1352,10 +1873,9 @@ function sellStock(id) {
         amount: revenue,
 
         time:
-            new Date()
-                .toLocaleString(
-                    "zh-TW"
-                )
+            formatDateTime(
+                new Date()
+            )
 
     });
 
@@ -1374,15 +1894,23 @@ function sellStock(id) {
 
 
 /* =========================================================
-   投資頁
+   23. 投資頁
    ========================================================= */
 
 function renderPortfolio() {
 
-    document.getElementById(
-        "portfolio-balance"
-    ).textContent =
-        money(user.balance);
+    const balance =
+        document.getElementById(
+            "portfolio-balance"
+        );
+
+
+    if (balance) {
+
+        balance.textContent =
+            money(user.balance);
+
+    }
 
 
     const list =
@@ -1391,13 +1919,20 @@ function renderPortfolio() {
         );
 
 
+    if (!list) {
+        return;
+    }
+
+
     const entries =
         Object.entries(
             portfolio
         );
 
 
-    if (entries.length === 0) {
+    if (
+        entries.length === 0
+    ) {
 
         list.innerHTML = `
             <div class="empty-state">
@@ -1426,38 +1961,35 @@ function renderPortfolio() {
 
 
                     const value =
-                        data.shares
-                        *
+                        data.shares *
                         stock.price;
 
 
                     return `
 
-                        <div class="portfolio-row">
+                    <div class="portfolio-row">
 
-                            <div>
+                        <div>
 
-                                <div class="portfolio-name">
-                                    ${stock.name}
-                                    ·
-                                    ${id}
-                                </div>
+                            <strong>
+                                ${stock.name}
+                            </strong>
 
-                                <div class="portfolio-meta">
-                                    ${data.shares.toLocaleString()}
-                                    股
-                                    ·
-                                    平均成本
-                                    ${money(data.average)}
-                                </div>
-
-                            </div>
-
-                            <div class="portfolio-value">
-                                ${money(value)}
-                            </div>
+                            <small>
+                                ${id}
+                                ·
+                                ${data.shares.toLocaleString()}
+                                股
+                            </small>
 
                         </div>
+
+
+                        <strong>
+                            ${money(value)}
+                        </strong>
+
+                    </div>
 
                     `;
 
@@ -1471,6 +2003,11 @@ function renderPortfolio() {
         document.getElementById(
             "transaction-list"
         );
+
+
+    if (!transactionList) {
+        return;
+    }
 
 
     if (
@@ -1494,29 +2031,36 @@ function renderPortfolio() {
             .map(
                 transaction => `
 
-                    <div class="transaction-row">
+                <div class="transaction-row">
 
-                        <div>
+                    <div>
 
-                            <div class="transaction-name">
-                                ${transaction.type}
-                                ${transaction.code}
-                            </div>
+                        <strong>
+                            ${transaction.type}
+                            ${transaction.code}
+                        </strong>
 
-                            <div class="transaction-meta">
-                                ${transaction.time}
-                                ·
-                                ${transaction.shares.toLocaleString()}
-                                股
-                            </div>
-
-                        </div>
-
-                        <div class="transaction-value">
-                            ${money(transaction.amount)}
-                        </div>
+                        <small>
+                            ${transaction.time}
+                        </small>
 
                     </div>
+
+
+                    <div>
+
+                        <strong>
+                            ${transaction.shares.toLocaleString()}
+                            股
+                        </strong>
+
+                        <small>
+                            ${money(transaction.amount)}
+                        </small>
+
+                    </div>
+
+                </div>
 
                 `
             )
@@ -1526,20 +2070,24 @@ function renderPortfolio() {
 
 
 /* =========================================================
-   儲值
+   24. 儲值
    ========================================================= */
 
 function openDepositModal() {
 
-    document.getElementById(
-        "deposit-wallet"
-    ).textContent =
-        money(user.wallet);
+    const modal =
+        document.getElementById(
+            "deposit-modal"
+        );
 
 
-    document.getElementById(
-        "deposit-modal"
-    ).classList.add("show");
+    if (modal) {
+
+        modal.classList.add(
+            "show"
+        );
+
+    }
 
 }
 
@@ -1552,13 +2100,17 @@ function depositMoney() {
         );
 
 
+    if (!input) {
+        return;
+    }
+
+
     const amount =
         Number(input.value);
 
 
     if (
-        !Number.isFinite(amount)
-        ||
+        !amount ||
         amount <= 0
     ) {
 
@@ -1571,7 +2123,10 @@ function depositMoney() {
     }
 
 
-    if (amount > user.wallet) {
+    if (
+        amount >
+        user.wallet
+    ) {
 
         showToast(
             "遊戲錢包餘額不足"
@@ -1593,12 +2148,12 @@ function depositMoney() {
     saveAll();
 
 
-    input.value = "";
-
-
     closeModal(
         "deposit-modal"
     );
+
+
+    input.value = "";
 
 
     showToast(
@@ -1613,77 +2168,55 @@ function depositMoney() {
 }
 
 
+function closeModal(id) {
+
+    const modal =
+        document.getElementById(id);
+
+
+    if (modal) {
+
+        modal.classList.remove(
+            "show"
+        );
+
+    }
+
+}
+
+
 /* =========================================================
-   Google 實名認證 Demo
+   25. Google 登入 Demo
    ========================================================= */
 
 function googleLogin() {
 
-    /*
-     * 目前仍然是 Demo。
-     *
-     * 正式版需要：
-     * Google OAuth
-     * 後端驗證
-     * 使用者資料庫
-     */
-
-    user.googleVerified = true;
-
-    saveAll();
-
-
     showToast(
-        "Google 實名認證 Demo 已啟用"
+        "Google OAuth 將在正式後端版本接入"
     );
-
-
-    renderProfile();
-
-}
-
-
-function renderProfile() {
-
-    document.getElementById(
-        "profile-name"
-    ).textContent =
-        user.name;
-
-
-    document.getElementById(
-        "profile-id"
-    ).textContent =
-        user.accountId;
-
-
-    document.getElementById(
-        "profile-avatar"
-    ).textContent =
-        user.name
-            .charAt(0)
-            .toUpperCase();
-
-
-    document.getElementById(
-        "google-status"
-    ).textContent =
-        user.googleVerified
-            ? "已驗證（Demo）"
-            : "Demo";
 
 }
 
 
 /* =========================================================
-   公司
+   26. 公司
    ========================================================= */
 
 function openCompanyModal() {
 
-    document.getElementById(
-        "company-modal"
-    ).classList.add("show");
+    const modal =
+        document.getElementById(
+            "company-modal"
+        );
+
+
+    if (modal) {
+
+        modal.classList.add(
+            "show"
+        );
+
+    }
 
 }
 
@@ -1725,12 +2258,9 @@ function registerCompany() {
 
 
     if (
-        !name
-        ||
-        !shortName
-        ||
-        !code
-        ||
+        !name ||
+        !shortName ||
+        !code ||
         !capital
     ) {
 
@@ -1747,8 +2277,7 @@ function registerCompany() {
         stocks.some(
             stock =>
                 stock.id === code
-        )
-        ||
+        ) ||
         companies.some(
             company =>
                 company.code === code
@@ -1791,10 +2320,9 @@ function registerCompany() {
             false,
 
         createdAt:
-            new Date()
-                .toLocaleDateString(
-                    "zh-TW"
-                )
+            formatDate(
+                new Date()
+            )
 
     };
 
@@ -1804,7 +2332,15 @@ function registerCompany() {
     );
 
 
-    saveAll();
+    saveData(
+        "mingyue_companies_v2",
+        companies
+    );
+
+
+    closeModal(
+        "company-modal"
+    );
 
 
     document.getElementById(
@@ -1827,11 +2363,6 @@ function registerCompany() {
     ).value = "";
 
 
-    closeModal(
-        "company-modal"
-    );
-
-
     showToast(
         `公司「${name}」註冊成功`
     );
@@ -1843,12 +2374,14 @@ function registerCompany() {
 
 
 /* =========================================================
-   我的公司
+   27. 我的公司
    ========================================================= */
 
 function openMyCompany() {
 
-    showPageWithoutCompanyLoop();
+    showPage(
+        "company"
+    );
 
 
     const mine =
@@ -1865,25 +2398,30 @@ function openMyCompany() {
         );
 
 
-    if (mine.length === 0) {
+    if (!container) {
+        return;
+    }
+
+
+    if (
+        mine.length === 0
+    ) {
 
         container.innerHTML = `
 
             <div class="empty-state">
 
-                <div style="font-size:32px;">
-                    🏢
-                </div>
+                <h2>
+                    🏢 我的公司
+                </h2>
 
-                <div style="margin-top:8px;">
+                <p>
                     你目前還沒有註冊公司。
-                </div>
+                </p>
 
                 <button
-                    class="primary-button"
-                    style="margin-top:15px;"
                     onclick="openCompanyModal()">
-                    ＋ 註冊公司
+                    註冊公司
                 </button>
 
             </div>
@@ -1899,112 +2437,91 @@ function openMyCompany() {
         mine.map(
             company => `
 
-                <div class="company-card">
+            <div class="company-card">
 
-                    <span class="company-status">
-                        ${company.status}
-                    </span>
-
-                    <div class="company-name">
-                        ${company.name}
-                    </div>
-
-                    <div class="company-code">
-                        ${company.code}
-                        ·
-                        ${company.industry}
-                    </div>
+                <span>
+                    ${company.status}
+                </span>
 
 
-                    <div class="company-info">
-
-                        <div class="company-info-box">
-
-                            <label>
-                                註冊資本
-                            </label>
-
-                            <strong>
-                                ${money(company.capital)}
-                            </strong>
-
-                        </div>
+                <h2>
+                    ${company.name}
+                </h2>
 
 
-                        <div class="company-info-box">
-
-                            <label>
-                                公司狀態
-                            </label>
-
-                            <strong>
-                                ${
-                                    company.listed
-                                    ? "上市"
-                                    : "未上市"
-                                }
-                            </strong>
-
-                        </div>
+                <p>
+                    ${company.code}
+                    ·
+                    ${company.industry}
+                </p>
 
 
-                        <div class="company-info-box">
+                <div>
 
-                            <label>
-                                成立日期
-                            </label>
+                    <small>
+                        註冊資本
+                    </small>
 
-                            <strong>
-                                ${company.createdAt}
-                            </strong>
-
-                        </div>
-
-
-                        <div class="company-info-box">
-
-                            <label>
-                                公司負責人
-                            </label>
-
-                            <strong>
-                                ${company.ownerName}
-                            </strong>
-
-                        </div>
-
-                    </div>
-
-
-                    <div class="company-actions">
-
-                        <button
-                            class="company-action"
-                            onclick="publishCompanyNews('${company.code}')">
-                            📰 發布新聞
-                        </button>
-
-                        <button
-                            class="company-action"
-                            onclick="showToast('IPO 功能正在開發中')">
-                            📈 IPO／上市
-                        </button>
-
-                        <button
-                            class="company-action"
-                            onclick="showToast('股東功能正在開發中')">
-                            👥 股東
-                        </button>
-
-                        <button
-                            class="company-action"
-                            onclick="showToast('財務功能正在開發中')">
-                            💰 財務
-                        </button>
-
-                    </div>
+                    <strong>
+                        ${money(company.capital)}
+                    </strong>
 
                 </div>
+
+
+                <div>
+
+                    <small>
+                        公司狀態
+                    </small>
+
+                    <strong>
+                        ${company.listed
+                            ? "上市"
+                            : "未上市"}
+                    </strong>
+
+                </div>
+
+
+                <div>
+
+                    <small>
+                        成立日期
+                    </small>
+
+                    <strong>
+                        ${company.createdAt}
+                    </strong>
+
+                </div>
+
+
+                <div class="company-actions">
+
+                    <button
+                        onclick="publishCompanyNews('${company.code}')">
+                        📰 發布新聞
+                    </button>
+
+
+                    <button>
+                        📈 IPO / 上市
+                    </button>
+
+
+                    <button>
+                        👥 股東
+                    </button>
+
+
+                    <button>
+                        💰 財務
+                    </button>
+
+                </div>
+
+            </div>
 
             `
         ).join("");
@@ -2012,54 +2529,11 @@ function openMyCompany() {
 }
 
 
-function showPageWithoutCompanyLoop() {
-
-    document
-        .querySelectorAll(".page")
-        .forEach(element => {
-
-            element.classList.remove(
-                "active"
-            );
-
-        });
-
-
-    document.getElementById(
-        "page-company"
-    ).classList.add("active");
-
-
-    document
-        .querySelectorAll(".nav-item")
-        .forEach(item => {
-
-            item.classList.remove(
-                "active"
-            );
-
-        });
-
-}
-
-
 /* =========================================================
-   公司發布新聞
+   28. 公司新聞
    ========================================================= */
 
 function publishCompanyNews(code) {
-
-    const company =
-        companies.find(
-            item =>
-                item.code === code
-        );
-
-
-    if (!company) {
-        return;
-    }
-
 
     const title =
         prompt(
@@ -2083,15 +2557,27 @@ function publishCompanyNews(code) {
     }
 
 
+    const company =
+        companies.find(
+            item =>
+                item.code === code
+        );
+
+
+    if (!company) {
+        return;
+    }
+
+
     news.unshift({
 
         id: Date.now(),
 
         companyCode:
-            company.code,
+            code,
 
         companyName:
-            company.shortName,
+            company.name,
 
         category:
             "company",
@@ -2101,26 +2587,28 @@ function publishCompanyNews(code) {
         content,
 
         time:
-            "剛剛"
+            formatDateTime(
+                new Date()
+            )
 
     });
 
 
-    saveAll();
+    saveData(
+        "mingyue_news_v2",
+        news
+    );
 
 
     showToast(
         "新聞已發布"
     );
 
-
-    renderNews();
-
 }
 
 
 /* =========================================================
-   新聞
+   29. 新聞
    ========================================================= */
 
 let newsFilter = "all";
@@ -2135,19 +2623,24 @@ function filterNews(
 
 
     document
-        .querySelectorAll(".news-tab")
-        .forEach(element => {
+        .querySelectorAll(
+            ".news-tab"
+        )
+        .forEach(
+            element =>
+                element.classList.remove(
+                    "active"
+                )
+        );
 
-            element.classList.remove(
-                "active"
-            );
 
-        });
+    if (button) {
 
+        button.classList.add(
+            "active"
+        );
 
-    button.classList.add(
-        "active"
-    );
+    }
 
 
     renderNews();
@@ -2181,16 +2674,8 @@ function renderNews() {
         );
 
 
-    if (list.length === 0) {
-
-        container.innerHTML = `
-            <div class="empty-state">
-                目前沒有新聞
-            </div>
-        `;
-
+    if (!container) {
         return;
-
     }
 
 
@@ -2198,35 +2683,39 @@ function renderNews() {
         list.map(
             item => `
 
-                <article
-                    class="news-card"
-                    onclick="openNews(${item.id})">
+            <article
+                class="news-card"
+                onclick="openNews(${item.id})">
 
-                    <div class="news-company">
+                <div>
 
-                        ${item.companyName}
+                    ${item.companyName}
 
-                        ${
-                            item.companyCode
-                            ? " · " + item.companyCode
+                    ${
+                        item.companyCode
+                            ? " · " +
+                              item.companyCode
                             : ""
-                        }
+                    }
 
-                    </div>
+                </div>
 
-                    <div class="news-title">
-                        ${item.title}
-                    </div>
 
-                    <div class="news-content">
-                        ${item.content}
-                    </div>
+                <h3>
+                    ${item.title}
+                </h3>
 
-                    <div class="news-time">
-                        ${item.time}
-                    </div>
 
-                </article>
+                <p>
+                    ${item.content}
+                </p>
+
+
+                <small>
+                    ${item.time}
+                </small>
+
+            </article>
 
             `
         ).join("");
@@ -2239,8 +2728,9 @@ function openNews(id) {
     const item =
         news.find(
             newsItem =>
-                String(newsItem.id)
-                ===
+                String(
+                    newsItem.id
+                ) ===
                 String(id)
         );
 
@@ -2251,103 +2741,90 @@ function openNews(id) {
 
 
     alert(
-        `${item.title}\n\n${item.content}\n\n${item.time}`
+        `${item.title}
+
+${item.content}
+
+${item.time}`
     );
 
 }
 
 
 /* =========================================================
-   儲存
+   30. 個人
    ========================================================= */
 
-function saveAll() {
+function renderProfile() {
 
-    saveData(
-        "mingyue_user_v3",
-        user
-    );
-
-    saveData(
-        "mingyue_stocks_v3",
-        stocks
-    );
-
-    saveData(
-        "mingyue_portfolio_v3",
-        portfolio
-    );
-
-    saveData(
-        "mingyue_transactions_v3",
-        transactions
-    );
-
-    saveData(
-        "mingyue_companies_v3",
-        companies
-    );
-
-    saveData(
-        "mingyue_news_v3",
-        news
-    );
-
-    saveData(
-        "mingyue_history_v3",
-        historyData
-    );
-
-}
-
-
-/* =========================================================
-   Modal
-   ========================================================= */
-
-function closeModal(id) {
-
-    const modal =
-        document.getElementById(id);
-
-
-    if (modal) {
-
-        modal.classList.remove(
-            "show"
+    const name =
+        document.getElementById(
+            "profile-name"
         );
+
+
+    if (name) {
+
+        name.textContent =
+            user.name;
 
     }
 
 }
 
 
-document
-    .querySelectorAll(".modal")
-    .forEach(modal => {
+/* =========================================================
+   31. 全部儲存
+   ========================================================= */
 
-        modal.addEventListener(
-            "click",
-            event => {
+function saveAll() {
 
-                if (
-                    event.target === modal
-                ) {
+    saveData(
+        "mingyue_user_v2",
+        user
+    );
 
-                    modal.classList.remove(
-                        "show"
-                    );
 
-                }
+    saveData(
+        "mingyue_portfolio_v2",
+        portfolio
+    );
 
-            }
-        );
 
-    });
+    saveData(
+        "mingyue_transactions_v2",
+        transactions
+    );
+
+
+    saveData(
+        "mingyue_stocks_v2",
+        stocks
+    );
+
+
+    saveData(
+        "mingyue_history_v3",
+        historyData
+    );
+
+
+    saveData(
+        "mingyue_companies_v2",
+        companies
+    );
+
+
+    saveData(
+        "mingyue_news_v2",
+        news
+    );
+
+}
 
 
 /* =========================================================
-   Toast
+   32. Toast
    ========================================================= */
 
 let toastTimer;
@@ -2359,6 +2836,11 @@ function showToast(message) {
         document.getElementById(
             "toast"
         );
+
+
+    if (!toast) {
+        return;
+    }
 
 
     toast.textContent =
@@ -2391,10 +2873,58 @@ function showToast(message) {
 
 
 /* =========================================================
-   模擬市場
+   33. Modal 背景關閉
+   ========================================================= */
+
+document
+    .querySelectorAll(".modal")
+    .forEach(
+        modal => {
+
+            modal.addEventListener(
+                "click",
+                event => {
+
+                    if (
+                        event.target ===
+                        modal
+                    ) {
+
+                        modal.classList.remove(
+                            "show"
+                        );
+
+                    }
+
+                }
+            );
+
+        }
+    );
+
+
+/* =========================================================
+   34. 市場即時波動
    ========================================================= */
 
 function updateMarket() {
+
+    const now =
+        new Date();
+
+
+    /*
+     * 週末不交易
+     */
+
+    if (
+        !isTradingDay(now)
+    ) {
+
+        return;
+
+    }
+
 
     stocks.forEach(
         stock => {
@@ -2404,38 +2934,79 @@ function updateMarket() {
 
 
             /*
-             * 不再使用固定倍數。
+             * 開盤價
              *
-             * 每次波動會依照目前價格、
-             * 波動率與隨機方向產生。
+             * 使用上一價格作為基準。
              */
 
+            const open =
+                oldPrice;
+
+
+            /*
+             * 真正的市場波動模型
+             *
+             * 小幅波動 + 偶爾較大波動
+             */
+
+            const randomShock =
+                (
+                    Math.random() -
+                    0.5
+                ) * 2;
+
+
             const volatility =
-                0.004
-                +
-                Math.random() * 0.014;
-
-
-            const direction =
-                Math.random() > 0.5
-                    ? 1
-                    : -1;
+                0.002 +
+                Math.random() *
+                0.012;
 
 
             const movement =
-                oldPrice
-                *
-                volatility
-                *
-                direction;
+                oldPrice *
+                volatility *
+                randomShock;
 
 
-            const newPrice =
+            const close =
                 Math.max(
                     1,
-                    oldPrice + movement
+                    oldPrice +
+                    movement
                 );
 
+
+            /*
+             * 最高最低
+             */
+
+            const high =
+                Math.max(
+                    open,
+                    close
+                ) *
+                (
+                    1 +
+                    Math.random() *
+                    0.006
+                );
+
+
+            const low =
+                Math.min(
+                    open,
+                    close
+                ) *
+                (
+                    1 -
+                    Math.random() *
+                    0.006
+                );
+
+
+            /*
+             * 更新股票
+             */
 
             stock.previous =
                 oldPrice;
@@ -2443,15 +3014,21 @@ function updateMarket() {
 
             stock.price =
                 Number(
-                    newPrice.toFixed(2)
+                    close.toFixed(2)
                 );
 
 
             stock.volume +=
                 Math.floor(
-                    Math.random() * 1000
+                    300 +
+                    Math.random() *
+                    2500
                 );
 
+
+            /*
+             * 今天的 K 線
+             */
 
             if (
                 !historyData[stock.id]
@@ -2463,113 +3040,110 @@ function updateMarket() {
             }
 
 
-            const open =
-                oldPrice;
+            const data =
+                historyData[stock.id];
 
 
-            const close =
-                stock.price;
+            const today =
+                formatDate(now);
 
 
-            /*
-             * 最高與最低不是單純
-             * price × 固定倍率。
-             *
-             * 它們會受到開盤、收盤
-             * 與當次隨機波動影響。
-             */
-
-            const spread =
-                (
-                    0.003
-                    +
-                    Math.random() * 0.012
-                )
-                *
-                oldPrice;
-
-
-            const high =
-                Math.max(
-                    open,
-                    close
-                )
-                +
-                spread
-                *
-                Math.random();
-
-
-            const low =
-                Math.max(
-                    0.01,
-                    Math.min(
-                        open,
-                        close
-                    )
-                    -
-                    spread
-                    *
-                    Math.random()
+            let todayCandle =
+                data.find(
+                    item =>
+                        item.date ===
+                        today
                 );
 
 
-            historyData[stock.id].push({
+            if (!todayCandle) {
 
-                time:
-                    new Date()
-                        .toLocaleTimeString(
-                            "zh-TW",
-                            {
-                                hour:
-                                    "2-digit",
+                todayCandle = {
 
-                                minute:
-                                    "2-digit"
-                            }
+                    date: today,
+
+                    open:
+                        Number(
+                            open.toFixed(2)
                         ),
 
-                open:
-                    Number(
-                        open.toFixed(2)
-                    ),
+                    high:
+                        Number(
+                            high.toFixed(2)
+                        ),
 
-                high:
-                    Number(
-                        high.toFixed(2)
-                    ),
+                    low:
+                        Number(
+                            low.toFixed(2)
+                        ),
 
-                low:
-                    Number(
-                        low.toFixed(2)
-                    ),
+                    close:
+                        Number(
+                            close.toFixed(2)
+                        ),
 
-                close:
+                    volume:
+                        Math.floor(
+                            500 +
+                            Math.random() *
+                            3000
+                        )
+
+                };
+
+
+                data.push(
+                    todayCandle
+                );
+
+            }
+
+            else {
+
+                todayCandle.high =
+                    Math.max(
+                        todayCandle.high,
+                        high,
+                        close
+                    );
+
+
+                todayCandle.low =
+                    Math.min(
+                        todayCandle.low,
+                        low,
+                        close
+                    );
+
+
+                todayCandle.close =
                     Number(
                         close.toFixed(2)
-                    ),
+                    );
 
-                volume:
+
+                todayCandle.volume +=
                     Math.floor(
-                        500
-                        +
-                        Math.random()
-                        *
+                        300 +
+                        Math.random() *
                         2000
-                    )
+                    );
 
-            });
+            }
 
+
+            /*
+             * 只保留最近 60 個交易日
+             */
 
             if (
-                historyData[stock.id]
-                    .length
-                >
-                50
+                data.length > 60
             ) {
 
-                historyData[stock.id]
-                    .shift();
+                data.splice(
+                    0,
+                    data.length - 60
+                );
 
             }
 
@@ -2588,9 +3162,8 @@ function updateMarket() {
             .getElementById(
                 "page-market"
             )
-            .classList.contains(
-                "active"
-            )
+            ?.classList
+            .contains("active")
     ) {
 
         renderMarket();
@@ -2603,9 +3176,8 @@ function updateMarket() {
             .getElementById(
                 "page-stock"
             )
-            .classList.contains(
-                "active"
-            )
+            ?.classList
+            .contains("active")
         &&
         currentStockId
     ) {
@@ -2632,7 +3204,7 @@ function updateMarket() {
 
 
 /* =========================================================
-   啟動
+   35. 啟動
    ========================================================= */
 
 renderHome();
@@ -2647,10 +3219,47 @@ renderProfile();
 
 
 /*
- * Demo 市場每 15 秒更新
+ * Demo：
+ * 每 15 秒更新一次市場
  */
 
 setInterval(
     updateMarket,
     15000
+);
+
+
+/* =========================================================
+   36. 視窗大小改變時重畫 K 線
+   ========================================================= */
+
+window.addEventListener(
+    "resize",
+    () => {
+
+        if (
+            currentChartType ===
+                "candle" &&
+            currentStockId
+        ) {
+
+            const stock =
+                stocks.find(
+                    item =>
+                        item.id ===
+                        currentStockId
+                );
+
+
+            if (stock) {
+
+                drawChart(
+                    stock
+                );
+
+            }
+
+        }
+
+    }
 );
