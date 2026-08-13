@@ -1,1241 +1,1093 @@
-/* =========================================
+/* ========================================
    明月證券 v2.0
-   ========================================= */
+   style.css
+======================================== */
+
+/* ========================================
+   基本設定
+======================================== */
 
 * {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
+  box-sizing: border-box;
 }
 
-:root {
-    --bg: #f5f7fb;
-    --card: #ffffff;
-    --text: #1d2433;
-    --muted: #7a8496;
-    --border: #e6e9ef;
-    --primary: #315efb;
-    --primary-dark: #244bd1;
-    --positive: #0e9f6e;
-    --negative: #e04444;
-    --gold: #c79838;
-    --shadow: 0 5px 20px rgba(30, 40, 70, 0.06);
+html {
+  margin: 0;
+  padding: 0;
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    "Noto Sans TC",
+    "Microsoft JhengHei",
+    sans-serif;
 }
 
 body {
-    font-family:
-        -apple-system,
-        BlinkMacSystemFont,
-        "Segoe UI",
-        "Noto Sans TC",
-        Arial,
-        sans-serif;
+  margin: 0;
+  padding: 0;
+  background: #f4f6f8;
+  color: #1f2937;
+}
 
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
+button,
+input,
+select {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+#app {
+  min-height: 100vh;
+  padding-bottom: 78px;
 }
 
 
-/* =========================================
+/* ========================================
    頂部
-   ========================================= */
+======================================== */
 
 .topbar {
-    height: 70px;
-    background: #ffffff;
-    border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 20;
 
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 
-    padding: 0 30px;
+  padding: 16px 22px;
 
-    position: sticky;
-    top: 0;
-    z-index: 100;
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .brand {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    cursor: pointer;
+  font-size: 22px;
+  font-weight: 800;
+  color: #111827;
 }
 
-.brand-icon {
-    width: 42px;
-    height: 42px;
-
-    border-radius: 12px;
-
-    background: #202735;
-    color: #ffffff;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    font-size: 22px;
-    font-weight: 700;
+.subtitle {
+  margin-top: 3px;
+  font-size: 12px;
+  color: #6b7280;
 }
 
-.brand-name {
-    font-size: 18px;
-    font-weight: 800;
-}
-
-.brand-sub {
-    font-size: 11px;
-    color: var(--muted);
-    margin-top: 2px;
-}
-
-.market-status {
-    font-size: 13px;
-    color: var(--muted);
-
-    display: flex;
-    align-items: center;
-    gap: 7px;
-}
-
-.status-dot {
-    width: 8px;
-    height: 8px;
-
-    border-radius: 50%;
-    background: var(--positive);
+.top-balance {
+  font-size: 15px;
+  font-weight: 700;
 }
 
 
-/* =========================================
-   主內容
-   ========================================= */
+/* ========================================
+   頁面
+======================================== */
 
-.main-content {
-    width: min(1100px, calc(100% - 40px));
-    margin: 30px auto 100px;
+main {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px 18px;
 }
 
 .page {
-    display: none;
+  display: none;
 }
 
 .page.active {
-    display: block;
+  display: block;
 }
 
-.page-title {
-    margin-bottom: 25px;
+.page h1 {
+  margin: 0 0 20px;
+  font-size: 26px;
 }
 
-.page-title h1 {
-    font-size: 28px;
-    margin-bottom: 5px;
-}
-
-.page-title p {
-    color: var(--muted);
+.page h2 {
+  margin: 24px 0 12px;
+  font-size: 19px;
 }
 
 
-/* =========================================
-   首頁
-   ========================================= */
+/* ========================================
+   首頁 Hero
+======================================== */
 
 .hero-card {
-    min-height: 220px;
+  padding: 28px;
+  border-radius: 20px;
 
-    background:
-        linear-gradient(
-            135deg,
-            #202735,
-            #39445b
-        );
+  background: linear-gradient(
+    135deg,
+    #111827,
+    #374151
+  );
 
-    border-radius: 24px;
-    padding: 35px;
+  color: white;
 
-    color: white;
-
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-
-    overflow: hidden;
-
-    box-shadow: var(--shadow);
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.12);
 }
 
-.hero-label {
-    font-size: 15px;
-    opacity: 0.75;
-    margin-bottom: 10px;
+.eyebrow {
+  font-size: 13px;
+  opacity: 0.75;
 }
 
-.hero-index {
-    font-size: 48px;
-    font-weight: 800;
-    letter-spacing: -1px;
-}
+.index-value {
+  margin-top: 8px;
 
-.hero-change {
-    margin-top: 7px;
-}
-
-.hero-change.positive {
-    color: #70e2bb;
-}
-
-.hero-decoration {
-    font-size: 180px;
-    opacity: 0.08;
-    transform: rotate(-20deg);
-}
-
-
-.asset-card {
-    background: var(--card);
-
-    border: 1px solid var(--border);
-    border-radius: 18px;
-
-    padding: 24px;
-
-    margin-top: 18px;
-
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-
-    box-shadow: var(--shadow);
-}
-
-.section-label {
-    color: var(--muted);
-    font-size: 13px;
-    margin-bottom: 6px;
-}
-
-.asset-value,
-.balance-value {
-    font-size: 28px;
-    font-weight: 800;
-}
-
-.asset-change {
-    color: var(--positive);
-    font-size: 13px;
-    margin-top: 4px;
-}
-
-
-/* =========================================
-   區塊標題
-   ========================================= */
-
-.section-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-
-    margin: 35px 0 15px;
-}
-
-.section-header h2 {
-    font-size: 19px;
-}
-
-.text-btn {
-    border: 0;
-    background: none;
-
-    color: var(--primary);
-
-    cursor: pointer;
-    font-size: 14px;
-}
-
-
-/* =========================================
-   股票
-   ========================================= */
-
-.stock-list {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 14px;
-}
-
-.stock-card {
-    background: var(--card);
-    border: 1px solid var(--border);
-
-    border-radius: 16px;
-
-    padding: 20px;
-
-    cursor: pointer;
-
-    transition:
-        transform 0.15s,
-        box-shadow 0.15s;
-}
-
-.stock-card:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow);
-}
-
-.stock-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.stock-name {
-    font-weight: 700;
-}
-
-.stock-code {
-    font-size: 12px;
-    color: var(--muted);
-    margin-top: 3px;
-}
-
-.stock-price {
-    margin-top: 18px;
-
-    display: flex;
-    justify-content: space-between;
-    align-items: end;
-}
-
-.price {
-    font-size: 25px;
-    font-weight: 800;
-}
-
-.change {
-    font-size: 13px;
-    font-weight: 700;
+  font-size: 42px;
+  font-weight: 800;
+  letter-spacing: -1px;
 }
 
 .positive {
-    color: var(--positive);
-}
-
-.negative {
-    color: var(--negative);
+  margin-top: 8px;
+  font-size: 15px;
 }
 
 
-/* =========================================
-   行情頁
-   ========================================= */
+/* ========================================
+   統計
+======================================== */
 
-.market-tabs,
-.news-tabs {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 18px;
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+
+  margin-top: 16px;
+}
+
+.stat-card {
+  padding: 16px;
+
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+}
+
+.stat-card span {
+  display: block;
+
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.stat-card strong {
+  display: block;
+
+  margin-top: 6px;
+
+  font-size: 22px;
+}
+
+
+/* ========================================
+   區段標題
+======================================== */
+
+.section-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  margin-top: 26px;
+}
+
+.section-title-row h2 {
+  margin: 0;
+}
+
+
+/* ========================================
+   按鈕
+======================================== */
+
+.small-btn,
+.primary-btn,
+.balance-card button {
+  border: 0;
+  border-radius: 10px;
+
+  padding: 9px 14px;
+
+  background: #111827;
+  color: white;
+
+  font-weight: 700;
+}
+
+.small-btn:hover,
+.primary-btn:hover,
+.balance-card button:hover {
+  opacity: 0.85;
+}
+
+.back-btn {
+  border: 0;
+  background: transparent;
+
+  padding: 0;
+  margin-bottom: 18px;
+
+  color: #4b5563;
+  font-weight: 700;
+}
+
+
+/* ========================================
+   資產
+======================================== */
+
+.asset-card {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+
+  margin-top: 12px;
+}
+
+.asset-card > div {
+  padding: 18px;
+
+  background: white;
+  border-radius: 15px;
+  border: 1px solid #e5e7eb;
+}
+
+.asset-card span {
+  display: block;
+
+  color: #6b7280;
+  font-size: 13px;
+}
+
+.asset-card strong {
+  display: block;
+
+  margin-top: 6px;
+
+  font-size: 24px;
+}
+
+
+/* ========================================
+   股票列表
+======================================== */
+
+.stock-list {
+  display: grid;
+  gap: 10px;
+}
+
+.stock-card {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+
+  align-items: center;
+  gap: 20px;
+
+  padding: 17px;
+
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 15px;
+
+  transition: transform 0.15s,
+              box-shadow 0.15s;
+}
+
+.stock-card:hover {
+  transform: translateY(-1px);
+
+  box-shadow:
+    0 6px 18px rgba(0, 0, 0, 0.06);
+}
+
+.stock-name {
+  font-weight: 800;
+}
+
+.stock-meta {
+  margin-top: 4px;
+
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.stock-price {
+  text-align: right;
+  font-weight: 800;
+}
+
+.stock-change {
+  min-width: 90px;
+  text-align: right;
+
+  font-weight: 700;
+}
+
+.up {
+  color: #dc2626;
+}
+
+.down {
+  color: #2563eb;
+}
+
+
+/* ========================================
+   行情 Tabs
+======================================== */
+
+.tabs {
+  display: flex;
+  gap: 8px;
+
+  margin-bottom: 16px;
 }
 
 .market-tab,
 .news-tab {
-    border: 1px solid var(--border);
-    background: white;
+  border: 1px solid #d1d5db;
+  border-radius: 999px;
 
-    padding: 9px 17px;
+  padding: 8px 15px;
 
-    border-radius: 10px;
-
-    cursor: pointer;
+  background: white;
+  color: #4b5563;
 }
 
 .market-tab.active,
 .news-tab.active {
-    background: var(--text);
-    color: white;
-    border-color: var(--text);
-}
-
-.market-list {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.market-row {
-    background: white;
-
-    border: 1px solid var(--border);
-    border-radius: 15px;
-
-    padding: 18px;
-
-    display: grid;
-
-    grid-template-columns:
-        2fr
-        1fr
-        1fr
-        1fr;
-
-    align-items: center;
-
-    cursor: pointer;
-}
-
-.market-row:hover {
-    box-shadow: var(--shadow);
-}
-
-.market-company {
-    font-weight: 700;
-}
-
-.market-code {
-    color: var(--muted);
-    font-size: 12px;
-}
-
-.market-number {
-    text-align: right;
+  background: #111827;
+  color: white;
+  border-color: #111827;
 }
 
 
-/* =========================================
-   股票詳細頁
-   ========================================= */
+/* ========================================
+   股票詳細
+======================================== */
 
-.back-btn {
-    background: none;
-    border: none;
+.stock-detail-card {
+  padding: 22px;
 
-    color: var(--primary);
-
-    cursor: pointer;
-
-    font-size: 15px;
-
-    margin-bottom: 20px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 18px;
 }
 
 .stock-detail-header {
-    background: white;
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+}
 
-    border: 1px solid var(--border);
-    border-radius: 20px;
-
-    padding: 25px;
+.stock-detail-company {
+  font-size: 14px;
+  color: #6b7280;
 }
 
 .stock-detail-title {
-    display: flex;
-    justify-content: space-between;
+  margin-top: 5px;
+
+  font-size: 25px;
+  font-weight: 800;
 }
 
 .stock-detail-price {
-    font-size: 38px;
-    font-weight: 800;
-    margin-top: 15px;
+  margin-top: 8px;
+
+  font-size: 34px;
+  font-weight: 800;
 }
 
-.stock-meta {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-
-    margin-top: 25px;
-
-    border-top: 1px solid var(--border);
-    padding-top: 20px;
+.stock-detail-change {
+  margin-top: 4px;
+  font-weight: 700;
 }
 
-.meta-label {
-    color: var(--muted);
-    font-size: 12px;
+.stock-info-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+
+  margin-top: 22px;
 }
 
-.meta-value {
-    margin-top: 4px;
-    font-weight: 700;
+.stock-info {
+  padding: 13px;
+
+  border-radius: 12px;
+  background: #f3f4f6;
 }
 
-.chart-card {
-    background: white;
+.stock-info span {
+  display: block;
 
-    border: 1px solid var(--border);
-    border-radius: 20px;
-
-    padding: 20px;
-
-    margin-top: 18px;
+  font-size: 12px;
+  color: #6b7280;
 }
 
-.chart-title {
-    font-weight: 700;
-    margin-bottom: 15px;
+.stock-info strong {
+  display: block;
+
+  margin-top: 5px;
 }
 
-.chart-wrapper {
-    height: 300px;
+
+/* ========================================
+   圖表
+======================================== */
+
+.chart-section {
+  margin-top: 18px;
+  padding: 18px;
+
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 18px;
 }
 
-.chart-switch {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 15px;
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  margin-bottom: 12px;
 }
 
-.chart-switch button {
-    border: 1px solid var(--border);
-    background: white;
-
-    padding: 7px 14px;
-
-    border-radius: 8px;
-
-    cursor: pointer;
+.chart-buttons {
+  display: flex;
+  gap: 6px;
 }
 
-.chart-switch button.active {
-    background: var(--text);
-    color: white;
+.chart-btn {
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+
+  padding: 6px 10px;
+
+  background: white;
 }
 
-.trade-box {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-
-    margin-top: 18px;
+.chart-btn.active {
+  background: #111827;
+  color: white;
 }
 
-.trade-box button {
-    padding: 14px;
+.chart-container {
+  position: relative;
 
-    border: none;
-    border-radius: 12px;
+  height: 340px;
+  width: 100%;
+}
 
-    cursor: pointer;
+.chart-container canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
 
-    font-size: 15px;
-    font-weight: 700;
+
+/* ========================================
+   交易按鈕
+======================================== */
+
+.trade-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+
+  margin-top: 18px;
+}
+
+.buy-btn,
+.sell-btn {
+  border: 0;
+  border-radius: 12px;
+
+  padding: 13px;
+
+  font-weight: 800;
 }
 
 .buy-btn {
-    background: #e5f7ef;
-    color: var(--positive);
+  background: #fee2e2;
+  color: #b91c1c;
 }
 
 .sell-btn {
-    background: #fdeaea;
-    color: var(--negative);
+  background: #dbeafe;
+  color: #1d4ed8;
 }
 
 
-/* =========================================
-   按鈕
-   ========================================= */
-
-.primary-btn {
-    border: none;
-
-    background: var(--primary);
-    color: white;
-
-    padding: 11px 18px;
-
-    border-radius: 10px;
-
-    cursor: pointer;
-
-    font-weight: 700;
-
-    transition: background 0.15s;
-}
-
-.primary-btn:hover {
-    background: var(--primary-dark);
-}
-
-.full-btn {
-    width: 100%;
-    margin-top: 18px;
-}
-
-
-/* =========================================
-   Stats
-   ========================================= */
-
-.stats-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 14px;
-}
-
-.stat-card {
-    background: white;
-
-    border: 1px solid var(--border);
-    border-radius: 15px;
-
-    padding: 20px;
-}
-
-.stat-title {
-    color: var(--muted);
-    font-size: 13px;
-}
-
-.stat-value {
-    font-size: 23px;
-    font-weight: 800;
-    margin-top: 8px;
-}
-
-
-/* =========================================
+/* ========================================
    投資
-   ========================================= */
+======================================== */
 
 .balance-card {
-    background: white;
+  padding: 22px;
 
-    border: 1px solid var(--border);
-    border-radius: 20px;
-
-    padding: 25px;
-
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 18px;
 }
 
-.portfolio-card {
-    background: white;
+.balance-card span {
+  display: block;
 
-    border: 1px solid var(--border);
-    border-radius: 15px;
-
-    padding: 18px;
-
-    margin-bottom: 10px;
-
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+  color: #6b7280;
+  font-size: 13px;
 }
 
-.portfolio-left {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
+.balance-card strong {
+  display: block;
 
-.portfolio-code {
-    color: var(--muted);
-    font-size: 12px;
-}
+  margin: 7px 0 15px;
 
-.transaction-card {
-    background: white;
-
-    border: 1px solid var(--border);
-    border-radius: 13px;
-
-    padding: 15px;
-
-    margin-bottom: 8px;
-
-    display: flex;
-    justify-content: space-between;
-}
-
-.transaction-type {
-    font-weight: 700;
-}
-
-.transaction-date {
-    color: var(--muted);
-    font-size: 12px;
+  font-size: 30px;
 }
 
 
-/* =========================================
+/* ========================================
+   簡單列表
+======================================== */
+
+.simple-list {
+  display: grid;
+  gap: 9px;
+}
+
+.list-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 15px;
+
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 13px;
+}
+
+.list-main {
+  font-weight: 700;
+}
+
+.list-sub {
+  margin-top: 4px;
+
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.list-value {
+  text-align: right;
+  font-weight: 800;
+}
+
+
+/* ========================================
    新聞
-   ========================================= */
+======================================== */
+
+.news-list {
+  display: grid;
+  gap: 12px;
+}
 
 .news-card {
-    background: white;
+  padding: 18px;
 
-    border: 1px solid var(--border);
-    border-radius: 17px;
-
-    padding: 20px;
-
-    margin-bottom: 12px;
-
-    cursor: pointer;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
 }
 
-.news-company {
-    color: var(--primary);
-
-    font-size: 13px;
-    font-weight: 700;
-
-    margin-bottom: 8px;
+.news-source {
+  color: #6b7280;
+  font-size: 12px;
 }
 
 .news-title {
-    font-size: 18px;
-    font-weight: 750;
+  margin-top: 7px;
+
+  font-size: 18px;
+  font-weight: 800;
 }
 
-.news-preview {
-    color: var(--muted);
+.news-content {
+  margin-top: 8px;
 
-    margin-top: 8px;
-
-    line-height: 1.6;
+  color: #4b5563;
+  line-height: 1.6;
 }
 
 .news-time {
-    color: var(--muted);
+  margin-top: 10px;
 
-    font-size: 12px;
-
-    margin-top: 12px;
+  color: #9ca3af;
+  font-size: 12px;
 }
 
 
-/* =========================================
+/* ========================================
    個人
-   ========================================= */
+======================================== */
 
 .profile-card {
-    background: white;
+  display: flex;
+  align-items: center;
+  gap: 15px;
 
-    border: 1px solid var(--border);
-    border-radius: 20px;
+  padding: 20px;
 
-    padding: 25px;
-
-    display: flex;
-    align-items: center;
-
-    gap: 18px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 18px;
 }
 
 .avatar {
-    width: 65px;
-    height: 65px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
-    border-radius: 50%;
+  width: 58px;
+  height: 58px;
 
-    background: #202735;
-    color: white;
+  border-radius: 50%;
 
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  background: #111827;
+  color: white;
 
-    font-size: 25px;
-    font-weight: 800;
+  font-size: 22px;
+  font-weight: 800;
 }
 
-.profile-name {
-    font-size: 20px;
-    font-weight: 800;
+.profile-card h2 {
+  margin: 0;
 }
 
-.profile-id {
-    color: var(--muted);
-    margin-top: 5px;
-    font-size: 13px;
+.profile-card p {
+  margin: 5px 0 0;
+
+  color: #6b7280;
+  font-size: 13px;
 }
 
-.google-status {
-    color: var(--positive);
-    margin-top: 6px;
-    font-size: 12px;
+.menu-card {
+  width: 100%;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  margin-top: 10px;
+  padding: 17px;
+
+  background: white;
+
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+
+  text-align: left;
 }
 
-.google-login-btn {
-    width: 100%;
-
-    margin-top: 15px;
-
-    background: white;
-
-    border: 1px solid var(--border);
-
-    border-radius: 12px;
-
-    padding: 13px;
-
-    cursor: pointer;
-
-    font-weight: 600;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    gap: 10px;
-}
-
-.google-logo {
-    font-weight: 900;
-    color: #4285f4;
-}
-
-.profile-section {
-    margin-top: 20px;
-
-    background: white;
-
-    border: 1px solid var(--border);
-    border-radius: 17px;
-
-    overflow: hidden;
-}
-
-.profile-section-title {
-    padding: 17px 18px;
-
-    font-size: 14px;
-    font-weight: 700;
-
-    background: #fafbfc;
-}
-
-.profile-item {
-    width: 100%;
-
-    background: white;
-
-    border: none;
-    border-top: 1px solid var(--border);
-
-    padding: 17px 18px;
-
-    display: flex;
-    justify-content: space-between;
-
-    cursor: pointer;
-
-    text-align: left;
-
-    font-size: 14px;
+.menu-card:hover {
+  background: #f9fafb;
 }
 
 
-/* =========================================
+/* ========================================
    公司
-   ========================================= */
+======================================== */
 
-.company-header {
-    background: white;
+.company-card {
+  padding: 20px;
 
-    border: 1px solid var(--border);
-    border-radius: 20px;
-
-    padding: 25px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 18px;
 }
 
-.company-type {
-    display: inline-block;
+.company-status {
+  display: inline-block;
 
-    background: #eef2ff;
-    color: var(--primary);
+  padding: 5px 9px;
 
-    padding: 5px 9px;
+  border-radius: 999px;
 
-    border-radius: 7px;
+  background: #f3f4f6;
+  color: #4b5563;
 
-    font-size: 12px;
+  font-size: 12px;
+  font-weight: 700;
 }
 
 .company-name {
-    font-size: 27px;
-    font-weight: 800;
+  margin-top: 10px;
 
-    margin-top: 12px;
+  font-size: 22px;
+  font-weight: 800;
 }
 
 .company-code {
-    color: var(--muted);
-    margin-top: 5px;
+  margin-top: 4px;
+
+  color: #6b7280;
+  font-size: 13px;
 }
 
-.company-stats {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
+.company-info {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
 
-    gap: 10px;
-
-    margin-top: 20px;
+  margin-top: 18px;
 }
 
-.company-stat {
-    background: var(--bg);
+.company-info-item {
+  padding: 12px;
 
-    padding: 15px;
-
-    border-radius: 12px;
+  background: #f3f4f6;
+  border-radius: 10px;
 }
+
+.company-info-item span {
+  display: block;
+
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.company-info-item strong {
+  display: block;
+
+  margin-top: 4px;
+}
+
+
+/* ========================================
+   公司功能
+======================================== */
 
 .company-actions {
-    display: grid;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 9px;
 
-    grid-template-columns: repeat(2, 1fr);
-
-    gap: 10px;
-
-    margin-top: 15px;
+  margin-top: 18px;
 }
 
 .company-action {
-    border: 1px solid var(--border);
+  border: 0;
+  border-radius: 11px;
 
-    background: white;
+  padding: 12px;
 
-    border-radius: 12px;
+  background: #111827;
+  color: white;
 
-    padding: 15px;
-
-    cursor: pointer;
-
-    font-weight: 600;
+  font-weight: 700;
 }
 
 
-/* =========================================
+/* ========================================
    Modal
-   ========================================= */
+======================================== */
 
 .modal {
-    display: none;
+  position: fixed;
+  inset: 0;
 
-    position: fixed;
+  z-index: 100;
 
-    inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
 
-    background: rgba(0, 0, 0, 0.45);
+  padding: 20px;
 
-    z-index: 1000;
-
-    align-items: center;
-    justify-content: center;
-
-    padding: 20px;
+  background: rgba(0, 0, 0, 0.45);
 }
 
 .modal.show {
-    display: flex;
+  display: flex;
 }
 
 .modal-box {
-    width: min(480px, 100%);
+  position: relative;
 
-    background: white;
+  width: 100%;
+  max-width: 450px;
 
-    border-radius: 20px;
+  padding: 24px;
 
-    padding: 25px;
+  background: white;
 
-    position: relative;
+  border-radius: 20px;
 
-    max-height: 90vh;
-
-    overflow-y: auto;
+  box-shadow:
+    0 20px 50px rgba(0, 0, 0, 0.2);
 }
 
 .modal-box h2 {
-    margin-bottom: 8px;
+  margin-top: 0;
 }
 
-.modal-description {
-    color: var(--muted);
-    font-size: 13px;
-
-    margin-bottom: 20px;
-}
-
-.modal-close {
-    position: absolute;
-
-    right: 17px;
-    top: 14px;
-
-    border: none;
-    background: none;
-
-    font-size: 28px;
-
-    cursor: pointer;
-
-    color: var(--muted);
-}
-
-.modal-box label {
-    display: block;
-
-    font-size: 13px;
-
-    margin-top: 13px;
-    margin-bottom: 6px;
+.modal-box p {
+  color: #6b7280;
+  font-size: 14px;
 }
 
 .modal-box input,
 .modal-box select {
-    width: 100%;
+  width: 100%;
 
-    padding: 12px;
+  margin-top: 10px;
+  padding: 12px;
 
-    border: 1px solid var(--border);
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
 
-    border-radius: 10px;
-
-    outline: none;
-
-    font-size: 14px;
+  outline: none;
 }
 
 .modal-box input:focus,
 .modal-box select:focus {
-    border-color: var(--primary);
+  border-color: #111827;
 }
 
-.wallet-info {
-    background: var(--bg);
-
-    padding: 15px;
-
-    border-radius: 12px;
-
-    display: flex;
-    justify-content: space-between;
+.modal-box .primary-btn {
+  width: 100%;
+  margin-top: 14px;
 }
 
-.wallet-info strong {
-    color: var(--primary);
+.close {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+
+  border: 0;
+  background: transparent;
+
+  font-size: 28px;
+  color: #6b7280;
 }
 
 
-/* =========================================
+/* ========================================
    Toast
-   ========================================= */
+======================================== */
 
 .toast {
-    position: fixed;
+  position: fixed;
 
-    left: 50%;
-    bottom: 90px;
+  left: 50%;
+  bottom: 92px;
 
-    transform: translateX(-50%) translateY(20px);
+  z-index: 200;
 
-    background: #202735;
-    color: white;
+  transform:
+    translate(-50%, 20px);
 
-    padding: 12px 20px;
+  padding: 12px 18px;
 
-    border-radius: 10px;
+  background: #111827;
+  color: white;
 
-    opacity: 0;
+  border-radius: 10px;
 
-    pointer-events: none;
+  font-size: 14px;
 
-    transition: all 0.25s;
+  opacity: 0;
+  pointer-events: none;
 
-    z-index: 2000;
-
-    font-size: 14px;
+  transition:
+    opacity 0.2s,
+    transform 0.2s;
 }
 
 .toast.show {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
+  opacity: 1;
+
+  transform:
+    translate(-50%, 0);
 }
 
 
-/* =========================================
+/* ========================================
    底部導航
-   ========================================= */
+======================================== */
 
 .bottom-nav {
-    position: fixed;
+  position: fixed;
 
-    left: 0;
-    right: 0;
-    bottom: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
 
-    height: 72px;
+  z-index: 50;
 
-    background: white;
+  display: flex;
+  justify-content: center;
 
-    border-top: 1px solid var(--border);
-
-    display: flex;
-
-    justify-content: center;
-
-    z-index: 500;
+  background: white;
+  border-top: 1px solid #e5e7eb;
 }
 
 .nav-item {
-    width: 120px;
+  width: 100%;
+  max-width: 150px;
 
-    border: none;
-    background: transparent;
+  border: 0;
 
-    cursor: pointer;
+  padding: 9px 4px;
 
-    color: var(--muted);
+  background: transparent;
 
-    display: flex;
-    flex-direction: column;
-
-    align-items: center;
-    justify-content: center;
-
-    gap: 3px;
+  color: #6b7280;
 }
 
 .nav-item span {
-    font-size: 20px;
+  display: block;
+
+  font-size: 20px;
 }
 
 .nav-item small {
-    font-size: 11px;
+  display: block;
+
+  margin-top: 2px;
+
+  font-size: 11px;
 }
 
 .nav-item.active {
-    color: var(--primary);
+  color: #111827;
+  font-weight: 800;
 }
 
 
-/* =========================================
+/* ========================================
+   空資料
+======================================== */
+
+.empty-state {
+  padding: 30px 15px;
+
+  text-align: center;
+
+  background: white;
+  border: 1px dashed #d1d5db;
+  border-radius: 15px;
+
+  color: #6b7280;
+}
+
+
+/* ========================================
    RWD
-   ========================================= */
+======================================== */
 
 @media (max-width: 700px) {
 
-    .topbar {
-        padding: 0 15px;
-        height: 62px;
-    }
+  main {
+    padding: 18px 13px;
+  }
 
-    .brand-sub {
-        display: none;
-    }
+  .topbar {
+    padding: 13px 15px;
+  }
 
-    .main-content {
-        width: calc(100% - 24px);
-        margin-top: 18px;
-    }
+  .brand {
+    font-size: 19px;
+  }
 
-    .hero-card {
-        min-height: 190px;
-        padding: 25px;
-    }
+  .index-value {
+    font-size: 34px;
+  }
 
-    .hero-index {
-        font-size: 35px;
-    }
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 
-    .hero-decoration {
-        font-size: 110px;
-    }
+  .asset-card {
+    grid-template-columns: 1fr;
+  }
 
-    .asset-card {
-        padding: 18px;
-    }
+  .stock-card {
+    grid-template-columns: 1fr auto;
+    gap: 8px;
+  }
 
-    .asset-value,
-    .balance-value {
-        font-size: 23px;
-    }
+  .stock-change {
+    grid-column: 2;
+    grid-row: 1;
+  }
 
-    .stock-list {
-        grid-template-columns: 1fr;
-    }
+  .stock-price {
+    grid-column: 2;
+    grid-row: 2;
+  }
 
-    .stats-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
+  .stock-detail-header {
+    flex-direction: column;
+  }
 
-    .market-row {
-        grid-template-columns: 1.7fr 1fr 1fr;
-    }
+  .stock-info-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 
-    .market-row .volume-column {
-        display: none;
-    }
+  .chart-container {
+    height: 280px;
+  }
 
-    .stock-meta {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 15px;
-    }
+  .company-info {
+    grid-template-columns: 1fr;
+  }
 
-    .company-stats {
-        grid-template-columns: 1fr;
-    }
+  .company-actions {
+    grid-template-columns: 1fr;
+  }
 
-    .company-actions {
-        grid-template-columns: 1fr;
-    }
+  .bottom-nav {
+    justify-content: stretch;
+  }
 
-    .bottom-nav {
-        height: 68px;
-    }
-
-    .nav-item {
-        width: 20%;
-    }
-
-    .nav-item span {
-        font-size: 18px;
-    }
-
-    .nav-item small {
-        font-size: 10px;
-    }
-
+  .nav-item {
+    max-width: none;
+  }
 }
 
 @media (max-width: 420px) {
 
-    .hero-card {
-        padding: 20px;
-    }
+  .hero-card {
+    padding: 22px;
+  }
 
-    .hero-index {
-        font-size: 30px;
-    }
+  .index-value {
+    font-size: 30px;
+  }
 
-    .hero-decoration {
-        display: none;
-    }
+  .stat-card {
+    padding: 13px;
+  }
 
-    .asset-card {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 15px;
-    }
+  .stat-card strong {
+    font-size: 19px;
+  }
 
-    .market-row {
-        grid-template-columns: 1.5fr 1fr;
-    }
-
-    .market-row .change-column {
-        display: none;
-    }
+  .stock-detail-price {
+    font-size: 29px;
+  }
 
 }
