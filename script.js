@@ -186,12 +186,118 @@ let transactions = loadData(
    8. 公司資料
    ========================================================= */
 
+/* =========================================================
+   4. 公司資料
+   ========================================================= */
+
+const DEFAULT_COMPANIES = [
+    {
+        id: "MTR-COMPANY",
+        name: "明月鐵路",
+        shortName: "明月鐵路",
+        code: "MTR",
+        industry: "交通",
+        capital: 120000000,
+        owner: "GOV-MINGYUE",
+        ownerName: "明月帝國政府",
+        status: "國營企業",
+        listed: true,
+        createdAt: "2026/01/01",
+        official: true
+    },
+
+    {
+        id: "KMB-COMPANY",
+        name: "國立京城大學附設生醫股份有限公司",
+        shortName: "國立京城大學附設生醫",
+        code: "KMB",
+        industry: "醫療",
+        capital: 60000000,
+        owner: "NCKU-MED",
+        ownerName: "國立京城大學",
+        status: "大學附設企業",
+        listed: true,
+        createdAt: "2026/01/01",
+        official: true
+    },
+
+    {
+        id: "HZI-COMPANY",
+        name: "鎬子餐飲股份有限公司",
+        shortName: "鎬子餐飲",
+        code: "HZI",
+        industry: "餐飲",
+        capital: 35000000,
+        owner: "HZI-OWNER",
+        ownerName: "鎬子餐飲經營者",
+        status: "民營企業",
+        listed: true,
+        createdAt: "2026/01/01",
+        official: true
+    },
+
+    {
+        id: "USF-COMPANY",
+        name: "國營上杉林業股份有限公司",
+        shortName: "國營上杉林業",
+        code: "USF",
+        industry: "農林",
+        capital: 80000000,
+        owner: "GOV-MINGYUE",
+        ownerName: "明月帝國政府",
+        status: "國營企業",
+        listed: true,
+        createdAt: "2026/01/01",
+        official: true
+    }
+];
+
+
+/*
+ * 讀取公司資料
+ *
+ * 如果以前已經有 Fisher 自己註冊的公司，
+ * 會保留下來。
+ *
+ * 同時自動補入四間既有企業。
+ */
+
 let companies = loadData(
-    "mingyue_companies_v3",
+    "mingyue_companies_v2",
     []
 );
 
 
+/*
+ * 補入既有企業
+ */
+
+DEFAULT_COMPANIES.forEach(defaultCompany => {
+
+    const exists = companies.some(
+        company =>
+            company.code === defaultCompany.code
+    );
+
+    if (!exists) {
+
+        companies.push(
+            defaultCompany
+        );
+
+    }
+
+});
+
+
+/*
+ * 儲存公司資料
+ */
+
+saveData(
+    "mingyue_companies_v2",
+    companies
+);
 /* =========================================================
    9. 新聞資料
    ========================================================= */
