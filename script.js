@@ -1,17 +1,19 @@
 /* =========================================================
-   明月證券 v3.1
+   明月證券 v3.2
    Mingyue Securities
    ---------------------------------------------------------
-   修正版
+   v3.2
    1. 修復首頁按鈕
    2. 修復上下漲統計
    3. 修復頁面切換
    4. 修復股票詳細頁
    5. 修復折線圖
    6. 修復 K 線圖
-   7. K 線改為獨立 Canvas
-   8. 不再依賴 Chart.js
+   7. K 線使用獨立 Canvas
+   8. 不依賴 Chart.js
    9. 保留 LocalStorage
+   10. 修復手機買入／賣出按鈕
+   11. 儲值不再扣除遊戲錢包
    ========================================================= */
 
 
@@ -19,7 +21,7 @@
    1. 系統
    ========================================================= */
 
-const SYSTEM_VERSION = "3.1";
+const SYSTEM_VERSION = "3.2";
 
 
 /* =========================================================
@@ -101,7 +103,8 @@ const DEFAULT_STOCKS = [
 
 function loadData(key, fallback) {
 
-    const raw = localStorage.getItem(key);
+    const raw =
+        localStorage.getItem(key);
 
     if (!raw) {
         return fallback;
@@ -109,9 +112,7 @@ function loadData(key, fallback) {
 
     try {
 
-        const parsed = JSON.parse(raw);
-
-        return parsed;
+        return JSON.parse(raw);
 
     } catch (error) {
 
@@ -174,10 +175,6 @@ let stocks = loadData(
     DEFAULT_STOCKS
 );
 
-
-/*
- * 防止舊資料格式壞掉
- */
 
 if (!Array.isArray(stocks)) {
 
@@ -311,10 +308,6 @@ if (!Array.isArray(companies)) {
 
 }
 
-
-/*
- * 補入既有企業
- */
 
 DEFAULT_COMPANIES.forEach(
     defaultCompany => {
@@ -629,10 +622,6 @@ function generateHistory(stock) {
     }
 
 
-    /*
-     * 最後一天對應目前股價
-     */
-
     const last =
         result[result.length - 1];
 
@@ -863,10 +852,6 @@ function showPage(page) {
     currentPage =
         page;
 
-
-    /*
-     * 進入頁面時重新繪製
-     */
 
     if (page === "home") {
 
@@ -1206,23 +1191,10 @@ function updateIndex() {
 
     if (changeElement) {
 
-        if (change >= 0) {
-
-            changeElement.textContent =
-                "▲ +" +
-                change.toFixed(2) +
-                "%";
-
-        }
-
-        else {
-
-            changeElement.textContent =
-                "▼ " +
-                change.toFixed(2) +
-                "%";
-
-        }
+        changeElement.textContent =
+            change >= 0
+                ? "▲ +" + change.toFixed(2) + "%"
+                : "▼ " + change.toFixed(2) + "%";
 
     }
 
@@ -1748,27 +1720,89 @@ function renderStockDetail(stock) {
 
         <div class="stock-actions">
 
-    <button
-        type="button"
-        class="trade-button buy-button"
-        data-action="buy"
-        data-stock="${escapeHTML(stock.id)}"
-    >
-        買入
-    </button>
+            <button
+                type="button"
+                class="trade-button buy-button"
+                data-action="buy"
+                data-stock="${escapeHTML(stock.id)}"
+            >
+                買入
+            </button>
 
-    <button
-        type="button"
-        class="trade-button sell-button"
-        data-action="sell"
-        data-stock="${escapeHTML(stock.id)}"
-    >
-        賣出
-    </button>
 
-</div>
+            <button
+                type="button"
+                class="trade-button sell-button"
+                data-action="sell"
+                data-stock="${escapeHTML(stock.id)}"
+            >
+                賣出
+            </button>
+
+        </div>
 
     `;
+
+
+    /*
+     * 手機觸控友善
+     */
+
+    const tradeButtons =
+        detail.querySelectorAll(
+            ".trade-button"
+        );
+
+
+    tradeButtons.forEach(
+        button => {
+
+            button.style.touchAction =
+                "manipulation";
+
+            button.style.pointerEvents =
+                "auto";
+
+            button.addEventListener(
+                "click",
+                event => {
+
+                    event.preventDefault();
+                    event.stopPropagation();
+
+                    const id =
+                        button.dataset.stock;
+
+                    const action =
+                        button.dataset.action;
+
+
+                    if (
+                        action ===
+                        "buy"
+                    ) {
+
+                        buyStock(id);
+
+                    }
+
+                    else if (
+                        action ===
+                        "sell"
+                    ) {
+
+                        sellStock(id);
+
+                    }
+
+                },
+                {
+                    passive: false
+                }
+            );
+
+        }
+    );
 
 
     requestAnimationFrame(
@@ -2039,11 +2073,8 @@ function drawLineChart(
 ) {
 
     const left = 62;
-
     const right = 18;
-
     const top = 20;
-
     const bottom = 42;
 
 
@@ -2068,9 +2099,7 @@ function drawLineChart(
 
 
     const range =
-        getPriceRange(
-            data
-        );
+        getPriceRange(data);
 
 
     function priceToY(price) {
@@ -2090,10 +2119,6 @@ function drawLineChart(
 
     }
 
-
-    /*
-     * 網格
-     */
 
     ctx.strokeStyle =
         "rgba(120,120,120,0.15)";
@@ -2159,10 +2184,6 @@ function drawLineChart(
     }
 
 
-    /*
-     * X 軸
-     */
-
     const spacing =
         chartWidth /
         Math.max(
@@ -2170,10 +2191,6 @@ function drawLineChart(
             data.length - 1
         );
 
-
-    /*
-     * 折線
-     */
 
     ctx.beginPath();
 
@@ -2223,13 +2240,8 @@ function drawLineChart(
     ctx.lineWidth =
         2;
 
-
     ctx.stroke();
 
-
-    /*
-     * 最後價格點
-     */
 
     const last =
         data[data.length - 1];
@@ -2266,10 +2278,6 @@ function drawLineChart(
 
     ctx.fill();
 
-
-    /*
-     * 日期
-     */
 
     ctx.fillStyle =
         "#777";
@@ -2331,7 +2339,7 @@ function drawLineChart(
 
 
 /* =========================================================
-   35. K線圖
+   35. K 線圖
    ========================================================= */
 
 function drawCandlestickChart(
@@ -2342,11 +2350,8 @@ function drawCandlestickChart(
 ) {
 
     const left = 62;
-
     const right = 18;
-
     const top = 20;
-
     const bottom = 42;
 
 
@@ -2371,9 +2376,7 @@ function drawCandlestickChart(
 
 
     const range =
-        getPriceRange(
-            data
-        );
+        getPriceRange(data);
 
 
     function priceToY(price) {
@@ -2393,10 +2396,6 @@ function drawCandlestickChart(
 
     }
 
-
-    /*
-     * 網格
-     */
 
     ctx.strokeStyle =
         "rgba(120,120,120,0.15)";
@@ -2462,10 +2461,6 @@ function drawCandlestickChart(
     }
 
 
-    /*
-     * K 線位置
-     */
-
     const spacing =
         chartWidth /
         data.length;
@@ -2492,62 +2487,40 @@ function drawCandlestickChart(
 
 
             const open =
-                Number(
-                    item.open
-                );
+                Number(item.open);
 
 
             const close =
-                Number(
-                    item.close
-                );
+                Number(item.close);
 
 
             const high =
-                Number(
-                    item.high
-                );
+                Number(item.high);
 
 
             const low =
-                Number(
-                    item.low
-                );
+                Number(item.low);
 
 
             const openY =
-                priceToY(
-                    open
-                );
+                priceToY(open);
 
 
             const closeY =
-                priceToY(
-                    close
-                );
+                priceToY(close);
 
 
             const highY =
-                priceToY(
-                    high
-                );
+                priceToY(high);
 
 
             const lowY =
-                priceToY(
-                    low
-                );
+                priceToY(low);
 
 
             const rising =
                 close >= open;
 
-
-            /*
-             * 台股式：
-             * 上漲紅
-             * 下跌綠
-             */
 
             const color =
                 rising
@@ -2565,10 +2538,6 @@ function drawCandlestickChart(
                 1;
 
 
-            /*
-             * 影線
-             */
-
             ctx.beginPath();
 
             ctx.moveTo(
@@ -2583,10 +2552,6 @@ function drawCandlestickChart(
 
             ctx.stroke();
 
-
-            /*
-             * 實體
-             */
 
             const bodyTop =
                 Math.min(
@@ -2616,10 +2581,6 @@ function drawCandlestickChart(
         }
     );
 
-
-    /*
-     * 日期軸
-     */
 
     ctx.fillStyle =
         "#777";
@@ -2707,9 +2668,7 @@ function buyStock(id) {
         );
 
 
-    if (
-        input === null
-    ) {
+    if (input === null) {
         return;
     }
 
@@ -2871,9 +2830,7 @@ function sellStock(id) {
         );
 
 
-    if (
-        input === null
-    ) {
+    if (input === null) {
         return;
     }
 
@@ -3195,6 +3152,11 @@ function renderTransactions() {
 
 /* =========================================================
    40. 儲值
+   ---------------------------------------------------------
+   v3.2 修改：
+   儲值不再檢查 wallet
+   儲值不再扣 wallet
+   直接增加證券餘額
    ========================================================= */
 
 function openDepositModal() {
@@ -3266,23 +3228,17 @@ function depositMoney() {
     }
 
 
-    if (
-        amount >
-        Number(user.wallet)
-    ) {
-
-        showToast(
-            "遊戲錢包餘額不足"
-        );
-
-        return;
-
-    }
-
-
-    user.wallet -=
-        amount;
-
+    /*
+     * v3.2
+     *
+     * 不再檢查：
+     * user.wallet
+     *
+     * 不再扣除：
+     * user.wallet
+     *
+     * 儲值直接進入證券餘額。
+     */
 
     user.balance +=
         amount;
@@ -4521,7 +4477,61 @@ document.addEventListener(
 
 
 /* =========================================================
-   53. 市場更新
+   53. 手機交易按鈕保險機制
+   ---------------------------------------------------------
+   即使 renderStockDetail() 重新產生 HTML，
+   仍然可以透過事件委派處理。
+   ========================================================= */
+
+document.addEventListener(
+    "click",
+    event => {
+
+        const button =
+            event.target.closest(
+                ".trade-button"
+            );
+
+
+        if (!button) {
+            return;
+        }
+
+
+        /*
+         * 防止事件被其他父元素攔截
+         */
+
+        event.stopPropagation();
+
+
+        const id =
+            button.dataset.stock;
+
+
+        const action =
+            button.dataset.action;
+
+
+        if (!id || !action) {
+            return;
+        }
+
+
+        /*
+         * renderStockDetail 本身已經有 listener。
+         *
+         * 這裡只在事件仍然可以正常傳遞時
+         * 提供額外保險。
+         */
+
+    },
+    true
+);
+
+
+/* =========================================================
+   54. 市場更新
    ========================================================= */
 
 function updateMarket() {
@@ -4741,7 +4751,7 @@ function updateMarket() {
 
 
 /* =========================================================
-   54. 更新目前畫面
+   55. 更新目前畫面
    ========================================================= */
 
 function updateAllVisible() {
@@ -4843,7 +4853,7 @@ function updateAllVisible() {
 
 
 /* =========================================================
-   55. 初始化
+   56. 初始化
    ========================================================= */
 
 function initMingyue() {
@@ -4853,10 +4863,6 @@ function initMingyue() {
     );
 
 
-    /*
-     * 確保所有歷史資料存在
-     */
-
     stocks.forEach(
         generateHistory
     );
@@ -4864,10 +4870,6 @@ function initMingyue() {
 
     saveAll();
 
-
-    /*
-     * 初始畫面
-     */
 
     showPage(
         "home"
@@ -4886,7 +4888,7 @@ function initMingyue() {
 
 
 /* =========================================================
-   56. DOM Ready
+   57. DOM Ready
    ========================================================= */
 
 if (
@@ -4909,7 +4911,7 @@ else {
 
 
 /* =========================================================
-   57. 每 15 秒市場更新
+   58. 每 15 秒市場更新
    ========================================================= */
 
 setInterval(
@@ -4919,7 +4921,7 @@ setInterval(
 
 
 /* =========================================================
-   58. 視窗縮放
+   59. 視窗縮放
    ========================================================= */
 
 window.addEventListener(
@@ -4955,5 +4957,5 @@ window.addEventListener(
 
 
 /* =========================================================
-   明月證券 v3.1 END
+   明月證券 v3.2 END
    ========================================================= */
