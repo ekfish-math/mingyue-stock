@@ -1,531 +1,2291 @@
-<!DOCTYPE html>
-<html lang="zh-Hant">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="明月證券 - 明月帝國證券交易系統">
-    <title>明月證券</title>
-
-    <link rel="stylesheet" href="style.css">
-
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-</head>
-
-<body>
-
-<div id="app">
-
-    <!-- ==============================
-         頂部
-    =============================== -->
-    <header class="topbar">
-
-        <div class="brand" onclick="showPage('home')">
-            <div class="brand-icon">月</div>
-            <div>
-                <div class="brand-name">明月證券</div>
-                <div class="brand-sub">明月帝國證券交易所</div>
-            </div>
-        </div>
-
-        <div class="top-status">
-            <span class="market-status">
-                <span class="status-dot"></span>
-                市場開市
-            </span>
-        </div>
-
-    </header>
+/* =========================================
+   明月證券 v2.0
+   ========================================= */
 
 
-    <!-- ==============================
-         主內容
-    =============================== -->
-    <main class="main-content">
+/* =========================================
+   基本資料
+   ========================================= */
 
-        <!-- ==========================
-             首頁
-        =========================== -->
-        <section id="page-home" class="page active">
+const DEFAULT_STOCKS = [
+    {
+        id: "MTR",
+        name: "明月鐵路",
+        company: "明月鐵路",
+        industry: "交通",
+        type: "既有企業",
+        price: 142.70,
+        previous: 135.77,
+        volume: 24580,
+        capital: 120000000,
+        shares: 10000000
+    },
 
-            <div class="hero-card">
+    {
+        id: "KMB",
+        name: "國立京城大學附設生醫",
+        company: "國立京城大學附設生醫股份有限公司",
+        industry: "醫療",
+        type: "大學附設企業",
+        price: 86.40,
+        previous: 84.95,
+        volume: 8320,
+        capital: 60000000,
+        shares: 6000000
+    },
+
+    {
+        id: "HZI",
+        name: "鎬子餐飲",
+        company: "鎬子餐飲股份有限公司",
+        industry: "餐飲",
+        type: "民營企業",
+        price: 52.80,
+        previous: 54.12,
+        volume: 11540,
+        capital: 35000000,
+        shares: 3500000
+    },
+
+    {
+        id: "USF",
+        name: "國營上杉林業",
+        company: "國營上杉林業股份有限公司",
+        industry: "農林",
+        type: "國營企業",
+        price: 73.60,
+        previous: 72.10,
+        volume: 6240,
+        capital: 80000000,
+        shares: 8000000
+    }
+];
+
+
+/* =========================================
+   LocalStorage
+   ========================================= */
+
+function loadData(key, fallback) {
+
+    const data = localStorage.getItem(key);
+
+    if (!data) {
+        return fallback;
+    }
+
+    try {
+        return JSON.parse(data);
+    } catch {
+        return fallback;
+    }
+}
+
+
+function saveData(key, data) {
+
+    localStorage.setItem(
+        key,
+        JSON.stringify(data)
+    );
+}
+
+
+/* =========================================
+   初始化股票
+   ========================================= */
+
+let stocks = loadData(
+    "mingyue_stocks_v2",
+    DEFAULT_STOCKS
+);
+
+
+/* =========================================
+   使用者資料
+   ========================================= */
+
+let user = loadData(
+    "mingyue_user_v2",
+    {
+        name: "Fisher",
+        accountId: "MYS-000184",
+        balance: 1000000,
+        wallet: 500000
+    }
+);
+
+
+/* =========================================
+   持股
+   ========================================= */
+
+let portfolio = loadData(
+    "mingyue_portfolio_v2",
+    {}
+);
+
+
+/* =========================================
+   交易紀錄
+   ========================================= */
+
+let transactions = loadData(
+    "mingyue_transactions_v2",
+    []
+);
+
+
+/* =========================================
+   公司
+   ========================================= */
+
+let companies = loadData(
+    "mingyue_companies_v2",
+    []
+);
+
+
+/* =========================================
+   新聞
+   ========================================= */
+
+let news = loadData(
+    "mingyue_news_v2",
+    [
+        {
+            id: 1,
+            companyCode: "MTR",
+            companyName: "明月鐵路",
+            category: "company",
+            title: "明月鐵路今日維持正常營運",
+            content: "明月鐵路今日各主要路線維持正常營運。",
+            time: "今天 08:00"
+        },
+
+        {
+            id: 2,
+            companyCode: "KMB",
+            companyName: "國立京城大學附設生醫",
+            category: "company",
+            title: "附設生醫公布最新研究進度",
+            content: "國立京城大學附設生醫股份有限公司公布最新研究計畫進度。",
+            time: "今天 07:40"
+        },
+
+        {
+            id: 3,
+            companyCode: "HZI",
+            companyName: "鎬子餐飲",
+            category: "company",
+            title: "鎬子餐飲公布新門市計畫",
+            content: "鎬子餐飲股份有限公司宣布規劃新的餐飲據點。",
+            time: "昨天 18:20"
+        }
+    ]
+);
+
+
+/* =========================================
+   OHLC 歷史資料
+   ========================================= */
+
+let historyData = loadData(
+    "mingyue_history_v2",
+    {}
+);
+
+
+/* =========================================
+   建立歷史資料
+   ========================================= */
+
+function generateHistory(stock) {
+
+    if (historyData[stock.id]) {
+        return;
+    }
+
+    let result = [];
+
+    let current = stock.previous;
+
+    for (let i = 0; i < 30; i++) {
+
+        const open = current;
+
+        const movement =
+            (Math.random() - 0.48)
+            * current
+            * 0.035;
+
+        const close =
+            Math.max(
+                1,
+                open + movement
+            );
+
+        const high =
+            Math.max(open, close)
+            *
+            (1 + Math.random() * 0.018);
+
+        const low =
+            Math.min(open, close)
+            *
+            (1 - Math.random() * 0.018);
+
+        const volume =
+            Math.floor(
+                3000 +
+                Math.random() * 20000
+            );
+
+        result.push({
+            time: `08/${String(i + 1).padStart(2, "0")}`,
+            open: Number(open.toFixed(2)),
+            high: Number(high.toFixed(2)),
+            low: Number(low.toFixed(2)),
+            close: Number(close.toFixed(2)),
+            volume
+        });
+
+        current = close;
+    }
+
+    historyData[stock.id] = result;
+}
+
+
+stocks.forEach(generateHistory);
+
+saveData(
+    "mingyue_history_v2",
+    historyData
+);
+
+
+/* =========================================
+   頁面切換
+   ========================================= */
+
+function showPage(page) {
+
+    document.querySelectorAll(".page")
+        .forEach(element => {
+            element.classList.remove("active");
+        });
+
+    const target =
+        document.getElementById(
+            `page-${page}`
+        );
+
+    if (target) {
+        target.classList.add("active");
+    }
+
+
+    document.querySelectorAll(".nav-item")
+        .forEach(item => {
+
+            item.classList.remove("active");
+
+            if (
+                item.dataset.page === page
+            ) {
+                item.classList.add("active");
+            }
+
+        });
+
+
+    if (page === "home") {
+        renderHome();
+    }
+
+    if (page === "market") {
+        renderMarket();
+    }
+
+    if (page === "portfolio") {
+        renderPortfolio();
+    }
+
+    if (page === "news") {
+        renderNews();
+    }
+
+    if (page === "profile") {
+        renderProfile();
+    }
+}
+
+
+/* =========================================
+   格式化金額
+   ========================================= */
+
+function money(value) {
+
+    return "¥" +
+        Number(value).toLocaleString(
+            "zh-TW",
+            {
+                maximumFractionDigits: 2
+            }
+        );
+}
+
+
+/* =========================================
+   漲跌
+   ========================================= */
+
+function getChange(stock) {
+
+    return (
+        (stock.price - stock.previous)
+        /
+        stock.previous
+    ) * 100;
+}
+
+
+function changeText(stock) {
+
+    const change =
+        getChange(stock);
+
+    const symbol =
+        change >= 0 ? "▲" : "▼";
+
+    const sign =
+        change >= 0 ? "+" : "";
+
+    return `${symbol} ${sign}${change.toFixed(2)}%`;
+}
+
+
+/* =========================================
+   首頁
+   ========================================= */
+
+function renderHome() {
+
+    const average =
+        stocks.reduce(
+            (sum, stock) =>
+                sum + stock.price,
+            0
+        ) / stocks.length;
+
+    const index =
+        12500 +
+        average * 1.7;
+
+    const indexElement =
+        document.getElementById(
+            "index-value"
+        );
+
+    if (indexElement) {
+
+        indexElement.textContent =
+            index.toLocaleString(
+                "zh-TW",
+                {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                }
+            );
+    }
+
+
+    document.getElementById(
+        "home-assets"
+    ).textContent =
+        money(user.balance);
+
+
+    const hot =
+        [...stocks]
+            .sort(
+                (a, b) =>
+                    Math.abs(getChange(b))
+                    -
+                    Math.abs(getChange(a))
+            )
+            .slice(0, 4);
+
+
+    document.getElementById(
+        "home-hot-stocks"
+    ).innerHTML =
+        hot.map(stock => {
+
+            const change =
+                getChange(stock);
+
+            return `
+                <div
+                    class="stock-card"
+                    onclick="openStock('${stock.id}')"
+                >
+
+                    <div class="stock-top">
+
+                        <div>
+                            <div class="stock-name">
+                                ${stock.name}
+                            </div>
+
+                            <div class="stock-code">
+                                ${stock.id} · ${stock.industry}
+                            </div>
+                        </div>
+
+                        <div
+                            class="${change >= 0 ? "positive" : "negative"}"
+                        >
+                            ${changeText(stock)}
+                        </div>
+
+                    </div>
+
+
+                    <div class="stock-price">
+
+                        <div class="price">
+                            ${money(stock.price)}
+                        </div>
+
+                        <div class="change">
+                            ${money(
+                                stock.price -
+                                stock.previous
+                            )}
+                        </div>
+
+                    </div>
+
+                </div>
+            `;
+
+        }).join("");
+
+
+    updateStats();
+}
+
+
+/* =========================================
+   市場統計
+   ========================================= */
+
+function updateStats() {
+
+    let up = 0;
+    let down = 0;
+    let volume = 0;
+
+    stocks.forEach(stock => {
+
+        if (stock.price >= stock.previous) {
+            up++;
+        } else {
+            down++;
+        }
+
+        volume += stock.volume;
+    });
+
+
+    document.getElementById(
+        "stat-companies"
+    ).textContent =
+        stocks.length + companies.length;
+
+
+    document.getElementById(
+        "stat-up"
+    ).textContent =
+        up;
+
+
+    document.getElementById(
+        "stat-down"
+    ).textContent =
+        down;
+
+
+    document.getElementById(
+        "stat-volume"
+    ).textContent =
+        volume.toLocaleString();
+}
+
+
+/* =========================================
+   行情
+   ========================================= */
+
+let marketFilter = "all";
+
+
+function filterMarket(filter, button) {
+
+    marketFilter = filter;
+
+    document.querySelectorAll(
+        ".market-tab"
+    ).forEach(
+        element =>
+            element.classList.remove("active")
+    );
+
+    button.classList.add("active");
+
+    renderMarket();
+}
+
+
+function renderMarket() {
+
+    let list = [...stocks];
+
+    if (marketFilter === "up") {
+
+        list =
+            list.filter(
+                stock =>
+                    getChange(stock) > 0
+            );
+    }
+
+    if (marketFilter === "down") {
+
+        list =
+            list.filter(
+                stock =>
+                    getChange(stock) < 0
+            );
+    }
+
+
+    document.getElementById(
+        "market-list"
+    ).innerHTML =
+
+        list.map(stock => {
+
+            const change =
+                getChange(stock);
+
+            return `
+                <div
+                    class="market-row"
+                    onclick="openStock('${stock.id}')"
+                >
+
+                    <div>
+                        <div class="market-company">
+                            ${stock.name}
+                        </div>
+
+                        <div class="market-code">
+                            ${stock.id} · ${stock.industry}
+                        </div>
+                    </div>
+
+                    <div class="market-number">
+                        ${money(stock.price)}
+                    </div>
+
+                    <div
+                        class="market-number
+                        ${change >= 0 ? "positive" : "negative"}"
+                    >
+                        ${changeText(stock)}
+                    </div>
+
+                    <div class="market-number volume-column">
+                        ${stock.volume.toLocaleString()}
+                    </div>
+
+                </div>
+            `;
+
+        }).join("");
+}
+
+
+/* =========================================
+   股票詳細
+   ========================================= */
+
+let currentStockId = null;
+let currentChart = null;
+let currentChartType = "line";
+
+
+function openStock(id) {
+
+    currentStockId = id;
+
+    const stock =
+        stocks.find(
+            item => item.id === id
+        );
+
+    if (!stock) {
+        return;
+    }
+
+
+    showPage("stock");
+
+    renderStockDetail(stock);
+}
+
+
+function renderStockDetail(stock) {
+
+    const change =
+        getChange(stock);
+
+    document.getElementById(
+        "stock-detail"
+    ).innerHTML = `
+
+        <div class="stock-detail-header">
+
+            <div class="stock-detail-title">
 
                 <div>
-                    <div class="hero-label">明月綜合指數</div>
 
-                    <div class="hero-index" id="index-value">
-                        12,584.32
+                    <div class="stock-name">
+                        ${stock.company}
                     </div>
 
-                    <div class="hero-change positive" id="index-change">
-                        ▲ +1.37%
+                    <div class="stock-code">
+                        ${stock.id}
+                        ·
+                        ${stock.industry}
                     </div>
+
                 </div>
 
-                <div class="hero-decoration">
-                    ☾
+                <div
+                    class="${change >= 0 ? "positive" : "negative"}"
+                >
+                    ${changeText(stock)}
                 </div>
 
             </div>
 
 
-            <!-- 資產 -->
-            <div class="asset-card">
+            <div class="stock-detail-price">
+                ${money(stock.price)}
+            </div>
+
+
+            <div class="stock-meta">
 
                 <div>
-                    <div class="section-label">我的資產</div>
-
-                    <div class="asset-value" id="home-assets">
-                        ¥1,000,000
+                    <div class="meta-label">
+                        開盤
                     </div>
 
-                    <div class="asset-change" id="home-assets-change">
-                        今日 +¥0
+                    <div class="meta-value">
+                        ${money(getLatest(stock).open)}
                     </div>
                 </div>
-
-                <button class="primary-btn" onclick="showPage('portfolio')">
-                    查看投資
-                </button>
-
-            </div>
-
-
-            <!-- 熱門股票 -->
-            <div class="section-header">
-                <h2>今日熱門</h2>
-                <button class="text-btn" onclick="showPage('market')">
-                    查看全部 →
-                </button>
-            </div>
-
-            <div id="home-hot-stocks" class="stock-list"></div>
-
-
-            <!-- 市場概況 -->
-            <div class="section-header">
-                <h2>市場概況</h2>
-            </div>
-
-            <div class="stats-grid">
-
-                <div class="stat-card">
-                    <div class="stat-title">上市公司</div>
-                    <div class="stat-value" id="stat-companies">4</div>
-                </div>
-
-                <div class="stat-card">
-                    <div class="stat-title">上漲家數</div>
-                    <div class="stat-value positive" id="stat-up">0</div>
-                </div>
-
-                <div class="stat-card">
-                    <div class="stat-title">下跌家數</div>
-                    <div class="stat-value negative" id="stat-down">0</div>
-                </div>
-
-                <div class="stat-card">
-                    <div class="stat-title">成交量</div>
-                    <div class="stat-value" id="stat-volume">0</div>
-                </div>
-
-            </div>
-
-        </section>
-
-
-        <!-- ==========================
-             行情
-        =========================== -->
-        <section id="page-market" class="page">
-
-            <div class="page-title">
-                <h1>📈 行情</h1>
-                <p>即時市場價格與股票資訊</p>
-            </div>
-
-            <div class="market-tabs">
-
-                <button class="market-tab active" onclick="filterMarket('all', this)">
-                    全部
-                </button>
-
-                <button class="market-tab" onclick="filterMarket('up', this)">
-                    上漲
-                </button>
-
-                <button class="market-tab" onclick="filterMarket('down', this)">
-                    下跌
-                </button>
-
-            </div>
-
-            <div id="market-list" class="market-list"></div>
-
-        </section>
-
-
-        <!-- ==========================
-             股票詳細
-        =========================== -->
-        <section id="page-stock" class="page">
-
-            <button class="back-btn" onclick="showPage('market')">
-                ← 返回行情
-            </button>
-
-            <div id="stock-detail"></div>
-
-        </section>
-
-
-        <!-- ==========================
-             投資
-        =========================== -->
-        <section id="page-portfolio" class="page">
-
-            <div class="page-title">
-                <h1>💼 投資</h1>
-                <p>管理你的資產與持股</p>
-            </div>
-
-            <div class="balance-card">
 
                 <div>
-                    <div class="section-label">證券可用餘額</div>
+                    <div class="meta-label">
+                        最高
+                    </div>
 
-                    <div class="balance-value" id="portfolio-balance">
-                        ¥1,000,000
+                    <div class="meta-value">
+                        ${money(getLatest(stock).high)}
                     </div>
                 </div>
 
-                <button class="primary-btn" onclick="openDepositModal()">
-                    💰 儲值
-                </button>
+                <div>
+                    <div class="meta-label">
+                        最低
+                    </div>
 
-            </div>
-
-
-            <div class="section-header">
-                <h2>我的持股</h2>
-            </div>
-
-            <div id="portfolio-list"></div>
-
-
-            <div class="section-header">
-                <h2>交易紀錄</h2>
-            </div>
-
-            <div id="transaction-list"></div>
-
-        </section>
-
-
-        <!-- ==========================
-             新聞
-        =========================== -->
-        <section id="page-news" class="page">
-
-            <div class="page-title">
-                <h1>📰 新聞</h1>
-                <p>公司公告與市場消息</p>
-            </div>
-
-            <div class="news-tabs">
-
-                <button class="news-tab active" onclick="filterNews('all', this)">
-                    全部
-                </button>
-
-                <button class="news-tab" onclick="filterNews('company', this)">
-                    公司
-                </button>
-
-                <button class="news-tab" onclick="filterNews('market', this)">
-                    市場
-                </button>
-
-            </div>
-
-            <div id="news-list"></div>
-
-        </section>
-
-
-        <!-- ==========================
-             我的
-        =========================== -->
-        <section id="page-profile" class="page">
-
-            <div class="page-title">
-                <h1>👤 我的</h1>
-                <p>個人帳戶與公司管理</p>
-            </div>
-
-
-            <div class="profile-card">
-
-                <div class="avatar">
-                    F
+                    <div class="meta-value">
+                        ${money(getLatest(stock).low)}
+                    </div>
                 </div>
 
-                <div class="profile-info">
-                    <div class="profile-name" id="profile-name">
-                        Fisher
+                <div>
+                    <div class="meta-label">
+                        成交量
                     </div>
 
-                    <div class="profile-id">
-                        證券帳戶 MYS-000184
-                    </div>
-
-                    <div class="google-status">
-                        ● Demo 帳戶
+                    <div class="meta-value">
+                        ${stock.volume.toLocaleString()}
                     </div>
                 </div>
 
             </div>
 
-
-            <button class="google-login-btn" onclick="googleLogin()">
-                <span class="google-logo">G</span>
-                使用 Google 登入
-            </button>
-
-
-            <!-- 資金 -->
-            <div class="profile-section">
-
-                <div class="profile-section-title">
-                    💰 資金管理
-                </div>
-
-                <button class="profile-item" onclick="openDepositModal()">
-                    <span>證券帳戶儲值</span>
-                    <span>→</span>
-                </button>
-
-                <button class="profile-item" onclick="showToast('遊戲錢包功能將在後端版本開放')">
-                    <span>遊戲錢包</span>
-                    <span>¥500,000 →</span>
-                </button>
-
-            </div>
-
-
-            <!-- 公司 -->
-            <div class="profile-section">
-
-                <div class="profile-section-title">
-                    🏢 公司管理
-                </div>
-
-                <button class="profile-item" onclick="openCompanyModal()">
-                    <span>註冊公司</span>
-                    <span>→</span>
-                </button>
-
-                <button class="profile-item" onclick="openMyCompany()">
-                    <span>我的公司</span>
-                    <span>→</span>
-                </button>
-
-            </div>
-
-
-            <!-- 個人 -->
-            <div class="profile-section">
-
-                <div class="profile-section-title">
-                    ⚙️ 個人資料
-                </div>
-
-                <button class="profile-item" onclick="showToast('Google 個人資料功能尚未連接')">
-                    <span>個人資料</span>
-                    <span>→</span>
-                </button>
-
-                <button class="profile-item" onclick="showToast('設定功能即將推出')">
-                    <span>帳戶設定</span>
-                    <span>→</span>
-                </button>
-
-            </div>
-
-        </section>
-
-
-        <!-- ==========================
-             我的公司
-        =========================== -->
-        <section id="page-company" class="page">
-
-            <button class="back-btn" onclick="showPage('profile')">
-                ← 返回我的
-            </button>
-
-            <div id="company-page"></div>
-
-        </section>
-
-    </main>
-
-
-    <!-- ==============================
-         底部導航
-    =============================== -->
-    <nav class="bottom-nav">
-
-        <button class="nav-item active" data-page="home" onclick="showPage('home')">
-            <span>🏠</span>
-            <small>首頁</small>
-        </button>
-
-        <button class="nav-item" data-page="market" onclick="showPage('market')">
-            <span>📈</span>
-            <small>行情</small>
-        </button>
-
-        <button class="nav-item" data-page="portfolio" onclick="showPage('portfolio')">
-            <span>💼</span>
-            <small>投資</small>
-        </button>
-
-        <button class="nav-item" data-page="news" onclick="showPage('news')">
-            <span>📰</span>
-            <small>新聞</small>
-        </button>
-
-        <button class="nav-item" data-page="profile" onclick="showPage('profile')">
-            <span>👤</span>
-            <small>我的</small>
-        </button>
-
-    </nav>
-
-</div>
-
-
-<!-- ==============================
-     儲值 Modal
-================================ -->
-<div id="deposit-modal" class="modal">
-
-    <div class="modal-box">
-
-        <button class="modal-close" onclick="closeModal('deposit-modal')">
-            ×
-        </button>
-
-        <h2>💰 證券帳戶儲值</h2>
-
-        <p class="modal-description">
-            Demo 版本會直接從模擬遊戲錢包轉入。
-        </p>
-
-        <div class="wallet-info">
-            遊戲錢包餘額
-            <strong>¥500,000</strong>
         </div>
 
-        <label>儲值金額</label>
 
-        <input
-            id="deposit-amount"
-            type="number"
-            min="1"
-            placeholder="輸入金額"
-        >
+        <div class="chart-card">
 
-        <button class="primary-btn full-btn" onclick="depositMoney()">
-            確認儲值
-        </button>
+            <div class="chart-title">
+                ${stock.name} 股價走勢
+            </div>
 
-    </div>
+            <div class="chart-switch">
 
-</div>
+                <button
+                    class="${currentChartType === "line" ? "active" : ""}"
+                    onclick="switchChart('line')"
+                >
+                    折線圖
+                </button>
 
+                <button
+                    class="${currentChartType === "candle" ? "active" : ""}"
+                    onclick="switchChart('candle')"
+                >
+                    K線圖
+                </button>
 
-<!-- ==============================
-     公司註冊 Modal
-================================ -->
-<div id="company-modal" class="modal">
+            </div>
 
-    <div class="modal-box">
+            <div class="chart-wrapper">
+                <canvas id="stock-chart"></canvas>
+            </div>
 
-        <button class="modal-close" onclick="closeModal('company-modal')">
-            ×
-        </button>
-
-        <h2>🏢 註冊公司</h2>
-
-        <p class="modal-description">
-            建立你的明月帝國企業。
-        </p>
-
-        <label>公司名稱</label>
-
-        <input
-            id="company-name"
-            type="text"
-            placeholder="例如：明月科技股份有限公司"
-        >
-
-        <label>公司簡稱</label>
-
-        <input
-            id="company-short"
-            type="text"
-            placeholder="例如：明月科技"
-        >
-
-        <label>股票代號</label>
-
-        <input
-            id="company-code"
-            type="text"
-            maxlength="6"
-            placeholder="例如：MTC"
-        >
-
-        <label>產業</label>
-
-        <select id="company-industry">
-
-            <option value="科技">科技</option>
-            <option value="金融">金融</option>
-            <option value="工業">工業</option>
-            <option value="交通">交通</option>
-            <option value="餐飲">餐飲</option>
-            <option value="農林">農林</option>
-            <option value="醫療">醫療</option>
-            <option value="其他">其他</option>
-
-        </select>
-
-        <label>註冊資本</label>
-
-        <input
-            id="company-capital"
-            type="number"
-            min="1"
-            placeholder="例如：10000000"
-        >
-
-        <button class="primary-btn full-btn" onclick="registerCompany()">
-            提交公司註冊
-        </button>
-
-    </div>
-
-</div>
+        </div>
 
 
-<!-- Toast -->
-<div id="toast" class="toast"></div>
+        <div class="trade-box">
+
+            <button
+                class="buy-btn"
+                onclick="buyStock('${stock.id}')"
+            >
+                買入
+            </button>
+
+            <button
+                class="sell-btn"
+                onclick="sellStock('${stock.id}')"
+            >
+                賣出
+            </button>
+
+        </div>
+
+    `;
+
+    drawChart(stock);
+}
 
 
-<script src="script.js"></script>
+function getLatest(stock) {
 
-</body>
-</html>
+    const data =
+        historyData[stock.id];
+
+    return data[data.length - 1];
+}
+
+
+/* =========================================
+   圖表
+   ========================================= */
+
+function switchChart(type) {
+
+    currentChartType = type;
+
+    const stock =
+        stocks.find(
+            item => item.id === currentStockId
+        );
+
+    if (!stock) {
+        return;
+    }
+
+    renderStockDetail(stock);
+}
+
+
+function drawChart(stock) {
+
+    if (currentChart) {
+        currentChart.destroy();
+    }
+
+
+    const canvas =
+        document.getElementById(
+            "stock-chart"
+        );
+
+    if (!canvas) {
+        return;
+    }
+
+
+    const data =
+        historyData[stock.id];
+
+
+    const labels =
+        data.map(
+            item => item.time
+        );
+
+
+    if (currentChartType === "line") {
+
+        currentChart =
+            new Chart(
+                canvas,
+                {
+                    type: "line",
+
+                    data: {
+                        labels,
+
+                        datasets: [
+                            {
+                                label: stock.id,
+
+                                data:
+                                    data.map(
+                                        item =>
+                                            item.close
+                                    ),
+
+                                borderWidth: 2,
+
+                                pointRadius: 0,
+
+                                tension: 0.25
+                            }
+                        ]
+                    },
+
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
+
+                        scales: {
+                            x: {
+                                grid: {
+                                    display: false
+                                }
+                            }
+                        }
+                    }
+                }
+            );
+
+    } else {
+
+        /*
+         * Chart.js 本身沒有原生 K 線圖。
+         * 因此這裡使用 High / Low 的區間
+         * 加上 Close 線來呈現 Demo K 線。
+         *
+         * 正式版可以換成專門的 Candlestick
+         * library。
+         */
+
+        currentChart =
+            new Chart(
+                canvas,
+                {
+                    type: "line",
+
+                    data: {
+                        labels,
+
+                        datasets: [
+
+                            {
+                                label: "最高",
+                                data:
+                                    data.map(
+                                        item =>
+                                            item.high
+                                    ),
+
+                                borderWidth: 1,
+                                pointRadius: 0
+                            },
+
+                            {
+                                label: "收盤",
+                                data:
+                                    data.map(
+                                        item =>
+                                            item.close
+                                    ),
+
+                                borderWidth: 2,
+                                pointRadius: 0
+                            },
+
+                            {
+                                label: "最低",
+                                data:
+                                    data.map(
+                                        item =>
+                                            item.low
+                                    ),
+
+                                borderWidth: 1,
+                                pointRadius: 0
+                            }
+
+                        ]
+                    },
+
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+
+                        plugins: {
+                            legend: {
+                                display: true
+                            }
+                        }
+                    }
+                }
+            );
+    }
+}
+
+
+/* =========================================
+   買入
+   ========================================= */
+
+function buyStock(id) {
+
+    const stock =
+        stocks.find(
+            item => item.id === id
+        );
+
+    if (!stock) {
+        return;
+    }
+
+
+    const amount =
+        prompt(
+            `目前股價 ${money(stock.price)}\n\n請輸入購買股數：`
+        );
+
+
+    const shares =
+        Number(amount);
+
+
+    if (
+        !Number.isInteger(shares)
+        ||
+        shares <= 0
+    ) {
+
+        showToast(
+            "請輸入有效股數"
+        );
+
+        return;
+    }
+
+
+    const cost =
+        shares * stock.price;
+
+
+    if (cost > user.balance) {
+
+        showToast(
+            "證券餘額不足"
+        );
+
+        return;
+    }
+
+
+    user.balance -= cost;
+
+
+    if (!portfolio[id]) {
+
+        portfolio[id] = {
+            shares: 0,
+            average: 0
+        };
+    }
+
+
+    const oldShares =
+        portfolio[id].shares;
+
+    const oldAverage =
+        portfolio[id].average;
+
+
+    portfolio[id].shares += shares;
+
+
+    portfolio[id].average =
+        (
+            oldShares * oldAverage
+            +
+            cost
+        )
+        /
+        portfolio[id].shares;
+
+
+    transactions.unshift({
+
+        id:
+            Date.now(),
+
+        type: "買入",
+
+        code: id,
+
+        shares,
+
+        price:
+            stock.price,
+
+        amount:
+            cost,
+
+        time:
+            new Date().toLocaleString(
+                "zh-TW"
+            )
+
+    });
+
+
+    saveAll();
+
+    showToast(
+        `已買入 ${shares.toLocaleString()} 股 ${id}`
+    );
+
+    renderStockDetail(stock);
+}
+
+
+/* =========================================
+   賣出
+   ========================================= */
+
+function sellStock(id) {
+
+    const stock =
+        stocks.find(
+            item => item.id === id
+        );
+
+    if (!portfolio[id]) {
+
+        showToast(
+            "你目前沒有持有這支股票"
+        );
+
+        return;
+    }
+
+
+    const amount =
+        prompt(
+            `目前持有 ${portfolio[id].shares.toLocaleString()} 股\n\n請輸入賣出股數：`
+        );
+
+
+    const shares =
+        Number(amount);
+
+
+    if (
+        !Number.isInteger(shares)
+        ||
+        shares <= 0
+    ) {
+
+        showToast(
+            "請輸入有效股數"
+        );
+
+        return;
+    }
+
+
+    if (
+        shares >
+        portfolio[id].shares
+    ) {
+
+        showToast(
+            "持股不足"
+        );
+
+        return;
+    }
+
+
+    const revenue =
+        shares * stock.price;
+
+
+    user.balance += revenue;
+
+
+    portfolio[id].shares -= shares;
+
+
+    if (
+        portfolio[id].shares === 0
+    ) {
+
+        delete portfolio[id];
+
+    }
+
+
+    transactions.unshift({
+
+        id:
+            Date.now(),
+
+        type: "賣出",
+
+        code: id,
+
+        shares,
+
+        price:
+            stock.price,
+
+        amount:
+            revenue,
+
+        time:
+            new Date().toLocaleString(
+                "zh-TW"
+            )
+
+    });
+
+
+    saveAll();
+
+    showToast(
+        `已賣出 ${shares.toLocaleString()} 股 ${id}`
+    );
+
+    renderStockDetail(stock);
+}
+
+
+/* =========================================
+   投資頁
+   ========================================= */
+
+function renderPortfolio() {
+
+    document.getElementById(
+        "portfolio-balance"
+    ).textContent =
+        money(user.balance);
+
+
+    const list =
+        document.getElementById(
+            "portfolio-list"
+        );
+
+
+    const entries =
+        Object.entries(portfolio);
+
+
+    if (entries.length === 0) {
+
+        list.innerHTML = `
+            <div class="portfolio-card">
+                <div>
+                    目前沒有持股
+                </div>
+            </div>
+        `;
+
+    } else {
+
+        list.innerHTML =
+            entries.map(
+                ([id, data]) => {
+
+                    const stock =
+                        stocks.find(
+                            item =>
+                                item.id === id
+                        );
+
+                    if (!stock) {
+                        return "";
+                    }
+
+
+                    const value =
+                        data.shares *
+                        stock.price;
+
+
+                    return `
+
+                        <div class="portfolio-card">
+
+                            <div class="portfolio-left">
+
+                                <strong>
+                                    ${stock.name}
+                                </strong>
+
+                                <span class="portfolio-code">
+                                    ${id}
+                                    ·
+                                    ${data.shares.toLocaleString()} 股
+                                </span>
+
+                            </div>
+
+                            <div>
+                                <strong>
+                                    ${money(value)}
+                                </strong>
+                            </div>
+
+                        </div>
+
+                    `;
+
+                }
+            ).join("");
+    }
+
+
+    const transactionList =
+        document.getElementById(
+            "transaction-list"
+        );
+
+
+    if (
+        transactions.length === 0
+    ) {
+
+        transactionList.innerHTML =
+            `<div class="transaction-card">
+                尚無交易紀錄
+            </div>`;
+
+        return;
+    }
+
+
+    transactionList.innerHTML =
+        transactions
+            .slice(0, 20)
+            .map(
+                transaction => `
+
+                    <div class="transaction-card">
+
+                        <div>
+
+                            <div class="transaction-type
+                                ${transaction.type === "買入"
+                                    ? "positive"
+                                    : "negative"}"
+                            >
+                                ${transaction.type}
+                                ${transaction.code}
+                            </div>
+
+                            <div class="transaction-date">
+                                ${transaction.time}
+                            </div>
+
+                        </div>
+
+                        <div>
+                            ${transaction.shares.toLocaleString()}
+                            股
+                            <br>
+                            ${money(transaction.amount)}
+                        </div>
+
+                    </div>
+
+                `
+            )
+            .join("");
+}
+
+
+/* =========================================
+   儲值
+   ========================================= */
+
+function openDepositModal() {
+
+    document.getElementById(
+        "deposit-modal"
+    ).classList.add("show");
+}
+
+
+function depositMoney() {
+
+    const amount =
+        Number(
+            document.getElementById(
+                "deposit-amount"
+            ).value
+        );
+
+
+    if (
+        !amount ||
+        amount <= 0
+    ) {
+
+        showToast(
+            "請輸入有效金額"
+        );
+
+        return;
+    }
+
+
+    if (
+        amount >
+        user.wallet
+    ) {
+
+        showToast(
+            "遊戲錢包餘額不足"
+        );
+
+        return;
+    }
+
+
+    user.wallet -= amount;
+
+    user.balance += amount;
+
+
+    saveAll();
+
+
+    closeModal(
+        "deposit-modal"
+    );
+
+
+    document.getElementById(
+        "deposit-amount"
+    ).value = "";
+
+
+    showToast(
+        `成功儲值 ${money(amount)}`
+    );
+
+
+    renderHome();
+    renderPortfolio();
+}
+
+
+function closeModal(id) {
+
+    document.getElementById(
+        id
+    ).classList.remove("show");
+}
+
+
+/* =========================================
+   Google Login Demo
+   ========================================= */
+
+function googleLogin() {
+
+    showToast(
+        "Google OAuth 將在正式後端版本接入"
+    );
+
+}
+
+
+/* =========================================
+   公司
+   ========================================= */
+
+function openCompanyModal() {
+
+    document.getElementById(
+        "company-modal"
+    ).classList.add("show");
+}
+
+
+function registerCompany() {
+
+    const name =
+        document.getElementById(
+            "company-name"
+        ).value.trim();
+
+
+    const shortName =
+        document.getElementById(
+            "company-short"
+        ).value.trim();
+
+
+    const code =
+        document.getElementById(
+            "company-code"
+        ).value
+        .trim()
+        .toUpperCase();
+
+
+    const industry =
+        document.getElementById(
+            "company-industry"
+        ).value;
+
+
+    const capital =
+        Number(
+            document.getElementById(
+                "company-capital"
+            ).value
+        );
+
+
+    if (
+        !name ||
+        !shortName ||
+        !code ||
+        !capital
+    ) {
+
+        showToast(
+            "請完整填寫公司資料"
+        );
+
+        return;
+    }
+
+
+    if (
+        stocks.some(
+            stock =>
+                stock.id === code
+        )
+        ||
+        companies.some(
+            company =>
+                company.code === code
+        )
+    ) {
+
+        showToast(
+            "股票代號已經存在"
+        );
+
+        return;
+    }
+
+
+    const company = {
+
+        id:
+            Date.now(),
+
+        name,
+
+        shortName,
+
+        code,
+
+        industry,
+
+        capital,
+
+        owner:
+            user.accountId,
+
+        ownerName:
+            user.name,
+
+        status:
+            "私人公司",
+
+        listed:
+            false,
+
+        createdAt:
+            new Date().toLocaleDateString(
+                "zh-TW"
+            )
+
+    };
+
+
+    companies.push(
+        company
+    );
+
+
+    saveData(
+        "mingyue_companies_v2",
+        companies
+    );
+
+
+    closeModal(
+        "company-modal"
+    );
+
+
+    document.getElementById(
+        "company-name"
+    ).value = "";
+
+    document.getElementById(
+        "company-short"
+    ).value = "";
+
+    document.getElementById(
+        "company-code"
+    ).value = "";
+
+    document.getElementById(
+        "company-capital"
+    ).value = "";
+
+
+    showToast(
+        `公司「${name}」註冊成功`
+    );
+
+
+    openMyCompany();
+}
+
+
+function openMyCompany() {
+
+    showPage("company");
+
+    const mine =
+        companies.filter(
+            company =>
+                company.owner ===
+                user.accountId
+        );
+
+
+    const container =
+        document.getElementById(
+            "company-page"
+        );
+
+
+    if (mine.length === 0) {
+
+        container.innerHTML = `
+
+            <div class="company-header">
+
+                <h2>
+                    🏢 我的公司
+                </h2>
+
+                <p style="margin-top:10px;color:var(--muted)">
+                    你目前還沒有註冊公司。
+                </p>
+
+                <button
+                    class="primary-btn"
+                    style="margin-top:20px"
+                    onclick="openCompanyModal()"
+                >
+                    註冊公司
+                </button>
+
+            </div>
+
+        `;
+
+        return;
+    }
+
+
+    container.innerHTML =
+        mine.map(
+            company => `
+
+                <div class="company-header">
+
+                    <span class="company-type">
+                        ${company.status}
+                    </span>
+
+                    <div class="company-name">
+                        ${company.name}
+                    </div>
+
+                    <div class="company-code">
+                        ${company.code}
+                        ·
+                        ${company.industry}
+                    </div>
+
+
+                    <div class="company-stats">
+
+                        <div class="company-stat">
+
+                            <div class="meta-label">
+                                註冊資本
+                            </div>
+
+                            <div class="meta-value">
+                                ${money(company.capital)}
+                            </div>
+
+                        </div>
+
+
+                        <div class="company-stat">
+
+                            <div class="meta-label">
+                                公司狀態
+                            </div>
+
+                            <div class="meta-value">
+                                ${company.listed
+                                    ? "上市"
+                                    : "未上市"}
+                            </div>
+
+                        </div>
+
+
+                        <div class="company-stat">
+
+                            <div class="meta-label">
+                                成立日期
+                            </div>
+
+                            <div class="meta-value">
+                                ${company.createdAt}
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="company-actions">
+
+                        <button
+                            class="company-action"
+                            onclick="publishCompanyNews('${company.code}')"
+                        >
+                            📰 發布新聞
+                        </button>
+
+                        <button
+                            class="company-action"
+                            onclick="showToast('IPO 功能將在下一階段加入')"
+                        >
+                            📈 IPO / 上市
+                        </button>
+
+                        <button
+                            class="company-action"
+                            onclick="showToast('股東管理功能將在下一階段加入')"
+                        >
+                            👥 股東
+                        </button>
+
+                        <button
+                            class="company-action"
+                            onclick="showToast('公司財務系統將在下一階段加入')"
+                        >
+                            💰 財務
+                        </button>
+
+                    </div>
+
+                </div>
+
+            `
+        ).join("");
+}
+
+
+/* =========================================
+   公司發布新聞
+   ========================================= */
+
+function publishCompanyNews(code) {
+
+    const title =
+        prompt(
+            "請輸入新聞標題："
+        );
+
+
+    if (!title) {
+        return;
+    }
+
+
+    const content =
+        prompt(
+            "請輸入新聞內容："
+        );
+
+
+    if (!content) {
+        return;
+    }
+
+
+    const company =
+        companies.find(
+            item =>
+                item.code === code
+        );
+
+
+    if (!company) {
+        return;
+    }
+
+
+    news.unshift({
+
+        id:
+            Date.now(),
+
+        companyCode:
+            code,
+
+        companyName:
+            company.name,
+
+        category:
+            "company",
+
+        title,
+
+        content,
+
+        time:
+            "剛剛"
+
+    });
+
+
+    saveData(
+        "mingyue_news_v2",
+        news
+    );
+
+
+    showToast(
+        "新聞已發布"
+    );
+}
+
+
+/* =========================================
+   新聞
+   ========================================= */
+
+let newsFilter = "all";
+
+
+function filterNews(filter, button) {
+
+    newsFilter = filter;
+
+    document.querySelectorAll(
+        ".news-tab"
+    ).forEach(
+        element =>
+            element.classList.remove("active")
+    );
+
+    button.classList.add("active");
+
+    renderNews();
+}
+
+
+function renderNews() {
+
+    let list =
+        [...news];
+
+
+    if (newsFilter !== "all") {
+
+        list =
+            list.filter(
+                item =>
+                    item.category ===
+                    newsFilter
+            );
+    }
+
+
+    document.getElementById(
+        "news-list"
+    ).innerHTML =
+
+        list.map(
+            item => `
+
+                <div
+                    class="news-card"
+                    onclick="openNews('${item.id}')"
+                >
+
+                    <div class="news-company">
+                        ${item.companyName}
+                        ${item.companyCode
+                            ? " · " + item.companyCode
+                            : ""}
+                    </div>
+
+                    <div class="news-title">
+                        ${item.title}
+                    </div>
+
+                    <div class="news-preview">
+                        ${item.content}
+                    </div>
+
+                    <div class="news-time">
+                        ${item.time}
+                    </div>
+
+                </div>
+
+            `
+        ).join("");
+}
+
+
+function openNews(id) {
+
+    const item =
+        news.find(
+            newsItem =>
+                String(newsItem.id) ===
+                String(id)
+        );
+
+
+    if (!item) {
+        return;
+    }
+
+
+    alert(
+        `${item.title}\n\n${item.content}\n\n${item.time}`
+    );
+}
+
+
+/* =========================================
+   個人
+   ========================================= */
+
+function renderProfile() {
+
+    document.getElementById(
+        "profile-name"
+    ).textContent =
+        user.name;
+}
+
+
+/* =========================================
+   儲存全部
+   ========================================= */
+
+function saveAll() {
+
+    saveData(
+        "mingyue_user_v2",
+        user
+    );
+
+    saveData(
+        "mingyue_portfolio_v2",
+        portfolio
+    );
+
+    saveData(
+        "mingyue_transactions_v2",
+        transactions
+    );
+
+    saveData(
+        "mingyue_stocks_v2",
+        stocks
+    );
+
+    saveData(
+        "mingyue_history_v2",
+        historyData
+    );
+
+    saveData(
+        "mingyue_companies_v2",
+        companies
+    );
+
+    saveData(
+        "mingyue_news_v2",
+        news
+    );
+}
+
+
+/* =========================================
+   Toast
+   ========================================= */
+
+let toastTimer;
+
+
+function showToast(message) {
+
+    const toast =
+        document.getElementById(
+            "toast"
+        );
+
+
+    toast.textContent =
+        message;
+
+
+    toast.classList.add(
+        "show"
+    );
+
+
+    clearTimeout(
+        toastTimer
+    );
+
+
+    toastTimer =
+        setTimeout(
+            () => {
+
+                toast.classList.remove(
+                    "show"
+                );
+
+            },
+            2500
+        );
+}
+
+
+/* =========================================
+   點擊 Modal 背景關閉
+   ========================================= */
+
+document.querySelectorAll(
+    ".modal"
+).forEach(
+    modal => {
+
+        modal.addEventListener(
+            "click",
+            event => {
+
+                if (
+                    event.target === modal
+                ) {
+
+                    modal.classList.remove(
+                        "show"
+                    );
+
+                }
+
+            }
+        );
+
+    }
+);
+
+
+/* =========================================
+   模擬市場波動
+   ========================================= */
+
+function updateMarket() {
+
+    stocks.forEach(stock => {
+
+        const oldPrice =
+            stock.price;
+
+
+        /*
+         * 獨立波動模型
+         *
+         * 不再使用：
+         * price * 1.05
+         *
+         * 而是讓每次價格變動
+         * 都獨立產生。
+         */
+
+        const volatility =
+            0.008 +
+            Math.random() * 0.018;
+
+
+        const direction =
+            Math.random() > 0.5
+                ? 1
+                : -1;
+
+
+        const movement =
+            oldPrice *
+            volatility *
+            direction;
+
+
+        const newPrice =
+            Math.max(
+                1,
+                oldPrice + movement
+            );
+
+
+        stock.previous =
+            oldPrice;
+
+
+        stock.price =
+            Number(
+                newPrice.toFixed(2)
+            );
+
+
+        stock.volume +=
+            Math.floor(
+                Math.random() * 1000
+            );
+
+
+        if (!historyData[stock.id]) {
+
+            historyData[stock.id] = [];
+
+        }
+
+
+        const open =
+            oldPrice;
+
+
+        const close =
+            stock.price;
+
+
+        const high =
+            Math.max(open, close)
+            *
+            (
+                1 +
+                Math.random() * 0.012
+            );
+
+
+        const low =
+            Math.min(open, close)
+            *
+            (
+                1 -
+                Math.random() * 0.012
+            );
+
+
+        historyData[stock.id].push({
+
+            time:
+                new Date()
+                    .toLocaleTimeString(
+                        "zh-TW",
+                        {
+                            hour: "2-digit",
+                            minute: "2-digit"
+                        }
+                    ),
+
+            open:
+                Number(
+                    open.toFixed(2)
+                ),
+
+            high:
+                Number(
+                    high.toFixed(2)
+                ),
+
+            low:
+                Number(
+                    low.toFixed(2)
+                ),
+
+            close:
+                Number(
+                    close.toFixed(2)
+                ),
+
+            volume:
+                Math.floor(
+                    500 +
+                    Math.random() * 2000
+                )
+
+        });
+
+
+        /*
+         * 只保留最近 50 個資料點
+         */
+
+        if (
+            historyData[stock.id].length
+            >
+            50
+        ) {
+
+            historyData[stock.id]
+                .shift();
+
+        }
+
+    });
+
+
+    saveAll();
+
+
+    renderHome();
+
+
+    if (
+        document.getElementById(
+            "page-market"
+        ).classList.contains("active")
+    ) {
+
+        renderMarket();
+
+    }
+
+
+    if (
+        document.getElementById(
+            "page-stock"
+        ).classList.contains("active")
+        &&
+        currentStockId
+    ) {
+
+        const stock =
+            stocks.find(
+                item =>
+                    item.id ===
+                    currentStockId
+            );
+
+        if (stock) {
+            renderStockDetail(stock);
+        }
+
+    }
+
+}
+
+
+/* =========================================
+   啟動
+   ========================================= */
+
+renderHome();
+
+renderMarket();
+
+renderPortfolio();
+
+renderNews();
+
+renderProfile();
+
+
+/*
+ * Demo 市場每 20 秒更新一次
+ */
+
+setInterval(
+    updateMarket,
+    20000
+);
