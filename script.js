@@ -1530,9 +1530,16 @@ function getLatest(stock) {
 
 }
 
-
 /* =========================================================
    30. 股票詳細頁
+   ---------------------------------------------------------
+   v3.3
+   1. 折線圖 / K線圖使用獨立 Canvas
+   2. 統一 X 軸座標
+   3. 統一 Y 軸價格座標
+   4. 明確繪製 X / Y 軸
+   5. 修復手機 Canvas 高度
+   6. 修復 K 線與座標軸偏移
    ========================================================= */
 
 function renderStockDetail(stock) {
@@ -1541,7 +1548,6 @@ function renderStockDetail(stock) {
         document.getElementById(
             "stock-detail"
         );
-
 
     if (!detail) {
         return;
@@ -1589,82 +1595,47 @@ function renderStockDetail(stock) {
         <div class="stock-stat-grid">
 
             <div>
-
-                <span>
-                    日期
-                </span>
-
+                <span>日期</span>
                 <strong>
-                    ${latest.date}
+                    ${escapeHTML(latest.date)}
                 </strong>
-
             </div>
 
-
             <div>
-
-                <span>
-                    開盤
-                </span>
-
+                <span>開盤</span>
                 <strong>
                     ${money(latest.open)}
                 </strong>
-
             </div>
 
-
             <div>
-
-                <span>
-                    最高
-                </span>
-
+                <span>最高</span>
                 <strong>
                     ${money(latest.high)}
                 </strong>
-
             </div>
 
-
             <div>
-
-                <span>
-                    最低
-                </span>
-
+                <span>最低</span>
                 <strong>
                     ${money(latest.low)}
                 </strong>
-
             </div>
 
-
             <div>
-
-                <span>
-                    收盤
-                </span>
-
+                <span>收盤</span>
                 <strong>
                     ${money(latest.close)}
                 </strong>
-
             </div>
 
-
             <div>
-
-                <span>
-                    成交量
-                </span>
-
+                <span>成交量</span>
                 <strong>
                     ${Number(
                         latest.volume || 0
                     ).toLocaleString("zh-TW")}
                 </strong>
-
             </div>
 
         </div>
@@ -1680,12 +1651,12 @@ function renderStockDetail(stock) {
 
             <button
                 type="button"
-                onclick="switchChart('line')"
                 class="${
                     currentChartType === "line"
                         ? "active"
                         : ""
                 }"
+                onclick="switchChart('line')"
             >
                 折線圖
             </button>
@@ -1693,12 +1664,12 @@ function renderStockDetail(stock) {
 
             <button
                 type="button"
-                onclick="switchChart('candle')"
                 class="${
                     currentChartType === "candle"
                         ? "active"
                         : ""
                 }"
+                onclick="switchChart('candle')"
             >
                 K線圖
             </button>
@@ -1712,7 +1683,22 @@ function renderStockDetail(stock) {
         >
 
             <canvas
-                id="stock-chart"
+                id="stock-line-chart"
+                class="stock-chart-canvas ${
+                    currentChartType === "line"
+                        ? "chart-visible"
+                        : "chart-hidden"
+                }"
+            ></canvas>
+
+
+            <canvas
+                id="stock-candle-chart"
+                class="stock-chart-canvas ${
+                    currentChartType === "candle"
+                        ? "chart-visible"
+                        : "chart-hidden"
+                }"
             ></canvas>
 
         </div>
@@ -1745,72 +1731,60 @@ function renderStockDetail(stock) {
 
 
     /*
-     * 手機觸控友善
+     * 交易按鈕
      */
 
-    const tradeButtons =
-        detail.querySelectorAll(
-            ".trade-button"
+    detail
+        .querySelectorAll(".trade-button")
+        .forEach(
+            button => {
+
+                button.style.touchAction =
+                    "manipulation";
+
+                button.addEventListener(
+                    "click",
+                    event => {
+
+                        event.preventDefault();
+                        event.stopPropagation();
+
+                        const id =
+                            button.dataset.stock;
+
+                        const action =
+                            button.dataset.action;
+
+
+                        if (action === "buy") {
+
+                            buyStock(id);
+
+                        }
+
+                        else if (
+                            action === "sell"
+                        ) {
+
+                            sellStock(id);
+
+                        }
+
+                    }
+                );
+
+            }
         );
 
 
-    tradeButtons.forEach(
-        button => {
-
-            button.style.touchAction =
-                "manipulation";
-
-            button.style.pointerEvents =
-                "auto";
-
-            button.addEventListener(
-                "click",
-                event => {
-
-                    event.preventDefault();
-                    event.stopPropagation();
-
-                    const id =
-                        button.dataset.stock;
-
-                    const action =
-                        button.dataset.action;
-
-
-                    if (
-                        action ===
-                        "buy"
-                    ) {
-
-                        buyStock(id);
-
-                    }
-
-                    else if (
-                        action ===
-                        "sell"
-                    ) {
-
-                        sellStock(id);
-
-                    }
-
-                },
-                {
-                    passive: false
-                }
-            );
-
-        }
-    );
-
+    /*
+     * 等 DOM 完成後繪圖
+     */
 
     requestAnimationFrame(
         () => {
 
-            drawChart(
-                stock
-            );
+            drawChart(stock);
 
         }
     );
@@ -1823,6 +1797,16 @@ function renderStockDetail(stock) {
    ========================================================= */
 
 function switchChart(type) {
+
+    if (
+        type !== "line" &&
+        type !== "candle"
+    ) {
+
+        return;
+
+    }
+
 
     currentChartType =
         type;
@@ -1846,24 +1830,68 @@ function switchChart(type) {
     }
 
 
-    renderStockDetail(
-        stock
+    /*
+     * 不重新產生整個股票頁
+     * 直接切換 Canvas
+     */
+
+    const lineCanvas =
+        document.getElementById(
+            "stock-line-chart"
+        );
+
+
+    const candleCanvas =
+        document.getElementById(
+            "stock-candle-chart"
+        );
+
+
+    if (
+        !lineCanvas ||
+        !candleCanvas
+    ) {
+
+        renderStockDetail(stock);
+        return;
+
+    }
+
+
+    lineCanvas.classList.toggle(
+        "chart-visible",
+        type === "line"
     );
+
+
+    lineCanvas.classList.toggle(
+        "chart-hidden",
+        type !== "line"
+    );
+
+
+    candleCanvas.classList.toggle(
+        "chart-visible",
+        type === "candle"
+    );
+
+
+    candleCanvas.classList.toggle(
+        "chart-hidden",
+        type !== "candle"
+    );
+
+
+    drawChart(stock);
 
 }
 
 
 /* =========================================================
-   32. Canvas 圖表
+   32. Canvas 圖表主程式
    ========================================================= */
 
 function drawChart(stock) {
-
-    const canvas =
-        document.getElementById(
-            "stock-chart"
-        );
-
 
     const container =
         document.getElementById(
@@ -1871,7 +1899,7 @@ function drawChart(stock) {
         );
 
 
-    if (!canvas || !container) {
+    if (!container) {
         return;
     }
 
@@ -1884,9 +1912,37 @@ function drawChart(stock) {
         !Array.isArray(data) ||
         data.length === 0
     ) {
+
         return;
+
     }
 
+
+    const lineCanvas =
+        document.getElementById(
+            "stock-line-chart"
+        );
+
+
+    const candleCanvas =
+        document.getElementById(
+            "stock-candle-chart"
+        );
+
+
+    if (
+        !lineCanvas ||
+        !candleCanvas
+    ) {
+
+        return;
+
+    }
+
+
+    /*
+     * chart-container 的高度固定至少 320px
+     */
 
     const rect =
         container.getBoundingClientRect();
@@ -1894,7 +1950,7 @@ function drawChart(stock) {
 
     const width =
         Math.max(
-            320,
+            300,
             Math.floor(
                 rect.width
             )
@@ -1903,23 +1959,84 @@ function drawChart(stock) {
 
     const height =
         Math.max(
-            300,
+            320,
             Math.floor(
                 rect.height || 320
             )
         );
 
 
+    setupCanvas(
+        lineCanvas,
+        width,
+        height
+    );
+
+
+    setupCanvas(
+        candleCanvas,
+        width,
+        height
+    );
+
+
+    const lineCtx =
+        lineCanvas.getContext("2d");
+
+
+    const candleCtx =
+        candleCanvas.getContext("2d");
+
+
+    if (currentChartType === "line") {
+
+        drawLineChart(
+            lineCtx,
+            width,
+            height,
+            data
+        );
+
+    }
+
+    else {
+
+        drawCandlestickChart(
+            candleCtx,
+            width,
+            height,
+            data
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   33. Canvas 初始化
+   ========================================================= */
+
+function setupCanvas(
+    canvas,
+    width,
+    height
+) {
+
     const dpr =
         window.devicePixelRatio || 1;
 
 
     canvas.width =
-        width * dpr;
+        Math.floor(
+            width * dpr
+        );
 
 
     canvas.height =
-        height * dpr;
+        Math.floor(
+            height * dpr
+        );
 
 
     canvas.style.width =
@@ -1931,9 +2048,7 @@ function drawChart(stock) {
 
 
     const ctx =
-        canvas.getContext(
-            "2d"
-        );
+        canvas.getContext("2d");
 
 
     ctx.setTransform(
@@ -1953,37 +2068,60 @@ function drawChart(stock) {
         height
     );
 
+}
 
-    if (
-        currentChartType ===
-        "line"
-    ) {
 
-        drawLineChart(
-            ctx,
-            width,
-            height,
-            data
-        );
+/* =========================================================
+   34. 圖表座標系統
+   ========================================================= */
 
-    }
+function getChartLayout(
+    width,
+    height
+) {
 
-    else {
+    const left =
+        width < 500
+            ? 58
+            : 72;
 
-        drawCandlestickChart(
-            ctx,
-            width,
-            height,
-            data
-        );
 
-    }
+    const right =
+        20;
+
+
+    const top =
+        20;
+
+
+    const bottom =
+        48;
+
+
+    return {
+
+        left,
+        right,
+        top,
+        bottom,
+
+        chartWidth:
+            width -
+            left -
+            right,
+
+        chartHeight:
+            height -
+            top -
+            bottom
+
+    };
 
 }
 
 
 /* =========================================================
-   33. 圖表共用範圍
+   35. 價格範圍
    ========================================================= */
 
 function getPriceRange(data) {
@@ -1994,67 +2132,87 @@ function getPriceRange(data) {
     data.forEach(
         item => {
 
-            prices.push(
-                Number(item.high)
-            );
+            const high =
+                Number(item.high);
 
-            prices.push(
-                Number(item.low)
-            );
+            const low =
+                Number(item.low);
+
+
+            if (
+                Number.isFinite(high)
+            ) {
+
+                prices.push(high);
+
+            }
+
+
+            if (
+                Number.isFinite(low)
+            ) {
+
+                prices.push(low);
+
+            }
 
         }
     );
 
 
+    if (prices.length === 0) {
+
+        return {
+
+            min: 0,
+            max: 100
+
+        };
+
+    }
+
+
     let max =
-        Math.max(
-            ...prices
-        );
+        Math.max(...prices);
 
 
     let min =
-        Math.min(
-            ...prices
-        );
-
-
-    if (
-        !Number.isFinite(max) ||
-        !Number.isFinite(min)
-    ) {
-
-        max = 100;
-        min = 0;
-
-    }
+        Math.min(...prices);
 
 
     let range =
         max - min;
 
 
-    if (range === 0) {
+    if (
+        !Number.isFinite(range) ||
+        range <= 0
+    ) {
 
         range =
             Math.max(
                 1,
-                max * 0.05
+                Math.abs(max) * 0.05
             );
 
     }
 
 
+    /*
+     * 上下留白
+     */
+
     const padding =
-        range * 0.08;
+        range * 0.10;
 
 
     return {
 
-        max:
-            max + padding,
-
         min:
-            min - padding
+            min - padding,
+
+        max:
+            max + padding
 
     };
 
@@ -2062,72 +2220,44 @@ function getPriceRange(data) {
 
 
 /* =========================================================
-   34. 折線圖
+   36. Y 軸
    ========================================================= */
 
-function drawLineChart(
+function drawYAxis(
     ctx,
+    layout,
     width,
     height,
-    data
+    range
 ) {
 
-    const left = 62;
-    const right = 18;
-    const top = 20;
-    const bottom = 42;
+    const {
+        left,
+        right,
+        top,
+        chartWidth,
+        chartHeight
+    } = layout;
 
 
-    const chartWidth =
-        width -
-        left -
-        right;
-
-
-    const chartHeight =
-        height -
-        top -
-        bottom;
-
-
-    if (
-        chartWidth <= 0 ||
-        chartHeight <= 0
-    ) {
-        return;
-    }
-
-
-    const range =
-        getPriceRange(data);
-
-
-    function priceToY(price) {
-
-        return (
-            top +
-            (
-                range.max -
-                price
-            ) /
-            (
-                range.max -
-                range.min
-            ) *
-            chartHeight
-        );
-
-    }
-
+    /*
+     * 水平格線
+     */
 
     ctx.strokeStyle =
-        "rgba(120,120,120,0.15)";
+        "rgba(120,120,120,0.16)";
+
+    ctx.lineWidth =
+        1;
+
 
     ctx.fillStyle =
         "#777";
 
+
     ctx.font =
-        "12px sans-serif";
+        "11px sans-serif";
+
 
     ctx.textAlign =
         "right";
@@ -2142,11 +2272,14 @@ function drawLineChart(
         i++
     ) {
 
+        const ratio =
+            i / 5;
+
+
         const y =
             top +
             chartHeight *
-            i /
-            5;
+            ratio;
 
 
         ctx.beginPath();
@@ -2170,8 +2303,7 @@ function drawLineChart(
                 range.max -
                 range.min
             ) *
-            i /
-            5;
+            ratio;
 
 
         ctx.fillText(
@@ -2184,13 +2316,273 @@ function drawLineChart(
     }
 
 
-    const spacing =
-        chartWidth /
-        Math.max(
-            1,
-            data.length - 1
+    /*
+     * Y 軸本體
+     */
+
+    ctx.strokeStyle =
+        "rgba(80,80,80,0.45)";
+
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+        left,
+        top
+    );
+
+    ctx.lineTo(
+        left,
+        top + chartHeight
+    );
+
+    ctx.stroke();
+
+}
+
+
+/* =========================================================
+   37. X 軸
+   ========================================================= */
+
+function drawXAxis(
+    ctx,
+    layout,
+    width,
+    height,
+    data,
+    getX
+) {
+
+    const {
+        left,
+        right,
+        top,
+        chartHeight
+    } = layout;
+
+
+    const axisY =
+        top +
+        chartHeight;
+
+
+    /*
+     * X 軸本體
+     */
+
+    ctx.strokeStyle =
+        "rgba(80,80,80,0.45)";
+
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+        left,
+        axisY
+    );
+
+    ctx.lineTo(
+        width - right,
+        axisY
+    );
+
+    ctx.stroke();
+
+
+    /*
+     * 日期
+     */
+
+    ctx.fillStyle =
+        "#777";
+
+
+    ctx.font =
+        "10px sans-serif";
+
+
+    ctx.textAlign =
+        "center";
+
+
+    ctx.textBaseline =
+        "top";
+
+
+    const count =
+        Math.min(
+            6,
+            data.length
         );
 
+
+    if (count <= 0) {
+        return;
+    }
+
+
+    for (
+        let i = 0;
+        i < count;
+        i++
+    ) {
+
+        const index =
+            count === 1
+                ? 0
+                : Math.round(
+                    i *
+                    (
+                        data.length - 1
+                    ) /
+                    (
+                        count - 1
+                    )
+                );
+
+
+        const x =
+            getX(index);
+
+
+        /*
+         * 小刻度
+         */
+
+        ctx.strokeStyle =
+            "rgba(80,80,80,0.35)";
+
+
+        ctx.beginPath();
+
+        ctx.moveTo(
+            x,
+            axisY
+        );
+
+        ctx.lineTo(
+            x,
+            axisY + 5
+        );
+
+        ctx.stroke();
+
+
+        ctx.fillStyle =
+            "#777";
+
+
+        ctx.fillText(
+            data[index].date,
+            x,
+            axisY + 8
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   38. 折線圖
+   ========================================================= */
+
+function drawLineChart(
+    ctx,
+    width,
+    height,
+    data
+) {
+
+    const layout =
+        getChartLayout(
+            width,
+            height
+        );
+
+
+    const range =
+        getPriceRange(data);
+
+
+    const {
+        left,
+        chartWidth,
+        chartHeight
+    } = layout;
+
+
+    function priceToY(price) {
+
+        return (
+            layout.top +
+            (
+                range.max -
+                Number(price)
+            ) /
+            (
+                range.max -
+                range.min
+            ) *
+            chartHeight
+        );
+
+    }
+
+
+    /*
+     * Y 軸
+     */
+
+    drawYAxis(
+        ctx,
+        layout,
+        width,
+        height,
+        range
+    );
+
+
+    /*
+     * X 座標
+     *
+     * 第一點 = 左軸
+     * 最後一點 = 右軸
+     *
+     * 這樣會與座標軸完全對齊
+     */
+
+    const getX =
+        index => {
+
+            if (
+                data.length <= 1
+            ) {
+
+                return (
+                    left +
+                    chartWidth / 2
+                );
+
+            }
+
+
+            return (
+                left +
+                chartWidth *
+                index /
+                (
+                    data.length - 1
+                )
+            );
+
+        };
+
+
+    /*
+     * 折線
+     */
 
     ctx.beginPath();
 
@@ -2199,16 +2591,12 @@ function drawLineChart(
         (item, index) => {
 
             const x =
-                left +
-                spacing *
-                index;
+                getX(index);
 
 
             const y =
                 priceToY(
-                    Number(
-                        item.close
-                    )
+                    item.close
                 );
 
 
@@ -2237,29 +2625,41 @@ function drawLineChart(
     ctx.strokeStyle =
         "#2563eb";
 
+
     ctx.lineWidth =
-        2;
+        2.5;
+
+
+    ctx.lineJoin =
+        "round";
+
+
+    ctx.lineCap =
+        "round";
+
 
     ctx.stroke();
 
 
+    /*
+     * 最後一點
+     */
+
+    const lastIndex =
+        data.length - 1;
+
+
     const last =
-        data[data.length - 1];
+        data[lastIndex];
 
 
     const lastX =
-        left +
-        spacing *
-        (
-            data.length - 1
-        );
+        getX(lastIndex);
 
 
     const lastY =
         priceToY(
-            Number(
-                last.close
-            )
+            last.close
         );
 
 
@@ -2273,73 +2673,67 @@ function drawLineChart(
         Math.PI * 2
     );
 
+
     ctx.fillStyle =
         "#2563eb";
+
 
     ctx.fill();
 
 
-    ctx.fillStyle =
-        "#777";
+    /*
+     * 最後價格標記
+     */
 
     ctx.font =
         "11px sans-serif";
 
+
     ctx.textAlign =
-        "center";
+        "left";
+
 
     ctx.textBaseline =
-        "top";
+        "middle";
 
 
-    const count =
+    ctx.fillStyle =
+        "#2563eb";
+
+
+    const labelX =
         Math.min(
-            6,
-            data.length
+            lastX + 8,
+            width - 58
         );
 
 
-    if (count > 1) {
-
-        for (
-            let i = 0;
-            i < count;
-            i++
-        ) {
-
-            const index =
-                Math.floor(
-                    i *
-                    (
-                        data.length - 1
-                    ) /
-                    (
-                        count - 1
-                    )
-                );
+    ctx.fillText(
+        "¥" +
+        Number(last.close).toFixed(2),
+        labelX,
+        lastY
+    );
 
 
-            const x =
-                left +
-                spacing *
-                index;
+    /*
+     * X 軸
+     */
 
-
-            ctx.fillText(
-                data[index].date,
-                x,
-                height - bottom + 10
-            );
-
-        }
-
-    }
+    drawXAxis(
+        ctx,
+        layout,
+        width,
+        height,
+        data,
+        getX
+    );
 
 }
 
 
 /* =========================================================
-   35. K 線圖
+   39. K 線圖
    ========================================================= */
 
 function drawCandlestickChart(
@@ -2349,40 +2743,28 @@ function drawCandlestickChart(
     data
 ) {
 
-    const left = 62;
-    const right = 18;
-    const top = 20;
-    const bottom = 42;
-
-
-    const chartWidth =
-        width -
-        left -
-        right;
-
-
-    const chartHeight =
-        height -
-        top -
-        bottom;
-
-
-    if (
-        chartWidth <= 0 ||
-        chartHeight <= 0
-    ) {
-        return;
-    }
+    const layout =
+        getChartLayout(
+            width,
+            height
+        );
 
 
     const range =
         getPriceRange(data);
 
 
+    const {
+        left,
+        chartWidth,
+        chartHeight
+    } = layout;
+
+
     function priceToY(price) {
 
         return (
-            top +
+            layout.top +
             (
                 range.max -
                 Number(price)
@@ -2397,73 +2779,63 @@ function drawCandlestickChart(
     }
 
 
-    ctx.strokeStyle =
-        "rgba(120,120,120,0.15)";
+    /*
+     * Y 軸
+     */
 
-    ctx.fillStyle =
-        "#777";
-
-    ctx.font =
-        "12px sans-serif";
-
-    ctx.textAlign =
-        "right";
-
-    ctx.textBaseline =
-        "middle";
+    drawYAxis(
+        ctx,
+        layout,
+        width,
+        height,
+        range
+    );
 
 
-    for (
-        let i = 0;
-        i <= 5;
-        i++
-    ) {
+    /*
+     * 每根 K 線的中心點
+     *
+     * 第一根、最後一根都與
+     * X 軸範圍保持一致
+     */
 
-        const y =
-            top +
-            chartHeight *
-            i /
-            5;
+    const getX =
+        index => {
 
+            if (
+                data.length <= 1
+            ) {
 
-        ctx.beginPath();
+                return (
+                    left +
+                    chartWidth / 2
+                );
 
-        ctx.moveTo(
-            left,
-            y
-        );
-
-        ctx.lineTo(
-            width - right,
-            y
-        );
-
-        ctx.stroke();
+            }
 
 
-        const price =
-            range.max -
-            (
-                range.max -
-                range.min
-            ) *
-            i /
-            5;
+            return (
+                left +
+                chartWidth *
+                (
+                    index + 0.5
+                ) /
+                data.length
+            );
+
+        };
 
 
-        ctx.fillText(
-            "¥" +
-            price.toFixed(2),
-            left - 8,
-            y
-        );
-
-    }
-
+    /*
+     * K 線間距
+     */
 
     const spacing =
         chartWidth /
-        data.length;
+        Math.max(
+            1,
+            data.length
+        );
 
 
     const candleWidth =
@@ -2471,7 +2843,7 @@ function drawCandlestickChart(
             3,
             Math.min(
                 14,
-                spacing * 0.58
+                spacing * 0.62
             )
         );
 
@@ -2480,10 +2852,7 @@ function drawCandlestickChart(
         (item, index) => {
 
             const x =
-                left +
-                spacing *
-                index +
-                spacing / 2;
+                getX(index);
 
 
             const open =
@@ -2500,6 +2869,18 @@ function drawCandlestickChart(
 
             const low =
                 Number(item.low);
+
+
+            if (
+                !Number.isFinite(open) ||
+                !Number.isFinite(close) ||
+                !Number.isFinite(high) ||
+                !Number.isFinite(low)
+            ) {
+
+                return;
+
+            }
 
 
             const openY =
@@ -2522,6 +2903,12 @@ function drawCandlestickChart(
                 close >= open;
 
 
+            /*
+             * 明月證券：
+             * 紅 = 上漲
+             * 綠 = 下跌
+             */
+
             const color =
                 rising
                     ? "#ef4444"
@@ -2531,12 +2918,18 @@ function drawCandlestickChart(
             ctx.strokeStyle =
                 color;
 
+
             ctx.fillStyle =
                 color;
+
 
             ctx.lineWidth =
                 1;
 
+
+            /*
+             * 上下影線
+             */
 
             ctx.beginPath();
 
@@ -2553,8 +2946,19 @@ function drawCandlestickChart(
             ctx.stroke();
 
 
+            /*
+             * K 線實體
+             */
+
             const bodyTop =
                 Math.min(
+                    openY,
+                    closeY
+                );
+
+
+            const bodyBottom =
+                Math.max(
                     openY,
                     closeY
                 );
@@ -2563,10 +2967,8 @@ function drawCandlestickChart(
             const bodyHeight =
                 Math.max(
                     1,
-                    Math.abs(
-                        closeY -
-                        openY
-                    )
+                    bodyBottom -
+                    bodyTop
                 );
 
 
@@ -2582,66 +2984,73 @@ function drawCandlestickChart(
     );
 
 
-    ctx.fillStyle =
-        "#777";
+    /*
+     * X 軸
+     */
 
-    ctx.font =
-        "11px sans-serif";
-
-    ctx.textAlign =
-        "center";
-
-    ctx.textBaseline =
-        "top";
-
-
-    const count =
-        Math.min(
-            6,
-            data.length
-        );
-
-
-    if (count > 1) {
-
-        for (
-            let i = 0;
-            i < count;
-            i++
-        ) {
-
-            const index =
-                Math.floor(
-                    i *
-                    (
-                        data.length - 1
-                    ) /
-                    (
-                        count - 1
-                    )
-                );
-
-
-            const x =
-                left +
-                spacing *
-                index +
-                spacing / 2;
-
-
-            ctx.fillText(
-                data[index].date,
-                x,
-                height - bottom + 10
-            );
-
-        }
-
-    }
+    drawXAxis(
+        ctx,
+        layout,
+        width,
+        height,
+        data,
+        getX
+    );
 
 }
 
 
+/* =========================================================
+   40. 圖表 Canvas 顯示狀態
+   ========================================================= */
+
+function updateChartCanvasVisibility() {
+
+    const lineCanvas =
+        document.getElementById(
+            "stock-line-chart"
+        );
+
+
+    const candleCanvas =
+        document.getElementById(
+            "stock-candle-chart"
+        );
+
+
+    if (!lineCanvas || !candleCanvas) {
+        return;
+    }
+
+
+    const lineVisible =
+        currentChartType === "line";
+
+
+    lineCanvas.classList.toggle(
+        "chart-visible",
+        lineVisible
+    );
+
+
+    lineCanvas.classList.toggle(
+        "chart-hidden",
+        !lineVisible
+    );
+
+
+    candleCanvas.classList.toggle(
+        "chart-visible",
+        !lineVisible
+    );
+
+
+    candleCanvas.classList.toggle(
+        "chart-hidden",
+        lineVisible
+    );
+
+}
 /* =========================================================
    36. 買入
    ========================================================= */
@@ -4475,59 +4884,6 @@ document.addEventListener(
     }
 );
 
-
-/* =========================================================
-   53. 手機交易按鈕保險機制
-   ---------------------------------------------------------
-   即使 renderStockDetail() 重新產生 HTML，
-   仍然可以透過事件委派處理。
-   ========================================================= */
-
-document.addEventListener(
-    "click",
-    event => {
-
-        const button =
-            event.target.closest(
-                ".trade-button"
-            );
-
-
-        if (!button) {
-            return;
-        }
-
-
-        /*
-         * 防止事件被其他父元素攔截
-         */
-
-        event.stopPropagation();
-
-
-        const id =
-            button.dataset.stock;
-
-
-        const action =
-            button.dataset.action;
-
-
-        if (!id || !action) {
-            return;
-        }
-
-
-        /*
-         * renderStockDetail 本身已經有 listener。
-         *
-         * 這裡只在事件仍然可以正常傳遞時
-         * 提供額外保險。
-         */
-
-    },
-    true
-);
 
 
 /* =========================================================
