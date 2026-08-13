@@ -3111,17 +3111,282 @@ function openMyCompany() {
                         <div class="company-actions">
 
                             <button
-                                onclick="publishCompanyNews('${company.code}')"
+                                onclick="publishCompanyNews('${company.code}')/* =========================================================
+   IPO / 上市系統 v3
+   ========================================================= */
+
+function applyIPO(code) {
+
+    const company = companies.find(
+        item => item.code === code
+    );
+
+    if (!company) {
+        showToast("找不到這間公司");
+        return;
+    }
+
+
+    /* 必須是公司負責人 */
+
+    if (
+        company.owner !== user.accountId
+    ) {
+
+        showToast(
+            "你不是這間公司的負責人"
+        );
+
+        return;
+
+    }
+
+
+    /* 已經上市 */
+
+    if (company.listed) {
+
+        showToast(
+            "這間公司已經上市"
+        );
+
+        return;
+
+    }
+
+
+    /* 已經申請 */
+
+    if (
+        company.ipoStatus === "審核中"
+    ) {
+
+        showToast(
+            "IPO 申請正在審核中"
+        );
+
+        return;
+
+    }
+
+
+    /*
+     * 基本條件
+     *
+     * 先採用 Demo 規則：
+     *
+     * 註冊資本 ≥ ¥10,000,000
+     */
+
+    if (
+        Number(company.capital) <
+        10000000
+    ) {
+
+        showToast(
+            "註冊資本不足 ¥10,000,000，暫時無法申請上市"
+        );
+
+        return;
+
+    }
+
+
+    const confirmIPO =
+        confirm(
+            `確定要申請「${company.name}」上市嗎？\n\n` +
+            `股票代號：${company.code}\n` +
+            `註冊資本：${money(company.capital)}\n\n` +
+            `送出後將進入上市審核。`
+        );
+
+
+    if (!confirmIPO) {
+        return;
+    }
+
+
+    /*
+     * IPO 狀態
+     */
+
+    company.ipoStatus =
+        "審核中";
+
+    company.ipoAppliedAt =
+        formatDateTime(
+            new Date()
+        );
+
+
+    saveData(
+        "mingyue_companies_v2",
+        companies
+    );
+
+
+    showToast(
+        "IPO 申請已送出"
+    );
+
+
+    openMyCompany();
+
+}"
+/* =========================================================
+   IPO 審核
+   ========================================================= */
+
+function approveIPO(code) {
+
+    const company = companies.find(
+        item => item.code === code
+    );
+
+    if (!company) {
+        showToast("找不到公司");
+        return;
+    }
+
+
+    if (
+        company.ipoStatus !== "審核中"
+    ) {
+
+        showToast(
+            "這間公司目前沒有 IPO 審核"
+        );
+
+        return;
+
+    }
+
+
+    /*
+     * Demo：
+     * 審核通過
+     */
+
+    company.ipoStatus =
+        "已上市";
+
+    company.listed =
+        true;
+
+    company.status =
+        "上市公司";
+
+    company.listedAt =
+        formatDateTime(
+            new Date()
+        );
+
+
+    /*
+     * 建立股票
+     */
+
+    const stockExists =
+        stocks.some(
+            stock =>
+                stock.id === company.code
+        );
+
+
+    if (!stockExists) {
+
+        /*
+         * 初始股價
+         *
+         * 以註冊資本與股數計算
+         */
+
+        const shares =
+            Math.max(
+                1000000,
+                Math.floor(
+                    company.capital /
+                    10
+                )
+            );
+
+
+        const initialPrice =
+            Number(
+                (
+                    company.capital /
+                    shares
+                ).toFixed(2)
+            );
+
+
+        const newStock = {
+
+            id:
+                company.code,
+
+            name:
+                company.shortName,
+
+            company:
+                company.name,
+
+            industry:
+                company.industry,
+
+            type:
+                "上市公司",
+
+            price:
+                initialPrice,
+
+            previous:
+                initialPrice,
+
+            volume:
+                0,
+
+            capital:
+                company.capital,
+
+            shares:
+                shares
+
+        };
+
+
+        stocks.push(
+            newStock
+        );
+
+
+        generateHistory(
+            newStock
+        );
+
+    }
+
+
+    saveAll();
+
+
+    showToast(
+        `🎉 ${company.shortName} 已正式上市`
+    );
+
+
+    openMyCompany();
+
+}
                             >
                                 📰 發布新聞
                             </button>
 
 
                             <button
-                                onclick="applyIPO('${company.code}')"
-                            >
-                                📈 IPO / 上市
-                            </button>
+    onclick="applyIPO('${company.code}')">
+    📈 IPO / 上市
+</button>
 
 
                             <button
