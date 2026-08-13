@@ -1,3 +1,33 @@
+import {
+    initializeApp
+} from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
+
+import {
+    getDatabase,
+    ref,
+    set,
+    get,
+    onValue
+} from "https://www.gstatic.com/firebasejs/12.17.1/firebase-database.js";
+
+
+const firebaseConfig = {
+    apiKey: "AIzaSyDWDaEZoZPwBe7wZX0aiDAGqs4b_EAkfgM",
+    authDomain: "mingyue-stock.firebaseapp.com",
+    databaseURL: "https://mingyue-stock-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "mingyue-stock",
+    storageBucket: "mingyue-stock.firebasestorage.app",
+    messagingSenderId: "774198660845",
+    appId: "1:774198660845:web:93f4a725b6303aae9f86e4"
+};
+
+
+const firebaseApp =
+    initializeApp(firebaseConfig);
+
+
+const db =
+    getDatabase(firebaseApp);
 /* =========================================================
    明月證券 v3.2
    Mingyue Securities
