@@ -1,1 +1,209 @@
+* {
+    box-sizing: border-box;
+}
 
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #f4f6f8;
+    color: #222;
+    padding-bottom: 80px;
+}
+
+header {
+    background: white;
+    padding: 18px;
+    border-bottom: 1px solid #ddd;
+}
+
+h1 {
+    margin: 0;
+    font-size: 24px;
+}
+
+main {
+    max-width: 600px;
+    margin: auto;
+    padding: 16px;
+}
+
+.card {
+    background: white;
+    padding: 20px;
+    margin-bottom: 14px;
+    border-radius: 18px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.index {
+    font-size: 32px;
+    font-weight: bold;
+}
+
+/* 明月帝國股市：漲紅、跌綠 */
+
+.up {
+    color: red !important;
+}
+
+.down {
+    color: green !important;
+}
+
+.stock {
+    background: white;
+    padding: 16px;
+    margin-bottom: 10px;
+    border-radius: 15px;
+    cursor: pointer;
+    touch-action: manipulation;
+}
+
+.stock strong {
+    font-size: 17px;
+}
+
+.stock p {
+    margin-bottom: 0;
+}
+
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+
+    height: 70px;
+
+    background: white;
+    border-top: 1px solid #ddd;
+
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+
+    z-index: 100;
+}
+
+.bottom-nav button {
+    border: none;
+    background: none;
+    font-size: 18px;
+}
+
+.bottom-nav span {
+    display: block;
+    font-size: 11px;
+}
+.stock-detail {
+    display: none;
+    background: white;
+    padding: 20px;
+    border-radius: 18px;
+    margin-top: 16px;
+}
+
+.stock-detail h2 {
+    margin-bottom: 4px;
+}
+
+.stock-detail .stock-code {
+    color: #888;
+}
+
+.stock-detail .stock-price {
+    font-size: 32px;
+    font-weight: bold;
+    margin-top: 20px;
+}
+
+.stock-detail .stock-change {
+    font-size: 18px;
+    margin-top: 5px;
+}
+
+.stock-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 25px;
+}
+
+.stock-buttons button {
+    flex: 1;
+    padding: 14px;
+    border: none;
+    border-radius: 12px;
+    font-size: 17px;
+    font-weight: bold;
+}
+
+.buy-button {
+    background: #e53935;
+    color: white;
+}
+
+.sell-button {
+    background: #2e7d32;
+    color: white;
+}
+
+.investment-page {
+    display: none;
+    background: white;
+    padding: 20px;
+    border-radius: 18px;
+    margin-top: 16px;
+}
+
+.investment-card {
+    background: #f7f7f7;
+    padding: 16px;
+    border-radius: 15px;
+    margin-top: 12px;
+}
+
+.investment-value {
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.holding {
+    padding: 15px 0;
+    border-bottom: 1px solid #ddd;
+}
+
+.holding:last-child {
+    border-bottom: none;
+}
+
+.transaction {
+    background: white;
+    padding: 16px;
+    margin-bottom: 12px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.holding {
+    background: white;
+    padding: 16px;
+    margin-bottom: 12px;
+    border-radius: 12px;
+}
+
+.back-button {
+    border: none;
+    background: none;
+    font-size: 18px;
+    padding: 8px 0;
+    cursor: pointer;
+}
+
+.transaction-button {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    cursor: pointer;
+}
