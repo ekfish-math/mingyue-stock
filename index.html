@@ -1080,63 +1080,6 @@
 <!-- =========================================================
      v3.1 不再依賴 Chart.js
 ========================================================= -->
-
-<script src="script.js"></script>
-<script type="module">
-
-    import { initializeApp }
-    from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
-
-    import {
-        getDatabase,
-        ref,
-        set,
-        get,
-        onValue
-    }
-    from "https://www.gstatic.com/firebasejs/12.17.1/firebase-database.js";
-
-
-    const firebaseConfig = {
-
-        apiKey: "AIzaSyDWDaEZoZPwBe7wZX0aiDAGqs4b_EAkfgM",
-
-        authDomain: "mingyue-stock.firebaseapp.com",
-
-        databaseURL:
-            "https://mingyue-stock-default-rtdb.asia-southeast1.firebasedatabase.app",
-
-        projectId: "mingyue-stock",
-
-        storageBucket: "mingyue-stock.firebasestorage.app",
-
-        messagingSenderId: "774198660845",
-
-        appId: "1:774198660845:web:93f4a725b6303aae9f86e4",
-
-        measurementId: "G-Z7F6N0ZJYJ"
-    };
-
-
-    // 初始化 Firebase
-    const app = initializeApp(firebaseConfig);
-
-
-    // 連接 Realtime Database
-    const db = getDatabase(app);
-
-
-    // Firebase 連線測試
-    const testRef = ref(db, "test");
-
-    set(testRef, {
-
-        message: "明月證券 Firebase 連線成功",
-
-        time: Date.now()
-
-    });
-
-</script>
+<script type="module" src="script.js"></script>
 </body>
 </html>
