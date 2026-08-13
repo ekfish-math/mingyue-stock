@@ -1748,22 +1748,25 @@ function renderStockDetail(stock) {
 
         <div class="stock-actions">
 
-            <button
-                type="button"
-                onclick="buyStock('${stock.id}')"
-            >
-                買入
-            </button>
+    <button
+        type="button"
+        class="trade-button buy-button"
+        data-action="buy"
+        data-stock="${escapeHTML(stock.id)}"
+    >
+        買入
+    </button>
 
+    <button
+        type="button"
+        class="trade-button sell-button"
+        data-action="sell"
+        data-stock="${escapeHTML(stock.id)}"
+    >
+        賣出
+    </button>
 
-            <button
-                type="button"
-                onclick="sellStock('${stock.id}')"
-            >
-                賣出
-            </button>
-
-        </div>
+</div>
 
     `;
 
