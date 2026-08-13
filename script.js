@@ -5594,3 +5594,8 @@ window.showToast =
 console.log(
     "明月證券 v4.0 script.js 載入完成"
 );
+// =====================================================
+// HTML onclick 全域函式
+// =====================================================
+
+window.depositMoney = depositMoney;
