@@ -3297,21 +3297,30 @@ function applyIPO(code) {
    36. 公司發布新聞
    ========================================================= */
 
+/* =========================================================
+   公司發布新聞 v3
+   ========================================================= */
+
 function publishCompanyNews(code) {
 
-    const company =
-        companies.find(
-            item =>
-                item.code === code &&
-                item.owner ===
-                user.accountId
-        );
-
+    const company = companies.find(
+        item => item.code === code
+    );
 
     if (!company) {
+        showToast("找不到這間公司");
+        return;
+    }
+
+
+    /* 確認是否為公司負責人 */
+
+    if (
+        company.owner !== user.accountId
+    ) {
 
         showToast(
-            "你不是這家公司的所有人"
+            "你不是這間公司的管理者"
         );
 
         return;
@@ -3319,46 +3328,49 @@ function publishCompanyNews(code) {
     }
 
 
-    const title =
-        prompt(
-            "請輸入新聞標題："
-        );
+    /* 新聞標題 */
+
+    const title = prompt(
+        `【${company.shortName}】
+
+請輸入新聞標題：`
+    );
 
 
-    if (!title) {
-
+    if (!title || !title.trim()) {
         return;
-
     }
 
 
-    const content =
-        prompt(
-            "請輸入新聞內容："
-        );
+    /* 新聞內容 */
+
+    const content = prompt(
+        `【${company.shortName}】
+
+請輸入新聞內容：`
+    );
 
 
-    if (!content) {
-
+    if (!content || !content.trim()) {
         return;
-
     }
 
 
-    const now =
-        new Date();
+    /*
+     * 建立新聞
+     */
 
+    const newNews = {
 
-    news.unshift({
-
-        id:
-            Date.now(),
+        id: Date.now(),
 
         companyCode:
             company.code,
 
         companyName:
-            company.shortName ||
+            company.shortName,
+
+        companyFullName:
             company.name,
 
         category:
@@ -3372,24 +3384,53 @@ function publishCompanyNews(code) {
 
         time:
             formatDateTime(
-                now
-            )
+                new Date()
+            ),
 
-    });
+        author:
+            company.shortName,
+
+        authorType:
+            "company"
+
+    };
 
 
-    saveAll();
+    /*
+     * 放到新聞最前面
+     */
 
-
-    showToast(
-        "新聞已發布"
+    news.unshift(
+        newNews
     );
 
 
+    /*
+     * 儲存新聞
+     */
+
+    saveData(
+        "mingyue_news_v2",
+        news
+    );
+
+
+    /*
+     * 更新新聞頁
+     */
+
     renderNews();
 
-}
 
+    /*
+     * 成功提示
+     */
+
+    showToast(
+        `「${company.shortName}」新聞已發布`
+    );
+
+}
 
 /* =========================================================
    37. 新聞
