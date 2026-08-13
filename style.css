@@ -1478,3 +1478,262 @@ button {
     }
 
 }
+
+]
+
+/* =========================================================
+   v3.1 FIX
+   手機 / 圖表 / 頁面高度 / 橫向溢出修正
+   ========================================================= */
+
+/* 防止整個網站出現橫向捲軸 */
+html,
+body {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+/* 所有圖片、Canvas 不要超出容器 */
+img,
+canvas,
+svg {
+    max-width: 100%;
+}
+
+/* Chart.js Canvas 修正 */
+.chart-container {
+    width: 100%;
+    min-width: 0;
+    position: relative;
+}
+
+.chart-container canvas {
+    width: 100% !important;
+    height: 100% !important;
+    display: block;
+}
+
+
+/* =========================================================
+   手機版
+   ========================================================= */
+
+@media (max-width: 600px) {
+
+    .app {
+        width: 100%;
+        min-height: 100vh;
+        padding-bottom: 82px;
+    }
+
+    .topbar {
+        width: 100%;
+        padding: 0 12px;
+    }
+
+    .main {
+        width: calc(100% - 20px);
+        max-width: none;
+        padding: 14px 0 20px;
+    }
+
+    /* 首頁指數卡 */
+    .index-card {
+        width: 100%;
+        padding: 22px;
+        border-radius: 18px;
+    }
+
+    .index-number {
+        font-size: 32px;
+    }
+
+    /* 四格統計 */
+    .stats-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+    }
+
+    .stat-card {
+        min-width: 0;
+        padding: 12px;
+    }
+
+    .stat-value {
+        font-size: 17px;
+    }
+
+    /* 區塊 */
+    .section-card,
+    .chart-card,
+    .detail-card {
+        width: 100%;
+        min-width: 0;
+        border-radius: 15px;
+    }
+
+    /* 股票 */
+    .stock-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .stock-card {
+        min-width: 0;
+    }
+
+    /* 行情 */
+    .market-row {
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 10px;
+        padding: 14px;
+    }
+
+    .market-name {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    /* 股票詳細資料 */
+    .detail-stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    /* 圖表 */
+    .chart-card {
+        padding: 15px;
+    }
+
+    .chart-head {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .chart-tabs {
+        flex-wrap: wrap;
+    }
+
+    .chart-container {
+        height: 260px;
+        width: 100%;
+    }
+
+    /* 買賣按鈕 */
+    .trade-buttons {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    /* 公司 */
+    .company-info {
+        grid-template-columns: 1fr;
+    }
+
+    /* 投資 */
+    .portfolio-balance-card {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+
+    .portfolio-balance-card .primary-button {
+        width: 100%;
+    }
+
+    /* 頁面標題 */
+    .page-title-row {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .page-title-row h2 {
+        font-size: 23px;
+    }
+
+    /* Tab */
+    .tabs {
+        overflow-x: auto;
+        padding-bottom: 3px;
+        scrollbar-width: none;
+    }
+
+    .tabs::-webkit-scrollbar {
+        display: none;
+    }
+
+    .tab {
+        flex-shrink: 0;
+    }
+
+    /* Modal */
+    .modal {
+        padding: 10px;
+    }
+
+    .modal-box {
+        width: 100%;
+        max-height: 92vh;
+        border-radius: 16px;
+    }
+
+    /* 底部導航 */
+    .bottom-nav {
+        height: 64px;
+    }
+
+    .nav-item {
+        width: 20%;
+    }
+
+    .nav-item span {
+        font-size: 18px;
+    }
+
+    .nav-item small {
+        font-size: 9px;
+    }
+
+}
+
+
+/* =========================================================
+   超小螢幕
+   ========================================================= */
+
+@media (max-width: 380px) {
+
+    .main {
+        width: calc(100% - 16px);
+    }
+
+    .index-card {
+        padding: 18px;
+    }
+
+    .index-number {
+        font-size: 28px;
+    }
+
+    .stat-card {
+        padding: 10px;
+        gap: 8px;
+    }
+
+    .stat-icon {
+        display: none;
+    }
+
+    .stat-value {
+        font-size: 16px;
+    }
+
+    .chart-container {
+        height: 230px;
+    }
+
+    .detail-price {
+        font-size: 27px;
+    }
+
+}
