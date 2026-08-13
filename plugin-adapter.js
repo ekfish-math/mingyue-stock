@@ -7,10 +7,8 @@
    2. Firebase Realtime Database
    3. v4.2 LocalStorage fallback
 
-   重要：本檔案在 script.js 前載入。
-   若外部外掛存在，會先取得資料、寫入 LocalStorage，
-   並同步鏡像到 Firebase，再讓 v4.2 啟動。
-   因此 v4.2 原本的 Firebase 讀取流程也會拿到外掛資料。
+   v4.3 addition: Google Authentication is loaded after
+   adapter preload and before the legacy v4.2 app.
    ========================================================= */
 
 import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
@@ -31,14 +29,8 @@ const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
 const PATHS = [
-    "users",
-    "stocks",
-    "companies",
-    "news",
-    "ipo",
-    "portfolios",
-    "transactions",
-    "historyData"
+    "users", "stocks", "companies", "news", "ipo",
+    "portfolios", "transactions", "historyData"
 ];
 
 const CACHE_KEYS = {
@@ -273,10 +265,13 @@ window.MingyueDataAdapter = window.MingyueDataPlugin;
 window.MINGYUE_V421 = true;
 
 console.log("明月證券 v4.2.1 Plugin Data Adapter 已載入");
-
-/*
- * 關鍵：index.html 先載入本模組，再載入 script.js。
- * top-level await 會讓 script.js 等待外掛資料完成預載入，
- * 因此 v4.2 初始化時 LocalStorage / Firebase 已是最新外掛資料。
- */
 await preload();
+
+try {
+    await import("./google-auth.js");
+    window.MINGYUE_V43 = true;
+    console.log("明月證券 v4.3 Google Account 模組已接入");
+} catch (error) {
+    window.MINGYUE_V43 = false;
+    console.warn("明月證券 v4.3 Google Account 模組載入失敗，股票系統不受影響：", error);
+}
