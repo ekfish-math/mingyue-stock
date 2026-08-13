@@ -3581,63 +3581,6 @@ function renderTransactions() {
    v3.3
    ========================================================= */
 
-function updateChartCanvasVisibility() {
-
-    const lineCanvas =
-        document.getElementById(
-            "stock-line-chart"
-        );
-
-    const candleCanvas =
-        document.getElementById(
-            "stock-candle-chart"
-        );
-
-
-    if (
-        !lineCanvas ||
-        !candleCanvas
-    ) {
-
-        return;
-
-    }
-
-
-    const lineVisible =
-        currentChartType === "line";
-
-
-    /*
-     * 折線圖
-     */
-
-    lineCanvas.classList.toggle(
-        "chart-visible",
-        lineVisible
-    );
-
-    lineCanvas.classList.toggle(
-        "chart-hidden",
-        !lineVisible
-    );
-
-
-    /*
-     * K 線圖
-     */
-
-    candleCanvas.classList.toggle(
-        "chart-visible",
-        !lineVisible
-    );
-
-    candleCanvas.classList.toggle(
-        "chart-hidden",
-        lineVisible
-    );
-
-}
 /* =========================================================
    41. Modal
    ========================================================= */
