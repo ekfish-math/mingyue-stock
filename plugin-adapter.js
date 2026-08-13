@@ -2,15 +2,8 @@
    明月證券 v4.2.1
    Plugin Data Adapter - Active Bridge
    ---------------------------------------------------------
-   資料優先順序：
-   1. window.MingyueExternalPlugin
-   2. Firebase Realtime Database
-   3. v4.2 LocalStorage fallback
-
-   重要：本檔案在 script.js 前載入。
-   若外部外掛存在，會先取得資料、寫入 LocalStorage，
-   並同步鏡像到 Firebase，再讓 v4.2 啟動。
-   因此 v4.2 原本的 Firebase 讀取流程也會拿到外掛資料。
+   v4.3 addition: Firebase Google Authentication is loaded
+   after the adapter preload and before the legacy v4.2 app.
    ========================================================= */
 
 import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
@@ -31,14 +24,8 @@ const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
 const PATHS = [
-    "users",
-    "stocks",
-    "companies",
-    "news",
-    "ipo",
-    "portfolios",
-    "transactions",
-    "historyData"
+    "users", "stocks", "companies", "news", "ipo",
+    "portfolios", "transactions", "historyData"
 ];
 
 const CACHE_KEYS = {
@@ -56,11 +43,8 @@ function validKey(key) {
 }
 
 function getExternalPlugin() {
-    return window.MingyueExternalPlugin ||
-           window.mingyueExternalPlugin ||
-           window.MingyuePlugin ||
-           window.mingyuePlugin ||
-           null;
+    return window.MingyueExternalPlugin || window.mingyueExternalPlugin ||
+           window.MingyuePlugin || window.mingyuePlugin || null;
 }
 
 async function externalRead(key) {
@@ -81,18 +65,9 @@ async function externalWrite(key, value) {
     const plugin = getExternalPlugin();
     if (!plugin) return false;
     try {
-        if (typeof plugin.write === "function") {
-            await plugin.write(key, value);
-            return true;
-        }
-        if (typeof plugin.set === "function") {
-            await plugin.set(key, value);
-            return true;
-        }
-        if (typeof plugin.writeData === "function") {
-            await plugin.writeData(key, value);
-            return true;
-        }
+        if (typeof plugin.write === "function") { await plugin.write(key, value); return true; }
+        if (typeof plugin.set === "function") { await plugin.set(key, value); return true; }
+        if (typeof plugin.writeData === "function") { await plugin.writeData(key, value); return true; }
     } catch (error) {
         console.warn("4.2.1 外部外掛寫入失敗：", key, error);
     }
@@ -115,10 +90,7 @@ async function externalWriteMany(data) {
     const plugin = getExternalPlugin();
     if (!plugin) return false;
     try {
-        if (typeof plugin.writeMany === "function") {
-            await plugin.writeMany(data || {});
-            return true;
-        }
+        if (typeof plugin.writeMany === "function") { await plugin.writeMany(data || {}); return true; }
     } catch (error) {
         console.warn("4.2.1 外部外掛批次寫入失敗：", error);
     }
@@ -128,9 +100,7 @@ async function externalWriteMany(data) {
 function filterPaths(data) {
     const result = {};
     for (const key of PATHS) {
-        if (Object.prototype.hasOwnProperty.call(data || {}, key)) {
-            result[key] = data[key];
-        }
+        if (Object.prototype.hasOwnProperty.call(data || {}, key)) result[key] = data[key];
     }
     return result;
 }
@@ -142,7 +112,6 @@ function cacheData(data) {
             const value = data[key];
             const cacheKey = CACHE_KEYS[key];
             if (!cacheKey) continue;
-
             if (key === "users" || key === "portfolios") {
                 const account = value?.["MYS-000184"];
                 if (account) localStorage.setItem(cacheKey, JSON.stringify(account));
@@ -156,11 +125,6 @@ function cacheData(data) {
     } catch (error) {
         console.warn("4.2.1 LocalStorage fallback 寫入失敗：", error);
     }
-}
-
-async function firebaseRead(key) {
-    const snapshot = await get(ref(db, key));
-    return snapshot.exists() ? snapshot.val() : null;
 }
 
 async function firebaseReadAll() {
@@ -182,12 +146,11 @@ async function mirrorToFirebase(data) {
 
 async function read(key) {
     if (!validKey(key)) throw new Error("不允許的資料路徑：" + key);
-
     const external = await externalRead(key);
     if (external !== undefined && external !== null) return external;
-
     try {
-        return await firebaseRead(key);
+        const snapshot = await get(ref(db, key));
+        return snapshot.exists() ? snapshot.val() : null;
     } catch (error) {
         console.warn("4.2.1 Firebase 讀取失敗：", key, error);
         return null;
@@ -196,7 +159,6 @@ async function read(key) {
 
 async function write(key, value) {
     if (!validKey(key)) throw new Error("不允許的資料路徑：" + key);
-
     const externalOK = await externalWrite(key, value);
     try {
         await set(ref(db, key), value);
@@ -210,7 +172,6 @@ async function write(key, value) {
 async function writeMany(data) {
     const patch = filterPaths(data);
     if (!Object.keys(patch).length) return [];
-
     const externalOK = await externalWriteMany(patch);
     try {
         await update(ref(db), patch);
@@ -227,7 +188,6 @@ async function readAll() {
         cacheData(external);
         return external;
     }
-
     try {
         const firebase = await firebaseReadAll();
         cacheData(firebase);
@@ -241,15 +201,12 @@ async function readAll() {
 async function preload() {
     const external = getExternalPlugin();
     const data = await readAll();
-
     if (external && data && typeof data === "object" && Object.keys(data).length) {
         cacheData(data);
         const mirrored = await mirrorToFirebase(data);
-        console.log(
-            mirrored
-                ? "明月證券 v4.2.1：外掛資料已預載入並同步至 Firebase"
-                : "明月證券 v4.2.1：外掛資料已預載入，Firebase 鏡像失敗"
-        );
+        console.log(mirrored
+            ? "明月證券 v4.2.1：外掛資料已預載入並同步至 Firebase"
+            : "明月證券 v4.2.1：外掛資料已預載入，Firebase 鏡像失敗");
     } else if (data && typeof data === "object" && Object.keys(data).length) {
         console.log("明月證券 v4.2.1：Firebase 資料已預載入");
     } else {
@@ -261,22 +218,21 @@ async function preload() {
 window.MingyueDataPlugin = Object.freeze({
     version: "4.2.1",
     paths: Object.freeze([...PATHS]),
-    read,
-    write,
-    writeMany,
-    readAll,
-    preload,
+    read, write, writeMany, readAll, preload,
     isReady: true
 });
-
 window.MingyueDataAdapter = window.MingyueDataPlugin;
 window.MINGYUE_V421 = true;
 
 console.log("明月證券 v4.2.1 Plugin Data Adapter 已載入");
-
-/*
- * 關鍵：index.html 先載入本模組，再載入 script.js。
- * top-level await 會讓 script.js 等待外掛資料完成預載入，
- * 因此 v4.2 初始化時 LocalStorage / Firebase 已是最新外掛資料。
- */
 await preload();
+
+/* v4.3：Firebase Google 帳戶模組 */
+try {
+    await import("./google-auth.js");
+    window.MINGYUE_V43 = true;
+    console.log("明月證券 v4.3 Google Account 模組已接入");
+} catch (error) {
+    window.MINGYUE_V43 = false;
+    console.warn("明月證券 v4.3 Google Account 模組載入失敗，股票系統不受影響：", error);
+}
