@@ -1,18 +1,20 @@
 /* =========================================================
-   明月證券 v4.3
+   明月證券 v4.3.2
    Google Account / Firebase Authentication
    ---------------------------------------------------------
-   v4.3.1
+   v4.3.2
    1. Google 登入
    2. Google 登出
-   3. 登入狀態同步
-   4. authUsers/{uid} 同步
-   5. 全域 googleLogin()
-   6. 全域 googleLogout()
-   7. 手機 Redirect 登入
+   3. Redirect 登入結果處理
+   4. Local Persistence
+   5. BFCache / pageshow 處理
+   6. authUsers/{uid} 同步
+   7. 全域 googleLogin()
+   8. 全域 googleLogout()
    ========================================================= */
 
-import { getApps } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
+import { getApps } from
+    "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
 
 import {
     getAuth,
@@ -20,19 +22,23 @@ import {
     signInWithRedirect,
     getRedirectResult,
     signOut,
-    onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
+    onAuthStateChanged,
+    setPersistence,
+    browserLocalPersistence
+} from
+    "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
 
 import {
     getDatabase,
     ref,
     get,
     update
-} from "https://www.gstatic.com/firebasejs/12.17.1/firebase-database.js";
+} from
+    "https://www.gstatic.com/firebasejs/12.17.1/firebase-database.js";
 
 
 /* =========================================================
-   1. Firebase App 檢查
+   1. Firebase App
 ========================================================= */
 
 if (!getApps().length) {
@@ -43,10 +49,6 @@ if (!getApps().length) {
 
 }
 
-
-/* =========================================================
-   2. Firebase 初始化
-========================================================= */
 
 const app =
     getApps()[0];
@@ -67,28 +69,28 @@ provider.setCustomParameters({
 
 
 /* =========================================================
-   3. MingyueAuth API
+   2. MingyueAuth
 ========================================================= */
 
 window.MingyueAuth = {
 
-    version: "4.3.1",
+    version: "4.3.2",
 
     ready: false,
 
     user: null,
-
-
-    /* -----------------------------------------------------
-       Google 登入
-    ----------------------------------------------------- */
 
     signIn: async function () {
 
         try {
 
             console.log(
-                "明月證券：正在開啟 Google 登入..."
+                "明月證券：準備 Google 登入"
+            );
+
+            await setPersistence(
+                auth,
+                browserLocalPersistence
             );
 
             await signInWithRedirect(
@@ -96,9 +98,7 @@ window.MingyueAuth = {
                 provider
             );
 
-        }
-
-        catch (error) {
+        } catch (error) {
 
             console.error(
                 "明月證券 Google 登入失敗：",
@@ -118,24 +118,22 @@ window.MingyueAuth = {
 
     },
 
-
-    /* -----------------------------------------------------
-       Google 登出
-    ----------------------------------------------------- */
-
     signOut: async function () {
 
         try {
 
             await signOut(auth);
 
+            window.MingyueAuth.user =
+                null;
+
             console.log(
                 "明月證券：Google 帳戶已登出"
             );
 
-        }
+            publish(null);
 
-        catch (error) {
+        } catch (error) {
 
             console.error(
                 "明月證券 Google 登出失敗：",
@@ -145,11 +143,6 @@ window.MingyueAuth = {
         }
 
     },
-
-
-    /* -----------------------------------------------------
-       取得目前使用者
-    ----------------------------------------------------- */
 
     getUser: function () {
 
@@ -161,12 +154,7 @@ window.MingyueAuth = {
 
 
 /* =========================================================
-   4. 全域函式
-   ---------------------------------------------------------
-   給 HTML：
-
-   onclick="googleLogin()"
-   onclick="googleLogout()"
+   3. HTML 全域函式
 ========================================================= */
 
 window.googleLogin =
@@ -186,7 +174,7 @@ window.googleLogout =
 
 
 /* =========================================================
-   5. 同步 Google 使用者資料
+   4. Firebase 使用者資料同步
 ========================================================= */
 
 async function syncGoogleProfile(user) {
@@ -197,10 +185,8 @@ async function syncGoogleProfile(user) {
 
     }
 
-
     const uid =
         user.uid;
-
 
     const node =
         ref(
@@ -208,69 +194,60 @@ async function syncGoogleProfile(user) {
             `authUsers/${uid}`
         );
 
-
     const snapshot =
         await get(node);
-
 
     const old =
         snapshot.exists()
             ? snapshot.val()
             : {};
 
-
-    const data = {
-
-        uid: uid,
-
-        provider: "google",
-
-        email:
-            user.email || "",
-
-        displayName:
-            user.displayName || "",
-
-        photoURL:
-            user.photoURL || "",
-
-        createdAt:
-            old.createdAt ||
-            Date.now(),
-
-        lastLoginAt:
-            Date.now()
-
-    };
-
-
     await update(
         node,
-        data
+        {
+
+            uid,
+
+            provider:
+                "google",
+
+            email:
+                user.email || "",
+
+            displayName:
+                user.displayName || "",
+
+            photoURL:
+                user.photoURL || "",
+
+            createdAt:
+                old.createdAt ||
+                Date.now(),
+
+            lastLoginAt:
+                Date.now()
+
+        }
     );
 
-
     console.log(
-        "明月證券：Google 帳戶資料已同步",
-        uid
+        "明月證券：Google 帳戶資料已同步"
     );
 
 }
 
 
 /* =========================================================
-   6. 發布登入狀態
+   5. 發布登入狀態
 ========================================================= */
 
-function publishAuthState(user) {
+function publish(user) {
 
     window.MingyueAuth.user =
         user || null;
 
-
     window.MingyueAuth.ready =
         true;
-
 
     const detail =
         user
@@ -293,20 +270,14 @@ function publishAuthState(user) {
 
 
     window.dispatchEvent(
-
         new CustomEvent(
             "mingyue-auth-state",
             {
-                detail: detail
+                detail
             }
         )
-
     );
 
-
-    /* -----------------------------------------------------
-       同時嘗試更新頁面上的 Google 帳戶 UI
-    ----------------------------------------------------- */
 
     updateGoogleUI(user);
 
@@ -314,7 +285,7 @@ function publishAuthState(user) {
 
 
 /* =========================================================
-   7. 更新 Google UI
+   6. Google UI
 ========================================================= */
 
 function updateGoogleUI(user) {
@@ -323,7 +294,6 @@ function updateGoogleUI(user) {
         document.getElementById(
             "google-status"
         );
-
 
     if (!status) {
 
@@ -363,6 +333,17 @@ function updateGoogleUI(user) {
     }
 
 
+    const name =
+        escapeHTML(
+            user.displayName ||
+            "Google 使用者"
+        );
+
+    const email =
+        escapeHTML(
+            user.email || ""
+        );
+
     const photo =
         user.photoURL || "";
 
@@ -394,22 +375,16 @@ function updateGoogleUI(user) {
                 <div class="google-profile-info">
 
                     <div class="google-profile-name">
-                        ${escapeHTML(
-                            user.displayName ||
-                            "Google 使用者"
-                        )}
+                        ${name}
                     </div>
 
                     <div class="google-profile-email">
-                        ${escapeHTML(
-                            user.email || ""
-                        )}
+                        ${email}
                     </div>
 
                 </div>
 
             </div>
-
 
             <div class="google-profile-uid">
 
@@ -417,7 +392,6 @@ function updateGoogleUI(user) {
                 ${escapeHTML(user.uid)}
 
             </div>
-
 
             <button
                 class="secondary-button full"
@@ -435,7 +409,7 @@ function updateGoogleUI(user) {
 
 
 /* =========================================================
-   8. 基本 HTML Escape
+   7. HTML Escape
 ========================================================= */
 
 function escapeHTML(value) {
@@ -471,7 +445,7 @@ function escapeHTML(value) {
 
 
 /* =========================================================
-   9. Firebase Authentication 狀態監聽
+   8. Auth 狀態監聽
 ========================================================= */
 
 onAuthStateChanged(
@@ -488,9 +462,7 @@ onAuthStateChanged(
 
             }
 
-        }
-
-        catch (error) {
+        } catch (error) {
 
             console.warn(
                 "明月證券 Google 帳戶資料同步失敗：",
@@ -500,23 +472,107 @@ onAuthStateChanged(
         }
 
 
-        publishAuthState(
+        publish(user);
+
+
+        console.log(
             user
+                ? "明月證券 v4.3.2：Google 帳戶已登入"
+                : "明月證券 v4.3.2：目前未登入 Google 帳戶"
         );
 
+    }
+);
 
-        if (user) {
+
+/* =========================================================
+   9. Redirect Result
+========================================================= */
+
+async function handleRedirectResult() {
+
+    try {
+
+        const result =
+            await getRedirectResult(auth);
+
+
+        if (result && result.user) {
 
             console.log(
-                "明月證券 v4.3.1：Google 帳戶已登入"
+                "明月證券：Google Redirect 登入成功"
+            );
+
+            await syncGoogleProfile(
+                result.user
+            );
+
+            publish(
+                result.user
+            );
+
+            return;
+
+        }
+
+
+        const currentUser =
+            auth.currentUser;
+
+
+        if (currentUser) {
+
+            console.log(
+                "明月證券：偵測到現有 Google 登入狀態"
+            );
+
+            await syncGoogleProfile(
+                currentUser
+            );
+
+            publish(
+                currentUser
             );
 
         }
 
-        else {
+    } catch (error) {
+
+        console.error(
+            "明月證券 Google Redirect 處理失敗：",
+            error
+        );
+
+        window.dispatchEvent(
+            new CustomEvent(
+                "mingyue-auth-error",
+                {
+                    detail: error
+                }
+            )
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   10. 頁面 BFCache
+========================================================= */
+
+window.addEventListener(
+    "pageshow",
+    function () {
+
+        if (auth.currentUser) {
 
             console.log(
-                "明月證券 v4.3.1：目前未登入 Google 帳戶"
+                "明月證券：pageshow 偵測到 Google 使用者"
+            );
+
+            publish(
+                auth.currentUser
             );
 
         }
@@ -526,50 +582,42 @@ onAuthStateChanged(
 
 
 /* =========================================================
-   10. Redirect 登入結果
+   11. visibilitychange
 ========================================================= */
 
-getRedirectResult(auth)
+document.addEventListener(
+    "visibilitychange",
+    function () {
 
-    .then(function (result) {
+        if (
+            document.visibilityState ===
+            "visible"
+        ) {
 
-        if (!result) {
+            const user =
+                auth.currentUser;
 
-            return;
+            if (user) {
+
+                publish(user);
+
+            }
 
         }
 
-
-        console.log(
-            "明月證券：Google Redirect 登入成功"
-        );
-
-    })
-
-    .catch(function (error) {
-
-        console.error(
-            "明月證券 Google 登入回傳失敗：",
-            error
-        );
-
-
-        window.dispatchEvent(
-
-            new CustomEvent(
-                "mingyue-auth-error",
-                {
-                    detail: error
-                }
-            )
-
-        );
-
-    });
+    }
+);
 
 
 /* =========================================================
-   11. 錯誤事件
+   12. 執行 Redirect 檢查
+========================================================= */
+
+handleRedirectResult();
+
+
+/* =========================================================
+   13. Auth Error
 ========================================================= */
 
 window.addEventListener(
@@ -579,12 +627,10 @@ window.addEventListener(
         const error =
             event.detail;
 
-
         console.error(
             "明月證券 Auth Error：",
             error
         );
-
 
         if (
             typeof window.showToast ===
@@ -602,9 +648,9 @@ window.addEventListener(
 
 
 /* =========================================================
-   12. 模組載入完成
+   14. 完成
 ========================================================= */
 
 console.log(
-    "明月證券 v4.3.1 Google Account 模組已載入"
+    "明月證券 v4.3.2 Google Account 模組已載入"
 );
