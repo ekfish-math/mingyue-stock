@@ -1,6 +1,15 @@
-import {
-    initializeApp
-} from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
+
+/* =========================================================
+   明月證券 v3.2
+   Mingyue Securities
+   ---------------------------------------------------------
+/* =========================================================
+   明月證券 v3.2
+   Firebase
+   ========================================================= */
+
+import { initializeApp } from
+    "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
 
 import {
     getDatabase,
@@ -8,7 +17,8 @@ import {
     set,
     get,
     onValue
-} from "https://www.gstatic.com/firebasejs/12.17.1/firebase-database.js";
+} from
+    "https://www.gstatic.com/firebasejs/12.17.1/firebase-database.js";
 
 
 const firebaseConfig = {
@@ -18,20 +28,16 @@ const firebaseConfig = {
     projectId: "mingyue-stock",
     storageBucket: "mingyue-stock.firebasestorage.app",
     messagingSenderId: "774198660845",
-    appId: "1:774198660845:web:93f4a725b6303aae9f86e4"
+    appId: "1:774198660845:web:93f4a725b6303aae9f86e4",
+    measurementId: "G-Z7F6N0ZJYJ"
 };
 
 
-const firebaseApp =
-    initializeApp(firebaseConfig);
+const app = initializeApp(firebaseConfig);
 
+const db = getDatabase(app);
 
-const db =
-    getDatabase(firebaseApp);
-/* =========================================================
-   明月證券 v3.2
-   Mingyue Securities
-   ---------------------------------------------------------
+console.log("Firebase Realtime Database 已連線");
    v3.2
    1. 修復首頁按鈕
    2. 修復上下漲統計
