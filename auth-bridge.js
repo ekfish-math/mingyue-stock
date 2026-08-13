@@ -14,9 +14,7 @@
         window.MINGYUE_ACCOUNT_ID = account;
         window.MingyueCurrentUser = user;
         window.MingyueCurrentAccount = account;
-        window.dispatchEvent(new CustomEvent("mingyue-user-ready", {
-            detail: { uid, accountId: account, user }
-        }));
+        window.dispatchEvent(new CustomEvent("mingyue-user-ready", { detail: { uid, accountId: account, user } }));
         console.log("明月證券 Auth Bridge：帳號已同步", account);
     }
 
@@ -31,12 +29,18 @@
         window.dispatchEvent(new CustomEvent("mingyue-user-logout"));
     }
 
+    function restoreGoogleButtons() {
+        if (window.MingyueAuth?.signIn) window.googleLogin = () => window.MingyueAuth.signIn();
+        if (window.MingyueAuth?.signOut) window.googleLogout = () => window.MingyueAuth.signOut();
+    }
+
     window.MingyueAuthBridge = Object.freeze({
         version: "4.3.3",
         getUid: () => window.MINGYUE_CURRENT_UID || localStorage.getItem(UID_KEY) || null,
         getAccountId: () => window.MINGYUE_ACCOUNT_ID || localStorage.getItem(ACCOUNT_KEY) || window.MINGYUE_CURRENT_UID || null,
         getUser: () => window.MingyueCurrentUser || window.MingyueAuth?.user || null,
-        isSignedIn: () => Boolean(window.MINGYUE_CURRENT_UID || localStorage.getItem(UID_KEY))
+        isSignedIn: () => Boolean(window.MINGYUE_CURRENT_UID || localStorage.getItem(UID_KEY)),
+        restoreGoogleButtons
     });
 
     function bind() {
@@ -46,9 +50,11 @@
             const d = event.detail;
             if (d?.uid) apply(auth.user || d, d.accountId || d.uid);
             else clear();
+            restoreGoogleButtons();
         });
         window.addEventListener("mingyue-user-logout", clear);
         if (auth.user) apply(auth.user, auth.user.uid);
+        restoreGoogleButtons();
         return true;
     }
 
