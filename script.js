@@ -1564,130 +1564,104 @@ function switchChart(type) {
    23. 圖表
    ========================================================= */
 
+/* =========================================================
+   19. 圖表系統 v3
+   折線圖 / K線圖
+   ========================================================= */
+
 function drawChart(stock) {
 
     if (currentChart) {
-
         currentChart.destroy();
-
-        currentChart =
-            null;
-
+        currentChart = null;
     }
 
-
-    const canvas =
-        document.getElementById(
-            "stock-chart"
-        );
-
+    const canvas = document.getElementById("stock-chart");
 
     if (!canvas) {
-
         return;
-
     }
 
+    const data = historyData[stock.id];
 
-    const data =
-        historyData[
-            stock.id
-        ];
-
-
-    if (
-        !data ||
-        data.length === 0
-    ) {
-
+    if (!data || data.length === 0) {
         return;
-
     }
 
+    /* -----------------------------------------------------
+       折線圖
+       ----------------------------------------------------- */
 
-    if (
-        currentChartType ===
-        "line"
-    ) {
+    if (currentChartType === "line") {
 
-        const labels =
-            data.map(
-                item =>
-                    item.date
-            );
+        const labels = data.map(item => item.date);
 
+        currentChart = new Chart(canvas, {
 
-        currentChart =
-            new Chart(
-                canvas,
-                {
+            type: "line",
 
-                    type: "line",
+            data: {
 
-                    data: {
+                labels: labels,
 
-                        labels,
+                datasets: [
 
-                        datasets: [
+                    {
+                        label: stock.id,
 
-                            {
+                        data: data.map(
+                            item => item.close
+                        ),
 
-                                label:
-                                    stock.id,
+                        borderWidth: 2,
 
-                                data:
-                                    data.map(
-                                        item =>
-                                            item.close
-                                    ),
+                        pointRadius: 0,
 
-                                borderWidth: 2,
+                        pointHoverRadius: 4,
 
-                                pointRadius: 0,
+                        tension: 0.25,
 
-                                tension: 0.25
+                        fill: false
+                    }
 
-                            }
+                ]
 
-                        ]
+            },
 
+            options: {
+
+                responsive: true,
+
+                maintainAspectRatio: false,
+
+                animation: false,
+
+                interaction: {
+
+                    mode: "index",
+
+                    intersect: false
+
+                },
+
+                plugins: {
+
+                    legend: {
+                        display: false
                     },
 
+                    tooltip: {
 
-                    options: {
+                        callbacks: {
 
-                        responsive: true,
+                            label: function(context) {
 
-                        maintainAspectRatio: false,
-
-                        plugins: {
-
-                            legend: {
-
-                                display:
-                                    false
-
-                            }
-
-                        },
-
-                        scales: {
-
-                            x: {
-
-                                ticks: {
-
-                                    maxTicksLimit:
-                                        8
-
-                                },
-
-                                grid: {
-
-                                    display:
-                                        false
-
-                                }
+                                return (
+                                    " ¥" +
+                                    Number(
+                                        context.raw
+                                    ).toFixed(2)
+                                );
 
                             }
 
@@ -1695,14 +1669,71 @@ function drawChart(stock) {
 
                     }
 
-                }
-            );
+                },
 
+                scales: {
+
+                    x: {
+
+                        display: true,
+
+                        grid: {
+
+                            display: false
+
+                        },
+
+                        ticks: {
+
+                            maxTicksLimit: 8,
+
+                            autoSkip: true
+
+                        }
+
+                    },
+
+                    y: {
+
+                        display: true,
+
+                        beginAtZero: false,
+
+                        grace: "5%",
+
+                        ticks: {
+
+                            callback: function(value) {
+
+                                return "¥" +
+                                    Number(value)
+                                        .toFixed(2);
+
+                            }
+
+                        },
+
+                        grid: {
+
+                            display: true
+
+                        }
+
+                    }
+
+                }
+
+            }
+
+        });
 
         return;
-
     }
 
+
+    /* -----------------------------------------------------
+       K 線
+       ----------------------------------------------------- */
 
     drawCandlestick(
         canvas,
@@ -1713,65 +1744,69 @@ function drawChart(stock) {
 
 
 /* =========================================================
-   24. K線
+   20. K 線 Canvas
    ========================================================= */
 
-function drawCandlestick(
-    canvas,
-    data
-) {
+function drawCandlestick(canvas, data) {
 
-    const ctx =
-        canvas.getContext(
-            "2d"
-        );
+    const container =
+        canvas.parentElement;
 
-
-    const rect =
-        canvas.getBoundingClientRect();
-
-
-    if (
-        rect.width <= 0 ||
-        rect.height <= 0
-    ) {
-
+    if (!container) {
         return;
-
     }
 
 
-    const ratio =
-        window.devicePixelRatio ||
-        1;
+    /* -----------------------------------------------------
+       取得實際顯示尺寸
+       ----------------------------------------------------- */
+
+    const rect =
+        container.getBoundingClientRect();
+
+    const width =
+        Math.max(
+            300,
+            Math.floor(rect.width)
+        );
+
+    const height =
+        Math.max(
+            280,
+            Math.floor(rect.height)
+        );
+
+
+    const dpr =
+        window.devicePixelRatio || 1;
 
 
     canvas.width =
-        rect.width *
-        ratio;
-
+        width * dpr;
 
     canvas.height =
-        rect.height *
-        ratio;
+        height * dpr;
+
+
+    canvas.style.width =
+        width + "px";
+
+    canvas.style.height =
+        height + "px";
+
+
+    const ctx =
+        canvas.getContext("2d");
 
 
     ctx.setTransform(
-        ratio,
+        dpr,
         0,
         0,
-        ratio,
+        dpr,
         0,
         0
     );
-
-
-    const width =
-        rect.width;
-
-
-    const height =
-        rect.height;
 
 
     ctx.clearRect(
@@ -1782,56 +1817,109 @@ function drawCandlestick(
     );
 
 
+    /* -----------------------------------------------------
+       圖表邊界
+       ----------------------------------------------------- */
+
+    const left = 58;
+
+    const right = 12;
+
+    const top = 20;
+
+    const bottom = 34;
+
+
+    const chartWidth =
+        width -
+        left -
+        right;
+
+    const chartHeight =
+        height -
+        top -
+        bottom;
+
+
+    if (
+        chartWidth <= 0 ||
+        chartHeight <= 0
+    ) {
+        return;
+    }
+
+
+    /* -----------------------------------------------------
+       價格範圍
+       ----------------------------------------------------- */
+
     const prices =
         data.flatMap(
             item => [
-                item.high,
-                item.low
+                Number(item.high),
+                Number(item.low)
             ]
         );
 
 
-    const maxPrice =
-        Math.max(
-            ...prices
-        );
+    let maxPrice =
+        Math.max(...prices);
+
+    let minPrice =
+        Math.min(...prices);
 
 
-    const minPrice =
-        Math.min(
-            ...prices
-        );
+    /* 留一些上下空間 */
+
+    const range =
+        maxPrice -
+        minPrice;
 
 
-    const padding =
-        35;
+    const paddingPrice =
+        range > 0
+            ? range * 0.08
+            : maxPrice * 0.08;
 
 
-    const chartHeight =
-        height -
-        padding * 2;
+    maxPrice +=
+        paddingPrice;
+
+    minPrice -=
+        paddingPrice;
 
 
-    function y(price) {
+    /* -----------------------------------------------------
+       價格 → Y 座標
+       ----------------------------------------------------- */
+
+    function priceToY(price) {
 
         return (
-            padding +
+            top +
             (
                 maxPrice -
                 price
             ) /
             (
                 maxPrice -
-                minPrice ||
-                1
-            ) *
+                minPrice
+            )
+            *
             chartHeight
         );
 
     }
 
 
-    ctx.beginPath();
+    /* -----------------------------------------------------
+       背景網格
+       ----------------------------------------------------- */
+
+    ctx.strokeStyle =
+        "rgba(120,120,120,0.14)";
+
+    ctx.lineWidth = 1;
 
 
     for (
@@ -1840,43 +1928,123 @@ function drawCandlestick(
         i++
     ) {
 
-        const gy =
-            padding +
+        const y =
+            top +
             chartHeight *
             i /
             4;
 
 
+        ctx.beginPath();
+
         ctx.moveTo(
-            0,
-            gy
+            left,
+            y
         );
 
-
         ctx.lineTo(
-            width,
-            gy
+            width - right,
+            y
+        );
+
+        ctx.stroke();
+
+
+        /* 價格 */
+
+        const price =
+            maxPrice -
+            (
+                maxPrice -
+                minPrice
+            ) *
+            i /
+            4;
+
+
+        ctx.fillStyle =
+            "#777";
+
+        ctx.font =
+            "12px sans-serif";
+
+        ctx.textAlign =
+            "right";
+
+        ctx.textBaseline =
+            "middle";
+
+
+        ctx.fillText(
+            "¥" +
+            price.toFixed(2),
+
+            left - 8,
+
+            y
         );
 
     }
 
 
-    ctx.strokeStyle =
-        "rgba(128,128,128,0.15)";
+    /* -----------------------------------------------------
+       X 軸
+       ----------------------------------------------------- */
 
+    ctx.strokeStyle =
+        "rgba(120,120,120,0.25)";
+
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+        left,
+        top + chartHeight
+    );
+
+    ctx.lineTo(
+        width - right,
+        top + chartHeight
+    );
 
     ctx.stroke();
 
 
+    /* -----------------------------------------------------
+       Y 軸
+       ----------------------------------------------------- */
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+        left,
+        top
+    );
+
+    ctx.lineTo(
+        left,
+        top + chartHeight
+    );
+
+    ctx.stroke();
+
+
+    /* -----------------------------------------------------
+       K 線
+       ----------------------------------------------------- */
+
     const spacing =
-        width /
+        chartWidth /
         data.length;
 
 
     const candleWidth =
         Math.max(
             3,
-            spacing * 0.55
+            Math.min(
+                14,
+                spacing * 0.58
+            )
         );
 
 
@@ -1884,25 +2052,34 @@ function drawCandlestick(
         (item, index) => {
 
             const x =
+                left +
                 spacing *
                 index +
                 spacing / 2;
 
 
             const openY =
-                y(item.open);
+                priceToY(
+                    item.open
+                );
 
 
             const closeY =
-                y(item.close);
+                priceToY(
+                    item.close
+                );
 
 
             const highY =
-                y(item.high);
+                priceToY(
+                    item.high
+                );
 
 
             const lowY =
-                y(item.low);
+                priceToY(
+                    item.low
+                );
 
 
             const rising =
@@ -1910,35 +2087,44 @@ function drawCandlestick(
                 item.open;
 
 
-            ctx.strokeStyle =
+            /*
+             * 上漲紅
+             * 下跌綠
+             */
+
+            const candleColor =
                 rising
                     ? "#ef4444"
                     : "#22c55e";
 
+
+            ctx.strokeStyle =
+                candleColor;
 
             ctx.fillStyle =
-                rising
-                    ? "#ef4444"
-                    : "#22c55e";
+                candleColor;
 
+            ctx.lineWidth = 1;
+
+
+            /* 上下影線 */
 
             ctx.beginPath();
-
 
             ctx.moveTo(
                 x,
                 highY
             );
 
-
             ctx.lineTo(
                 x,
                 lowY
             );
 
-
             ctx.stroke();
 
+
+            /* 實體 */
 
             const bodyTop =
                 Math.min(
@@ -1958,6 +2144,7 @@ function drawCandlestick(
 
 
             ctx.fillRect(
+
                 x -
                 candleWidth / 2,
 
@@ -1966,47 +2153,68 @@ function drawCandlestick(
                 candleWidth,
 
                 bodyHeight
+
             );
 
         }
     );
 
 
-    ctx.fillStyle =
-        "#666";
+    /* -----------------------------------------------------
+       日期軸
+       ----------------------------------------------------- */
 
+    ctx.fillStyle =
+        "#777";
 
     ctx.font =
-        "12px sans-serif";
+        "11px sans-serif";
+
+    ctx.textAlign =
+        "center";
+
+    ctx.textBaseline =
+        "top";
+
+
+    const labelCount =
+        Math.min(
+            6,
+            data.length
+        );
 
 
     for (
         let i = 0;
-        i <= 4;
+        i < labelCount;
         i++
     ) {
 
-        const price =
-            maxPrice -
-            (
-                maxPrice -
-                minPrice
-            ) *
-            i /
-            4;
+        const index =
+            Math.floor(
+                i *
+                (
+                    data.length - 1
+                ) /
+                (
+                    labelCount - 1
+                )
+            );
 
 
-        const py =
-            padding +
-            chartHeight *
-            i /
-            4;
+        const x =
+            left +
+            spacing *
+            index +
+            spacing / 2;
 
 
         ctx.fillText(
-            price.toFixed(2),
-            5,
-            py - 4
+            data[index].date,
+            x,
+            top +
+            chartHeight +
+            8
         );
 
     }
