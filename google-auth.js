@@ -38,6 +38,7 @@ window.MingyueAuth = {
 };
 window.googleLogin = () => window.MingyueAuth.signIn();
 window.googleLogout = () => window.MingyueAuth.signOut();
+window.toggleGoogleLogin = () => window.MingyueAuth.user ? window.MingyueAuth.signOut() : window.MingyueAuth.signIn();
 
 async function completeLogin(user) {
     if (!user) return;
@@ -99,20 +100,33 @@ function publish(user, account) {
     const detail = user ? { uid: user.uid, accountId: account?.accountId || user.uid, email: user.email || "", displayName: user.displayName || "", photoURL: user.photoURL || "" } : null;
     window.dispatchEvent(new CustomEvent("mingyue-auth-state", { detail }));
     updateGoogleUI(user, account);
+    updateProfileUI(user, account);
 }
 
 function updateGoogleUI(user, account) {
     const status = document.getElementById("google-status");
     if (!status) return;
     if (!user) {
-        status.innerHTML = `<div class="google-auth-status"><div class="google-auth-title">尚未登入</div><div class="google-auth-subtitle">使用 Google 帳戶登入明月證券</div><button class="primary-button full" type="button" onclick="googleLogin()">🔐 使用 Google 登入</button></div>`;
+        status.textContent = "尚未登入 · 點擊登入";
         return;
     }
-    const name = escapeHTML(user.displayName || "Google 使用者");
-    const email = escapeHTML(user.email || "");
-    const photo = user.photoURL || "";
-    const avatar = photo ? `<img src="${escapeHTML(photo)}" alt="Google 頭像" class="google-avatar">` : `<div class="google-avatar-fallback">👤</div>`;
-    status.innerHTML = `<div class="google-auth-status"><div class="google-profile">${avatar}<div class="google-profile-info"><div class="google-profile-name">${name}</div><div class="google-profile-email">${email}</div></div></div><div class="google-profile-uid">證券帳號：${escapeHTML(account?.accountId || user.uid)}</div><div class="google-profile-uid">Google UID：${escapeHTML(user.uid)}</div><button class="secondary-button full" type="button" onclick="googleLogout()">登出 Google 帳戶</button></div>`;
+    status.textContent = `已登入 · ${user.email || user.displayName || "Google 帳戶"}`;
+}
+
+function updateProfileUI(user, account) {
+    const name = document.getElementById("profile-name");
+    const id = document.getElementById("profile-account");
+    const avatar = document.getElementById("profile-avatar");
+    if (!name || !id) return;
+    if (!user) {
+        name.textContent = "尚未登入";
+        id.textContent = "未建立證券帳號";
+        if (avatar) avatar.textContent = "?";
+        return;
+    }
+    name.textContent = user.displayName || user.email || "Google 使用者";
+    id.textContent = `證券帳號：${account?.accountId || user.uid}`;
+    if (avatar) avatar.textContent = (user.displayName || user.email || "G").trim().charAt(0).toUpperCase();
 }
 
 async function handleRedirectResult() {
@@ -142,9 +156,6 @@ document.addEventListener("visibilitychange", async () => {
 function reportAuthError(message, error) {
     console.error(`明月證券：${message}`, error);
     window.dispatchEvent(new CustomEvent("mingyue-auth-error", { detail: error }));
-}
-function escapeHTML(value) {
-    return String(value ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
 }
 window.addEventListener("mingyue-auth-error", () => {
     if (typeof window.showToast === "function") window.showToast("Google 登入失敗，請稍後再試");
