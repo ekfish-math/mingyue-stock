@@ -1791,9 +1791,10 @@ function renderStockDetail(stock) {
 
 }
 
-
 /* =========================================================
    31. 圖表切換
+   ---------------------------------------------------------
+   v3.3 修正版
    ========================================================= */
 
 function switchChart(type) {
@@ -1830,16 +1831,10 @@ function switchChart(type) {
     }
 
 
-    /*
-     * 不重新產生整個股票頁
-     * 直接切換 Canvas
-     */
-
     const lineCanvas =
         document.getElementById(
             "stock-line-chart"
         );
-
 
     const candleCanvas =
         document.getElementById(
@@ -1853,125 +1848,101 @@ function switchChart(type) {
     ) {
 
         renderStockDetail(stock);
+
         return;
 
     }
 
 
-    lineCanvas.classList.toggle(
-        "chart-visible",
-        type === "line"
+    updateChartCanvasVisibility();
+
+
+    /*
+     * 等瀏覽器完成 display / class 更新後再畫
+     */
+
+    requestAnimationFrame(
+        () => {
+
+            drawChart(stock);
+
+        }
     );
-
-
-    lineCanvas.classList.toggle(
-        "chart-hidden",
-        type !== "line"
-    );
-
-
-    candleCanvas.classList.toggle(
-        "chart-visible",
-        type === "candle"
-    );
-
-
-    candleCanvas.classList.toggle(
-        "chart-hidden",
-        type !== "candle"
-    );
-
-
-    drawChart(stock);
 
 }
-
-
 /* =========================================================
    32. Canvas 圖表主程式
+   ---------------------------------------------------------
+   v3.3 修正版
+   1. 只計算目前顯示的 Canvas
+   2. 修復手機 Canvas 寬高
+   3. 圖表切換後重新計算
+   4. 統一 X 軸座標
    ========================================================= */
 
 function drawChart(stock) {
 
     const container =
-        document.getElementById(
-            "chart-container"
-        );
-
+        document.getElementById("chart-container");
 
     if (!container) {
         return;
     }
 
-
     const data =
         historyData[stock.id];
-
 
     if (
         !Array.isArray(data) ||
         data.length === 0
     ) {
-
         return;
-
     }
-
 
     const lineCanvas =
-        document.getElementById(
-            "stock-line-chart"
-        );
-
+        document.getElementById("stock-line-chart");
 
     const candleCanvas =
-        document.getElementById(
-            "stock-candle-chart"
-        );
+        document.getElementById("stock-candle-chart");
 
-
-    if (
-        !lineCanvas ||
-        !candleCanvas
-    ) {
-
+    if (!lineCanvas || !candleCanvas) {
         return;
-
     }
 
+    /*
+     * 強制確認目前 Canvas 顯示狀態
+     */
+    updateChartCanvasVisibility();
 
     /*
-     * chart-container 的高度固定至少 320px
+     * 重新取得實際容器尺寸
      */
-
     const rect =
         container.getBoundingClientRect();
 
-
     const width =
         Math.max(
-            300,
-            Math.floor(
-                rect.width
-            )
+            280,
+            Math.floor(rect.width)
         );
-
 
     const height =
         Math.max(
             320,
             Math.floor(
-                rect.height || 320
+                container.clientHeight || 320
             )
         );
 
-
+    /*
+     * 只初始化兩個 Canvas，
+     * 但實際只繪製目前的圖表。
+     */
     setupCanvas(
         lineCanvas,
         width,
         height
     );
-
 
     setupCanvas(
         candleCanvas,
@@ -1979,19 +1950,17 @@ function drawChart(stock) {
         height
     );
 
-
-    const lineCtx =
-        lineCanvas.getContext("2d");
-
-
-    const candleCtx =
-        candleCanvas.getContext("2d");
-
-
     if (currentChartType === "line") {
 
+        const ctx =
+            lineCanvas.getContext("2d");
+
+        if (!ctx) {
+            return;
+        }
+
         drawLineChart(
-            lineCtx,
+            ctx,
             width,
             height,
             data
@@ -1999,10 +1968,19 @@ function drawChart(stock) {
 
     }
 
-    else {
+    else if (
+        currentChartType === "candle"
+    ) {
+
+        const ctx =
+            candleCanvas.getContext("2d");
+
+        if (!ctx) {
+            return;
+        }
 
         drawCandlestickChart(
-            candleCtx,
+            ctx,
             width,
             height,
             data
@@ -2011,8 +1989,6 @@ function drawChart(stock) {
     }
 
 }
-
-
 /* =========================================================
    33. Canvas 初始化
    ========================================================= */
@@ -2070,9 +2046,11 @@ function setupCanvas(
 
 }
 
-
 /* =========================================================
    34. 圖表座標系統
+   ---------------------------------------------------------
+   v3.3
+   所有圖表共用同一套座標系統
    ========================================================= */
 
 function getChartLayout(
@@ -2082,21 +2060,37 @@ function getChartLayout(
 
     const left =
         width < 500
-            ? 58
-            : 72;
-
+            ? 62
+            : 76;
 
     const right =
-        20;
-
+        width < 500
+            ? 18
+            : 24;
 
     const top =
         20;
 
-
     const bottom =
-        48;
+        width < 500
+            ? 52
+            : 48;
 
+    const chartWidth =
+        Math.max(
+            1,
+            width -
+            left -
+            right
+        );
+
+    const chartHeight =
+        Math.max(
+            1,
+            height -
+            top -
+            bottom
+        );
 
     return {
 
@@ -2105,21 +2099,12 @@ function getChartLayout(
         top,
         bottom,
 
-        chartWidth:
-            width -
-            left -
-            right,
-
-        chartHeight:
-            height -
-            top -
-            bottom
+        chartWidth,
+        chartHeight
 
     };
 
 }
-
-
 /* =========================================================
    35. 價格範圍
    ========================================================= */
@@ -2734,6 +2719,12 @@ function drawLineChart(
 
 /* =========================================================
    39. K 線圖
+   ---------------------------------------------------------
+   v3.3 修正版
+   1. 第一根 K 線與左側 X 軸起點對齊
+   2. 最後一根 K 線與右側 X 軸終點對齊
+   3. 與折線圖使用完全相同的 X 座標
+   4. 手機版自動縮小 K 線寬度
    ========================================================= */
 
 function drawCandlestickChart(
@@ -2749,10 +2740,8 @@ function drawCandlestickChart(
             height
         );
 
-
     const range =
         getPriceRange(data);
-
 
     const {
         left,
@@ -2793,10 +2782,15 @@ function drawCandlestickChart(
 
 
     /*
-     * 每根 K 線的中心點
+     * =====================================================
+     * X 座標
+     * =====================================================
      *
-     * 第一根、最後一根都與
-     * X 軸範圍保持一致
+     * 與折線圖完全相同：
+     *
+     * 第一根 = 左端
+     * 最後一根 = 右端
+     *
      */
 
     const getX =
@@ -2813,14 +2807,13 @@ function drawCandlestickChart(
 
             }
 
-
             return (
                 left +
                 chartWidth *
+                index /
                 (
-                    index + 0.5
-                ) /
-                data.length
+                    data.length - 1
+                )
             );
 
         };
@@ -2831,22 +2824,35 @@ function drawCandlestickChart(
      */
 
     const spacing =
-        chartWidth /
-        Math.max(
-            1,
-            data.length
-        );
+        data.length <= 1
+            ? chartWidth
+            : chartWidth /
+              (
+                  data.length - 1
+              );
 
+
+    /*
+     * 手機版避免 K 線過寬
+     */
 
     const candleWidth =
         Math.max(
             3,
             Math.min(
-                14,
-                spacing * 0.62
+                width < 500
+                    ? 10
+                    : 14,
+                spacing * 0.55
             )
         );
 
+
+    /*
+     * =====================================================
+     * 繪製每一根 K 線
+     * =====================================================
+     */
 
     data.forEach(
         (item, index) => {
@@ -2858,14 +2864,11 @@ function drawCandlestickChart(
             const open =
                 Number(item.open);
 
-
             const close =
                 Number(item.close);
 
-
             const high =
                 Number(item.high);
-
 
             const low =
                 Number(item.low);
@@ -2886,14 +2889,11 @@ function drawCandlestickChart(
             const openY =
                 priceToY(open);
 
-
             const closeY =
                 priceToY(close);
 
-
             const highY =
                 priceToY(high);
-
 
             const lowY =
                 priceToY(low);
@@ -2905,6 +2905,7 @@ function drawCandlestickChart(
 
             /*
              * 明月證券：
+             *
              * 紅 = 上漲
              * 綠 = 下跌
              */
@@ -2918,10 +2919,8 @@ function drawCandlestickChart(
             ctx.strokeStyle =
                 color;
 
-
             ctx.fillStyle =
                 color;
-
 
             ctx.lineWidth =
                 1;
@@ -2956,13 +2955,11 @@ function drawCandlestickChart(
                     closeY
                 );
 
-
             const bodyBottom =
                 Math.max(
                     openY,
                     closeY
                 );
-
 
             const bodyHeight =
                 Math.max(
@@ -2975,8 +2972,11 @@ function drawCandlestickChart(
             ctx.fillRect(
                 x -
                 candleWidth / 2,
+
                 bodyTop,
+
                 candleWidth,
+
                 bodyHeight
             );
 
@@ -2998,8 +2998,6 @@ function drawCandlestickChart(
     );
 
 }
-
-
 /* =========================================================
    40. 圖表 Canvas 顯示狀態
    ========================================================= */
@@ -3560,121 +3558,68 @@ function renderTransactions() {
 
 
 /* =========================================================
-   40. 儲值
+   40. 圖表 Canvas 顯示狀態
    ---------------------------------------------------------
-   v3.2 修改：
-   儲值不再檢查 wallet
-   儲值不再扣 wallet
-   直接增加證券餘額
+   v3.3
    ========================================================= */
 
-function openDepositModal() {
+function updateChartCanvasVisibility() {
 
-    const modal =
+    const lineCanvas =
         document.getElementById(
-            "deposit-modal"
+            "stock-line-chart"
         );
 
-
-    if (!modal) {
-        return;
-    }
-
-
-    updateHomeAssets();
-
-
-    modal.classList.add(
-        "show"
-    );
-
-
-    const input =
+    const candleCanvas =
         document.getElementById(
-            "deposit-amount"
-        );
-
-
-    if (input) {
-
-        input.focus();
-
-    }
-
-}
-
-
-function depositMoney() {
-
-    const input =
-        document.getElementById(
-            "deposit-amount"
-        );
-
-
-    if (!input) {
-        return;
-    }
-
-
-    const amount =
-        Number(
-            input.value
+            "stock-candle-chart"
         );
 
 
     if (
-        !Number.isFinite(amount) ||
-        amount <= 0
+        !lineCanvas ||
+        !candleCanvas
     ) {
-
-        showToast(
-            "請輸入有效金額"
-        );
 
         return;
 
     }
 
 
+    const lineVisible =
+        currentChartType === "line";
+
+
     /*
-     * v3.2
-     *
-     * 不再檢查：
-     * user.wallet
-     *
-     * 不再扣除：
-     * user.wallet
-     *
-     * 儲值直接進入證券餘額。
+     * 折線圖
      */
 
-    user.balance +=
-        amount;
+    lineCanvas.classList.toggle(
+        "chart-visible",
+        lineVisible
+    );
 
-
-    saveAll();
-
-
-    input.value =
-        "";
-
-
-    closeModal(
-        "deposit-modal"
+    lineCanvas.classList.toggle(
+        "chart-hidden",
+        !lineVisible
     );
 
 
-    showToast(
-        `成功儲值 ${money(amount)}`
+    /*
+     * K 線圖
+     */
+
+    candleCanvas.classList.toggle(
+        "chart-visible",
+        !lineVisible
     );
 
-
-    updateAllVisible();
+    candleCanvas.classList.toggle(
+        "chart-hidden",
+        lineVisible
+    );
 
 }
-
-
 /* =========================================================
    41. Modal
    ========================================================= */
