@@ -38,20 +38,7 @@ const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
 console.log("Firebase Realtime Database 已連線");
-   v3.2
-   1. 修復首頁按鈕
-   2. 修復上下漲統計
-   3. 修復頁面切換
-   4. 修復股票詳細頁
-   5. 修復折線圖
-   6. 修復 K 線圖
-   7. K 線使用獨立 Canvas
-   8. 不依賴 Chart.js
-   9. 保留 LocalStorage
-   10. 修復手機買入／賣出按鈕
-   11. 儲值不再扣除遊戲錢包
-   ========================================================= */
-
+   
 
 /* =========================================================
    1. 系統
