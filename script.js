@@ -3164,35 +3164,30 @@ function registerCompany() {
 
 function openMyCompany() {
 
-    showPageWithoutLoop(
-        "company"
-    );
+    showPageWithoutLoop("company");
 
 
     const mine =
         companies.filter(
             company =>
-                company.owner ===
-                user.accountId
+                company.owner === user.accountId
         );
 
 
     const container =
-        document.getElementById(
-            "company-page"
-        );
+        document.getElementById("company-page");
 
 
     if (!container) {
-
         return;
-
     }
 
 
-    if (
-        mine.length === 0
-    ) {
+    /* -----------------------------------------------------
+       沒有公司
+       ----------------------------------------------------- */
+
+    if (mine.length === 0) {
 
         container.innerHTML = `
 
@@ -3206,7 +3201,6 @@ function openMyCompany() {
                     你目前還沒有註冊公司。
                 </p>
 
-
                 <button
                     onclick="openCompanyModal()"
                 >
@@ -3218,9 +3212,12 @@ function openMyCompany() {
         `;
 
         return;
-
     }
 
+
+    /* -----------------------------------------------------
+       顯示公司
+       ----------------------------------------------------- */
 
     container.innerHTML =
         mine.map(
@@ -3267,9 +3264,7 @@ function openMyCompany() {
                                 </small>
 
                                 <strong>
-                                    ${money(
-                                        company.capital
-                                    )}
+                                    ${money(company.capital)}
                                 </strong>
 
                             </div>
@@ -3291,7 +3286,7 @@ function openMyCompany() {
                             <div>
 
                                 <small>
-                                    IPO狀態
+                                    IPO 狀態
                                 </small>
 
                                 <strong>
@@ -3319,282 +3314,29 @@ function openMyCompany() {
                         <div class="company-actions">
 
                             <button
-                                onclick="publishCompanyNews('${company.code}')/* =========================================================
-   IPO / 上市系統 v3
-   ========================================================= */
-
-function applyIPO(code) {
-
-    const company = companies.find(
-        item => item.code === code
-    );
-
-    if (!company) {
-        showToast("找不到這間公司");
-        return;
-    }
-
-
-    /* 必須是公司負責人 */
-
-    if (
-        company.owner !== user.accountId
-    ) {
-
-        showToast(
-            "你不是這間公司的負責人"
-        );
-
-        return;
-
-    }
-
-
-    /* 已經上市 */
-
-    if (company.listed) {
-
-        showToast(
-            "這間公司已經上市"
-        );
-
-        return;
-
-    }
-
-
-    /* 已經申請 */
-
-    if (
-        company.ipoStatus === "審核中"
-    ) {
-
-        showToast(
-            "IPO 申請正在審核中"
-        );
-
-        return;
-
-    }
-
-
-    /*
-     * 基本條件
-     *
-     * 先採用 Demo 規則：
-     *
-     * 註冊資本 ≥ ¥10,000,000
-     */
-
-    if (
-        Number(company.capital) <
-        10000000
-    ) {
-
-        showToast(
-            "註冊資本不足 ¥10,000,000，暫時無法申請上市"
-        );
-
-        return;
-
-    }
-
-
-    const confirmIPO =
-        confirm(
-            `確定要申請「${company.name}」上市嗎？\n\n` +
-            `股票代號：${company.code}\n` +
-            `註冊資本：${money(company.capital)}\n\n` +
-            `送出後將進入上市審核。`
-        );
-
-
-    if (!confirmIPO) {
-        return;
-    }
-
-
-    /*
-     * IPO 狀態
-     */
-
-    company.ipoStatus =
-        "審核中";
-
-    company.ipoAppliedAt =
-        formatDateTime(
-            new Date()
-        );
-
-
-    saveData(
-        "mingyue_companies_v2",
-        companies
-    );
-
-
-    showToast(
-        "IPO 申請已送出"
-    );
-
-
-    openMyCompany();
-
-}"
-/* =========================================================
-   IPO 審核
-   ========================================================= */
-
-function approveIPO(code) {
-
-    const company = companies.find(
-        item => item.code === code
-    );
-
-    if (!company) {
-        showToast("找不到公司");
-        return;
-    }
-
-
-    if (
-        company.ipoStatus !== "審核中"
-    ) {
-
-        showToast(
-            "這間公司目前沒有 IPO 審核"
-        );
-
-        return;
-
-    }
-
-
-    /*
-     * Demo：
-     * 審核通過
-     */
-
-    company.ipoStatus =
-        "已上市";
-
-    company.listed =
-        true;
-
-    company.status =
-        "上市公司";
-
-    company.listedAt =
-        formatDateTime(
-            new Date()
-        );
-
-
-    /*
-     * 建立股票
-     */
-
-    const stockExists =
-        stocks.some(
-            stock =>
-                stock.id === company.code
-        );
-
-
-    if (!stockExists) {
-
-        /*
-         * 初始股價
-         *
-         * 以註冊資本與股數計算
-         */
-
-        const shares =
-            Math.max(
-                1000000,
-                Math.floor(
-                    company.capital /
-                    10
-                )
-            );
-
-
-        const initialPrice =
-            Number(
-                (
-                    company.capital /
-                    shares
-                ).toFixed(2)
-            );
-
-
-        const newStock = {
-
-            id:
-                company.code,
-
-            name:
-                company.shortName,
-
-            company:
-                company.name,
-
-            industry:
-                company.industry,
-
-            type:
-                "上市公司",
-
-            price:
-                initialPrice,
-
-            previous:
-                initialPrice,
-
-            volume:
-                0,
-
-            capital:
-                company.capital,
-
-            shares:
-                shares
-
-        };
-
-
-        stocks.push(
-            newStock
-        );
-
-
-        generateHistory(
-            newStock
-        );
-
-    }
-
-
-    saveAll();
-
-
-    showToast(
-        `🎉 ${company.shortName} 已正式上市`
-    );
-
-
-    openMyCompany();
-
-}
+                                onclick="publishCompanyNews('${company.code}')"
                             >
                                 📰 發布新聞
                             </button>
 
 
-                            <button
-    onclick="applyIPO('${company.code}')">
-    📈 IPO / 上市
-</button>
+                            ${
+                                company.listed
+                                    ? `
+                                        <button
+                                            onclick="showToast('這家公司已經上市')"
+                                        >
+                                            📈 已上市
+                                        </button>
+                                    `
+                                    : `
+                                        <button
+                                            onclick="applyIPO('${company.code}')"
+                                        >
+                                            📈 IPO / 上市
+                                        </button>
+                                    `
+                            }
 
 
                             <button
@@ -3631,10 +3373,11 @@ function showPageWithoutLoop(page) {
     document
         .querySelectorAll(".page")
         .forEach(
-            element =>
-                element.classList.remove(
-                    "active"
-                )
+            element => {
+
+                element.classList.remove("active");
+
+            }
         );
 
 
@@ -3646,9 +3389,7 @@ function showPageWithoutLoop(page) {
 
     if (target) {
 
-        target.classList.add(
-            "active"
-        );
+        target.classList.add("active");
 
     }
 
@@ -3658,19 +3399,14 @@ function showPageWithoutLoop(page) {
         .forEach(
             item => {
 
-                item.classList.remove(
-                    "active"
-                );
+                item.classList.remove("active");
 
 
                 if (
-                    item.dataset.page ===
-                    page
+                    item.dataset.page === page
                 ) {
 
-                    item.classList.add(
-                        "active"
-                    );
+                    item.classList.add("active");
 
                 }
 
@@ -3681,10 +3417,7 @@ function showPageWithoutLoop(page) {
 
 
 /* =========================================================
-   35. IPO 申請
-   ---------------------------------------------------------
-   v3 先建立申請狀態。
-   真正上市流程下一階段處理。
+   35. IPO / 上市系統
    ========================================================= */
 
 function applyIPO(code) {
@@ -3693,8 +3426,7 @@ function applyIPO(code) {
         companies.find(
             item =>
                 item.code === code &&
-                item.owner ===
-                user.accountId
+                item.owner === user.accountId
         );
 
 
@@ -3709,9 +3441,11 @@ function applyIPO(code) {
     }
 
 
-    if (
-        company.listed
-    ) {
+    /* -----------------------------------------------------
+       已上市
+       ----------------------------------------------------- */
+
+    if (company.listed) {
 
         showToast(
             "這家公司已經上市"
@@ -3722,9 +3456,12 @@ function applyIPO(code) {
     }
 
 
+    /* -----------------------------------------------------
+       已經申請
+       ----------------------------------------------------- */
+
     if (
-        company.ipoStatus ===
-        "審核中"
+        company.ipoStatus === "審核中"
     ) {
 
         showToast(
@@ -3736,21 +3473,47 @@ function applyIPO(code) {
     }
 
 
-    const confirmed =
-        confirm(
-            `確定要申請「${company.name}」IPO 嗎？\n\n目前公司狀態：私人公司`
+    /* -----------------------------------------------------
+       上市基本條件
+       ----------------------------------------------------- */
+
+    if (
+        Number(company.capital) < 10000000
+    ) {
+
+        showToast(
+            "註冊資本不足 ¥10,000,000，暫時無法申請上市"
         );
-
-
-    if (!confirmed) {
 
         return;
 
     }
 
 
+    const confirmed =
+        confirm(
+            `確定要申請「${company.name}」IPO 嗎？
+
+股票代號：${company.code}
+註冊資本：${money(company.capital)}
+
+送出後將進入上市審核。`
+        );
+
+
+    if (!confirmed) {
+        return;
+    }
+
+
     company.ipoStatus =
         "審核中";
+
+
+    company.ipoAppliedAt =
+        formatDateTime(
+            new Date()
+        );
 
 
     saveAll();
@@ -3767,26 +3530,182 @@ function applyIPO(code) {
 
 
 /* =========================================================
-   36. 公司發布新聞
+   36. IPO 審核
    ========================================================= */
 
+function approveIPO(code) {
+
+    const company =
+        companies.find(
+            item =>
+                item.code === code
+        );
+
+
+    if (!company) {
+
+        showToast(
+            "找不到公司"
+        );
+
+        return;
+
+    }
+
+
+    if (
+        company.ipoStatus !== "審核中"
+    ) {
+
+        showToast(
+            "這間公司目前沒有 IPO 審核"
+        );
+
+        return;
+
+    }
+
+
+    /* -----------------------------------------------------
+       審核通過
+       ----------------------------------------------------- */
+
+    company.ipoStatus =
+        "已上市";
+
+
+    company.listed =
+        true;
+
+
+    company.status =
+        "上市公司";
+
+
+    company.listedAt =
+        formatDateTime(
+            new Date()
+        );
+
+
+    /* -----------------------------------------------------
+       建立股票
+       ----------------------------------------------------- */
+
+    const stockExists =
+        stocks.some(
+            stock =>
+                stock.id === company.code
+        );
+
+
+    if (!stockExists) {
+
+        const shares =
+            Math.max(
+                1000000,
+                Math.floor(
+                    Number(company.capital) / 10
+                )
+            );
+
+
+        const initialPrice =
+            Number(
+                (
+                    Number(company.capital) /
+                    shares
+                ).toFixed(2)
+            );
+
+
+        const newStock = {
+
+            id:
+                company.code,
+
+            name:
+                company.shortName,
+
+            company:
+                company.name,
+
+            industry:
+                company.industry,
+
+            type:
+                "上市公司",
+
+            price:
+                initialPrice,
+
+            previous:
+                initialPrice,
+
+            volume:
+                0,
+
+            capital:
+                Number(company.capital),
+
+            shares:
+                shares
+
+        };
+
+
+        stocks.push(
+            newStock
+        );
+
+
+        generateHistory(
+            newStock
+        );
+
+    }
+
+
+    saveAll();
+
+
+    showToast(
+        `🎉 ${company.shortName} 已正式上市`
+    );
+
+
+    openMyCompany();
+
+}
+
+
 /* =========================================================
-   公司發布新聞 v3
+   36.5 公司發布新聞
    ========================================================= */
 
 function publishCompanyNews(code) {
 
-    const company = companies.find(
-        item => item.code === code
-    );
+    const company =
+        companies.find(
+            item =>
+                item.code === code
+        );
+
 
     if (!company) {
-        showToast("找不到這間公司");
+
+        showToast(
+            "找不到這間公司"
+        );
+
         return;
+
     }
 
 
-    /* 確認是否為公司負責人 */
+    /* -----------------------------------------------------
+       權限
+       ----------------------------------------------------- */
 
     if (
         company.owner !== user.accountId
@@ -3801,41 +3720,58 @@ function publishCompanyNews(code) {
     }
 
 
-    /* 新聞標題 */
+    /* -----------------------------------------------------
+       新聞標題
+       ----------------------------------------------------- */
 
-    const title = prompt(
-        `【${company.shortName}】
+    const title =
+        prompt(
+            `【${company.shortName}】
 
 請輸入新聞標題：`
-    );
+        );
 
 
-    if (!title || !title.trim()) {
+    if (
+        !title ||
+        !title.trim()
+    ) {
+
         return;
+
     }
 
 
-    /* 新聞內容 */
+    /* -----------------------------------------------------
+       新聞內容
+       ----------------------------------------------------- */
 
-    const content = prompt(
-        `【${company.shortName}】
+    const content =
+        prompt(
+            `【${company.shortName}】
 
 請輸入新聞內容：`
-    );
+        );
 
 
-    if (!content || !content.trim()) {
+    if (
+        !content ||
+        !content.trim()
+    ) {
+
         return;
+
     }
 
 
-    /*
-     * 建立新聞
-     */
+    /* -----------------------------------------------------
+       建立新聞
+       ----------------------------------------------------- */
 
     const newNews = {
 
-        id: Date.now(),
+        id:
+            Date.now(),
 
         companyCode:
             company.code,
@@ -3869,41 +3805,27 @@ function publishCompanyNews(code) {
     };
 
 
-    /*
-     * 放到新聞最前面
-     */
-
     news.unshift(
         newNews
     );
 
 
-    /*
-     * 儲存新聞
-     */
+    saveAll();
 
-    saveData(
-        "mingyue_news_v2",
-        news
-    );
-
-
-    /*
-     * 更新新聞頁
-     */
 
     renderNews();
 
-
-    /*
-     * 成功提示
-     */
 
     showToast(
         `「${company.shortName}」新聞已發布`
     );
 
 }
+
+
+/* =========================================================
+   37. 新聞
+   ========================================================= */
 
 /* =========================================================
    37. 新聞
@@ -4160,7 +4082,7 @@ function saveAll() {
 
 
     saveData(
-        "mingyue_companies_v3",
+        "mingyue_companies_v2",
         companies
     );
 
