@@ -268,7 +268,7 @@ console.log("明月證券 v4.2.1 Plugin Data Adapter 已載入");
 await preload();
 
 try {
-    await import("./google-auth.js");
+    await import("./google-auth.js?v=4.3.3");
     window.MINGYUE_V43 = true;
     console.log("明月證券 v4.3 Google Account 模組已接入");
 } catch (error) {
