@@ -5653,6 +5653,91 @@ window.publishNews = publishNews;
 window.toast = toast;
 
 console.log("明月證券 v4.0 全域函式已掛載");
+/* =========================================================
+   儲值系統
+   ========================================================= */
+
+function depositMoney() {
+
+    const input = document.getElementById("depositAmount");
+
+    if (!input) {
+        console.error("找不到 depositAmount");
+        return;
+    }
+
+    const amount = Number(input.value);
+
+    if (!Number.isFinite(amount) || amount <= 0) {
+        toast("請輸入有效金額");
+        return;
+    }
+
+    if (typeof user === "undefined") {
+        console.error("user 尚未初始化");
+        return;
+    }
+
+    const wallet = Number(user.wallet || 0);
+
+    if (amount > wallet) {
+        toast("遊戲錢包餘額不足");
+        return;
+    }
+
+    user.wallet = wallet - amount;
+    user.balance = Number(user.balance || 0) + amount;
+
+    if (typeof saveAll === "function") {
+        saveAll();
+    }
+
+    input.value = "";
+
+    const modal = document.getElementById("depositModal");
+
+    if (modal) {
+        modal.classList.remove("show");
+    }
+
+    if (typeof renderHome === "function") {
+        renderHome();
+    }
+
+    if (typeof renderPortfolio === "function") {
+        renderPortfolio();
+    }
+
+    toast("儲值成功");
+
+    console.log(
+        "儲值成功：",
+        amount,
+        "目前餘額：",
+        user.balance
+    );
+}
+
+
+/* =========================================================
+   ES Module → HTML onclick 全域橋接
+   ========================================================= */
+
+window.depositMoney = depositMoney;
+
+if (typeof openDeposit === "function") {
+    window.openDeposit = openDeposit;
+}
+
+if (typeof showPage === "function") {
+    window.showPage = showPage;
+}
+
+if (typeof closeModal === "function") {
+    window.closeModal = closeModal;
+}
+
+console.log("明月證券 v4.0 全域函式已掛載");
 console.log(
     "明月證券 v4.0 script.js 載入完成"
 );
