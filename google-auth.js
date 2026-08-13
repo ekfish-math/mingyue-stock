@@ -55,6 +55,7 @@ async function ensureSecuritiesAccount(user) {
         get(ref(db, `transactions/${uid}`)),
         get(ref(db, `authUsers/${uid}`))
     ]);
+    const isNewAccount = !userSnap.exists() && !authSnap.exists();
     const oldUser = userSnap.exists() ? userSnap.val() : {};
     const oldAuth = authSnap.exists() ? authSnap.val() : {};
     const createdAt = oldUser.createdAt || oldAuth.createdAt || Date.now();
@@ -65,7 +66,7 @@ async function ensureSecuritiesAccount(user) {
         name: oldUser.name || user.displayName || "Google 使用者",
         email: oldUser.email || user.email || "",
         photoURL: oldUser.photoURL || user.photoURL || "",
-        balance: Number.isFinite(Number(oldUser.balance)) ? Number(oldUser.balance) : 1000000,
+        balance: isNewAccount ? 0 : (Number.isFinite(Number(oldUser.balance)) ? Number(oldUser.balance) : 0),
         createdAt,
         lastLoginAt: Date.now()
     };
@@ -106,10 +107,7 @@ function publish(user, account) {
 function updateGoogleUI(user, account) {
     const status = document.getElementById("google-status");
     if (!status) return;
-    if (!user) {
-        status.textContent = "尚未登入 · 點擊登入";
-        return;
-    }
+    if (!user) { status.textContent = "尚未登入 · 點擊登入"; return; }
     status.textContent = `已登入 · ${user.email || user.displayName || "Google 帳戶"}`;
 }
 
