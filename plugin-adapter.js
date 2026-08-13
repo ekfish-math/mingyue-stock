@@ -2,13 +2,13 @@
    明月證券 v4.2.1
    Plugin Data Adapter
    ---------------------------------------------------------
-   作用：在 v4.2 script.js 啟動前取得外部資料。
-   優先順序：
+   資料優先順序：
    1. window.MingyueExternalPlugin
    2. Firebase Realtime Database
    3. v4.2 LocalStorage fallback
-   ---------------------------------------------------------
-   這個檔案必須在 script.js 之前載入。
+
+   v4.2 script.js 不需要改動即可使用本層的
+   預載資料與同步橋接。
    ========================================================= */
 
 import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
@@ -28,7 +28,26 @@ const firebaseConfig = {
 const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-const PATHS = ["users", "stocks", "companies", "news", "ipo", "portfolios", "transactions", "historyData"];
+const PATHS = [
+    "users",
+    "stocks",
+    "companies",
+    "news",
+    "ipo",
+    "portfolios",
+    "transactions",
+    "historyData"
+];
+
+const CACHE_KEYS = {
+    users: "mingyue_user_v42",
+    stocks: "mingyue_stocks_v42",
+    companies: "mingyue_companies_v42",
+    news: "mingyue_news_v42",
+    portfolios: "mingyue_portfolio_v42",
+    transactions: "mingyue_transactions_v42",
+    historyData: "mingyue_history_v42"
+};
 
 function validKey(key) {
     return PATHS.includes(String(key));
@@ -38,7 +57,7 @@ function getExternalPlugin() {
     return window.MingyueExternalPlugin || window.mingyueExternalPlugin || null;
 }
 
-async function readFromExternal(key) {
+async function externalRead(key) {
     const plugin = getExternalPlugin();
     if (!plugin) return undefined;
     try {
@@ -47,125 +66,174 @@ async function readFromExternal(key) {
         if (typeof plugin.readData === "function") return await plugin.readData(key);
         if (typeof plugin.getData === "function") return await plugin.getData(key);
     } catch (error) {
-        console.warn("外部資料外掛讀取失敗：", key, error);
+        console.warn("4.2.1 外部外掛讀取失敗：", key, error);
     }
     return undefined;
 }
 
-async function readFirebase(key) {
-    if (!validKey(key)) throw new Error("不允許的資料路徑：" + key);
+async function externalWrite(key, value) {
+    const plugin = getExternalPlugin();
+    if (!plugin) return false;
     try {
-        const snapshot = await get(ref(db, key));
-        return snapshot.exists() ? snapshot.val() : null;
+        if (typeof plugin.write === "function") {
+            await plugin.write(key, value);
+            return true;
+        }
+        if (typeof plugin.set === "function") {
+            await plugin.set(key, value);
+            return true;
+        }
+        if (typeof plugin.writeData === "function") {
+            await plugin.writeData(key, value);
+            return true;
+        }
     } catch (error) {
-        console.warn("Firebase Adapter 讀取失敗：", key, error);
-        return null;
+        console.warn("4.2.1 外部外掛寫入失敗：", key, error);
     }
+    return false;
+}
+
+async function externalReadAll() {
+    const plugin = getExternalPlugin();
+    if (!plugin) return undefined;
+    try {
+        if (typeof plugin.readAll === "function") return await plugin.readAll();
+        if (typeof plugin.getAll === "function") return await plugin.getAll();
+    } catch (error) {
+        console.warn("4.2.1 外部外掛全資料讀取失敗：", error);
+    }
+    return undefined;
+}
+
+async function externalWriteMany(data) {
+    const plugin = getExternalPlugin();
+    if (!plugin) return false;
+    try {
+        if (typeof plugin.writeMany === "function") {
+            await plugin.writeMany(data || {});
+            return true;
+        }
+    } catch (error) {
+        console.warn("4.2.1 外部外掛批次寫入失敗：", error);
+    }
+    return false;
+}
+
+function cacheData(data) {
+    try {
+        for (const key of PATHS) {
+            if (!Object.prototype.hasOwnProperty.call(data || {}, key)) continue;
+            const value = data[key];
+            const cacheKey = CACHE_KEYS[key];
+            if (!cacheKey) continue;
+
+            if (key === "users") {
+                const account = value?.["MYS-000184"];
+                if (account) localStorage.setItem(cacheKey, JSON.stringify(account));
+            } else if (key === "portfolios") {
+                const account = value?.["MYS-000184"];
+                if (account) localStorage.setItem(cacheKey, JSON.stringify(account));
+            } else if (key === "transactions") {
+                const account = value?.["MYS-000184"];
+                if (Array.isArray(account)) localStorage.setItem(cacheKey, JSON.stringify(account));
+            } else {
+                localStorage.setItem(cacheKey, JSON.stringify(value));
+            }
+        }
+    } catch (error) {
+        console.warn("4.2.1 LocalStorage fallback 寫入失敗：", error);
+    }
+}
+
+async function firebaseRead(key) {
+    const snapshot = await get(ref(db, key));
+    return snapshot.exists() ? snapshot.val() : null;
+}
+
+async function firebaseReadAll() {
+    const snapshot = await get(ref(db));
+    return snapshot.exists() ? snapshot.val() : {};
 }
 
 async function read(key) {
     if (!validKey(key)) throw new Error("不允許的資料路徑：" + key);
-    const external = await readFromExternal(key);
+
+    const external = await externalRead(key);
     if (external !== undefined && external !== null) return external;
-    return readFirebase(key);
+
+    try {
+        return await firebaseRead(key);
+    } catch (error) {
+        console.warn("4.2.1 Firebase 讀取失敗：", key, error);
+        return null;
+    }
 }
 
 async function write(key, value) {
     if (!validKey(key)) throw new Error("不允許的資料路徑：" + key);
-    const plugin = getExternalPlugin();
-    if (plugin) {
+
+    const externalOK = await externalWrite(key, value);
+    if (externalOK) {
         try {
-            if (typeof plugin.write === "function") {
-                await plugin.write(key, value);
-                return true;
-            }
-            if (typeof plugin.set === "function") {
-                await plugin.set(key, value);
-                return true;
-            }
-            if (typeof plugin.writeData === "function") {
-                await plugin.writeData(key, value);
-                return true;
-            }
+            await set(ref(db, key), value);
         } catch (error) {
-            console.warn("外部資料外掛寫入失敗，改用 Firebase：", key, error);
+            console.warn("4.2.1 外掛寫入後 Firebase 鏡像失敗：", key, error);
         }
+        return true;
     }
+
     await set(ref(db, key), value);
     return true;
 }
 
 async function writeMany(data) {
-    const plugin = getExternalPlugin();
-    if (plugin) {
-        try {
-            if (typeof plugin.writeMany === "function") {
-                await plugin.writeMany(data || {});
-                return Object.keys(data || {}).filter(validKey);
-            }
-        } catch (error) {
-            console.warn("外部資料外掛批次寫入失敗，改用 Firebase：", error);
-        }
-    }
     const patch = {};
     for (const [key, value] of Object.entries(data || {})) {
         if (validKey(key)) patch[key] = value;
     }
-    if (Object.keys(patch).length) await update(ref(db), patch);
+
+    if (!Object.keys(patch).length) return [];
+
+    const externalOK = await externalWriteMany(patch);
+
+    try {
+        await update(ref(db), patch);
+    } catch (error) {
+        if (!externalOK) throw error;
+        console.warn("4.2.1 Firebase 批次鏡像失敗：", error);
+    }
+
     return Object.keys(patch);
 }
 
 async function readAll() {
-    const plugin = getExternalPlugin();
-    if (plugin) {
-        try {
-            if (typeof plugin.readAll === "function") {
-                const value = await plugin.readAll();
-                if (value && typeof value === "object") return value;
-            }
-            if (typeof plugin.getAll === "function") {
-                const value = await plugin.getAll();
-                if (value && typeof value === "object") return value;
-            }
-        } catch (error) {
-            console.warn("外部資料外掛全部讀取失敗，改用 Firebase：", error);
-        }
+    const external = await externalReadAll();
+    if (external && typeof external === "object" && Object.keys(external).length) {
+        cacheData(external);
+        return external;
     }
-    try {
-        const snapshot = await get(ref(db));
-        return snapshot.exists() ? snapshot.val() : {};
-    } catch (error) {
-        console.warn("Firebase Adapter 全資料讀取失敗：", error);
-        return {};
-    }
-}
 
-function saveV42Cache(data) {
     try {
-        const userId = "MYS-000184";
-        const userData = data?.users?.[userId];
-        const portfolioData = data?.portfolios?.[userId];
-        const transactionData = data?.transactions?.[userId];
-        if (userData) localStorage.setItem("mingyue_user_v42", JSON.stringify(userData));
-        if (Array.isArray(data?.stocks)) localStorage.setItem("mingyue_stocks_v42", JSON.stringify(data.stocks));
-        if (portfolioData && typeof portfolioData === "object") localStorage.setItem("mingyue_portfolio_v42", JSON.stringify(portfolioData));
-        if (Array.isArray(transactionData)) localStorage.setItem("mingyue_transactions_v42", JSON.stringify(transactionData));
-        if (Array.isArray(data?.companies)) localStorage.setItem("mingyue_companies_v42", JSON.stringify(data.companies));
-        if (Array.isArray(data?.news)) localStorage.setItem("mingyue_news_v42", JSON.stringify(data.news));
-        if (data?.history && typeof data.history === "object") localStorage.setItem("mingyue_history_v42", JSON.stringify(data.history));
+        const firebase = await firebaseReadAll();
+        cacheData(firebase);
+        return firebase;
     } catch (error) {
-        console.warn("v4.2.1 LocalStorage cache 建立失敗：", error);
+        console.warn("4.2.1 Firebase 全資料讀取失敗：", error);
+        return {};
     }
 }
 
 async function preload() {
     const data = await readAll();
     if (data && typeof data === "object" && Object.keys(data).length) {
-        saveV42Cache(data);
-        console.log("明月證券 v4.2.1：外掛資料已預載入");
-        return data;
+        console.log(
+            getExternalPlugin()
+                ? "明月證券 v4.2.1：外掛資料已預載入"
+                : "明月證券 v4.2.1：Firebase 資料已預載入"
+        );
+    } else {
+        console.log("明月證券 v4.2.1：沒有遠端資料，交由 v4.2 fallback");
     }
-    console.log("明月證券 v4.2.1：沒有外部資料，交由 v4.2 fallback");
     return data;
 }
 
@@ -181,7 +249,10 @@ window.MingyueDataPlugin = Object.freeze({
 });
 
 window.MingyueDataAdapter = window.MingyueDataPlugin;
+window.MINGYUE_V421 = true;
 
-preload().catch(error => console.warn("明月證券 v4.2.1 Adapter preload 失敗：", error));
+preload().catch(error =>
+    console.warn("明月證券 v4.2.1 Adapter preload 失敗：", error)
+);
 
 console.log("明月證券 v4.2.1 Plugin Data Adapter 已載入");
