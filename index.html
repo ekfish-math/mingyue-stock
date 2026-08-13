@@ -1080,35 +1080,7 @@
 <!-- =========================================================
      v3.1 不再依賴 Chart.js
 ========================================================= -->
-<script type="module">
-    import {
-        initializeApp
-    } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
-
-    import {
-        getDatabase,
-        ref,
-        set,
-        get,
-        onValue
-    } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-database.js";
-
-    const firebaseConfig = {
-        apiKey: "AIzaSyDWDaEZoZPwBe7wZX0aiDAGqs4b_EAkfgM",
-        authDomain: "mingyue-stock.firebaseapp.com",
-        databaseURL: "https://mingyue-stock-default-rtdb.asia-southeast1.firebasedatabase.app",
-        projectId: "mingyue-stock",
-        storageBucket: "mingyue-stock.firebasestorage.app",
-        messagingSenderId: "774198660845",
-        appId: "1:774198660845:web:93f4a725b6303aae9f86e4",
-        measurementId: "G-Z7F6N0ZJYJ"
-    };
-
-    const app = initializeApp(firebaseConfig);
-
-    const db = getDatabase(app);
-
-    console.log("Firebase Realtime Database 已連線");
-</script>
+<script type="module"></script>
+    
 </body>
 </html>
