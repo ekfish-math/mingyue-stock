@@ -4,12 +4,19 @@
     const UID_KEY = "mingyue_current_google_uid";
     const ACCOUNT_KEY = "mingyue_active_account_id";
     const LEGACY_ACCOUNT = "MYS-000184";
+    const RELOAD_KEY = "mingyue_auth_identity_reloaded";
 
     function apply(user, accountId) {
         if (!user || !user.uid) return;
         const uid = String(user.uid);
         let account = String(accountId || uid);
         if (account === LEGACY_ACCOUNT) account = uid;
+
+        let previousAccount = null;
+        try {
+            const previous = JSON.parse(localStorage.getItem("mingyue_user_v42") || "null");
+            previousAccount = previous?.accountId || null;
+        } catch (_) {}
 
         const cached = {
             name: user.displayName || user.email || "Google 使用者",
@@ -21,8 +28,6 @@
 
         localStorage.setItem(UID_KEY, uid);
         localStorage.setItem(ACCOUNT_KEY, account);
-        // script.js still reads mingyue_user_v42 during its startup.
-        // Keep that key and replace its identity with the authenticated Google account.
         try {
             const old = JSON.parse(localStorage.getItem("mingyue_user_v42") || "null");
             const merged = old && typeof old === "object" ? { ...old, ...cached } : cached;
@@ -47,6 +52,17 @@
             detail: { uid, accountId: account, user }
         }));
         console.log("明月證券 Auth Bridge：Google 帳號已同步", account);
+
+        // script.js v4.2 reads mingyue_user_v42 only during startup.
+        // If it previously loaded the legacy account, reload once after replacing that identity.
+        if (previousAccount && previousAccount !== account && previousAccount === LEGACY_ACCOUNT) {
+            if (sessionStorage.getItem(RELOAD_KEY) !== uid) {
+                sessionStorage.setItem(RELOAD_KEY, uid);
+                setTimeout(() => window.location.reload(), 50);
+            }
+        } else if (sessionStorage.getItem(RELOAD_KEY) === uid) {
+            sessionStorage.removeItem(RELOAD_KEY);
+        }
     }
 
     function clear() {
@@ -58,6 +74,7 @@
         window.MINGYUE_ACCOUNT_ID = null;
         window.MingyueCurrentUser = null;
         window.MingyueCurrentAccount = null;
+        sessionStorage.removeItem(RELOAD_KEY);
         window.dispatchEvent(new CustomEvent("mingyue-user-logout"));
     }
 
