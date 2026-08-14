@@ -1,15 +1,1084 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>明月證券｜明月帝國證券交易所</title>
-<link rel="stylesheet" href="style.css">
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>明月證券｜明月帝國證券交易所</title>
+
+    <link rel="stylesheet" href="style.css">
+
 </head>
+
+
 <body>
-<!-- RESTORE IN PROGRESS: application shell restored separately -->
-<div id="profile-account">MYS-000184</div>
-<script type="module" src="plugin-adapter.js"></script>
-<script type="module" src="script.js"></script>
+
+<div class="app">
+
+
+    <!-- =====================================================
+         頂部
+    ====================================================== -->
+
+    <header class="topbar">
+
+        <button
+            class="brand"
+            onclick="showPage('home')"
+            type="button"
+        >
+
+            <div class="brand-icon">
+                月
+            </div>
+
+            <div>
+
+                <div class="brand-title">
+                    明月證券
+                </div>
+
+                <div class="brand-subtitle">
+                    明月帝國證券交易所
+                </div>
+
+            </div>
+
+        </button>
+
+
+        <div
+            class="top-balance"
+            id="top-balance"
+        >
+            ¥1,000,000
+        </div>
+
+    </header>
+
+
+
+    <!-- =====================================================
+         主內容
+    ====================================================== -->
+
+    <main class="main">
+
+
+        <!-- =================================================
+             首頁
+        ================================================== -->
+
+        <section
+            id="page-home"
+            class="page active"
+        >
+
+            <div class="index-card">
+
+                <div class="index-label">
+                    明月綜合指數
+                </div>
+
+                <div
+                    class="index-number"
+                    id="index-value"
+                >
+                    12,584.32
+                </div>
+
+                <div
+                    class="index-change"
+                    id="index-change"
+                >
+                    ▲ +0.00%
+                </div>
+
+            </div>
+
+
+
+            <div class="stats-grid">
+
+
+                <div class="stat-card">
+
+                    <div class="stat-icon">
+                        🏢
+                    </div>
+
+                    <div>
+
+                        <div class="stat-label">
+                            上市／已登錄企業
+                        </div>
+
+                        <div
+                            class="stat-value"
+                            id="stat-companies"
+                        >
+                            4
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+
+                <div class="stat-card">
+
+                    <div class="stat-icon">
+                        📈
+                    </div>
+
+                    <div>
+
+                        <div class="stat-label">
+                            上漲
+                        </div>
+
+                        <div
+                            class="stat-value up"
+                            id="stat-up"
+                        >
+                            0
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+
+                <div class="stat-card">
+
+                    <div class="stat-icon">
+                        📉
+                    </div>
+
+                    <div>
+
+                        <div class="stat-label">
+                            下跌
+                        </div>
+
+                        <div
+                            class="stat-value down"
+                            id="stat-down"
+                        >
+                            0
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+
+                <div class="stat-card">
+
+                    <div class="stat-icon">
+                        💹
+                    </div>
+
+                    <div>
+
+                        <div class="stat-label">
+                            成交量
+                        </div>
+
+                        <div
+                            class="stat-value"
+                            id="stat-volume"
+                        >
+                            0
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- 我的資產 -->
+
+            <div class="section-card">
+
+                <div class="section-header">
+
+                    <div>
+
+                        <div class="section-title">
+                            我的資產
+                        </div>
+
+                        <div class="section-subtitle">
+                            管理你的證券與遊戲資金
+                        </div>
+
+                    </div>
+
+
+                    <button
+                        class="primary-button"
+                        onclick="openDepositModal()"
+                        type="button"
+                    >
+                        ＋ 儲值
+                    </button>
+
+                </div>
+
+
+
+                <div class="asset-grid">
+
+
+                    <div class="asset-box">
+
+                        <div class="asset-label">
+                            證券餘額
+                        </div>
+
+                        <div
+                            class="asset-value"
+                            id="home-balance"
+                        >
+                            ¥1,000,000
+                        </div>
+
+                    </div>
+
+
+
+                    <div class="asset-box wallet">
+
+                        <div class="asset-label">
+                            遊戲錢包
+                        </div>
+
+                        <div
+                            class="asset-value"
+                            id="home-wallet"
+                        >
+                            ¥500,000
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+            </div>
+
+
+
+            <!-- 今日熱門 -->
+
+            <div class="section-card">
+
+                <div class="section-header">
+
+                    <div>
+
+                        <div class="section-title">
+                            今日熱門
+                        </div>
+
+                        <div class="section-subtitle">
+                            市場即時熱門股票
+                        </div>
+
+                    </div>
+
+
+                    <button
+                        class="text-button"
+                        onclick="showPage('market')"
+                        type="button"
+                    >
+                        查看全部 →
+                    </button>
+
+                </div>
+
+
+                <div
+                    class="stock-grid"
+                    id="home-hot-stocks"
+                ></div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =================================================
+             行情
+        ================================================== -->
+
+        <section
+            id="page-market"
+            class="page"
+        >
+
+            <div class="page-title-row">
+
+                <div>
+
+                    <h2>
+                        📈 行情
+                    </h2>
+
+                    <p>
+                        明月證券市場即時行情
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="tabs">
+
+                <button
+                    class="tab active market-tab"
+                    onclick="filterMarket('all', this)"
+                    type="button"
+                >
+                    全部
+                </button>
+
+                <button
+                    class="tab market-tab"
+                    onclick="filterMarket('up', this)"
+                    type="button"
+                >
+                    上漲
+                </button>
+
+                <button
+                    class="tab market-tab"
+                    onclick="filterMarket('down', this)"
+                    type="button"
+                >
+                    下跌
+                </button>
+
+            </div>
+
+
+            <div
+                class="market-list"
+                id="market-list"
+            ></div>
+
+        </section>
+
+
+
+        <!-- =================================================
+             股票詳細
+        ================================================== -->
+
+        <section
+            id="page-stock"
+            class="page"
+        >
+
+            <button
+                class="back-button"
+                onclick="showPage('market')"
+                type="button"
+            >
+                ← 返回行情
+            </button>
+
+
+            <div id="stock-detail"></div>
+
+        </section>
+
+
+
+        <!-- =================================================
+             投資
+        ================================================== -->
+
+        <section
+            id="page-portfolio"
+            class="page"
+        >
+
+            <div class="page-title-row">
+
+                <div>
+
+                    <h2>
+                        💼 我的投資
+                    </h2>
+
+                    <p>
+                        管理你的股票與交易紀錄
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="portfolio-balance-card">
+
+                <div>
+
+                    <div class="asset-label">
+                        證券餘額
+                    </div>
+
+                    <div
+                        class="portfolio-balance"
+                        id="portfolio-balance"
+                    >
+                        ¥1,000,000
+                    </div>
+
+                </div>
+
+
+                <button
+                    class="primary-button"
+                    onclick="openDepositModal()"
+                    type="button"
+                >
+                    ＋ 儲值
+                </button>
+
+            </div>
+
+
+
+            <div class="section-card">
+
+                <div class="section-title">
+                    我的持股
+                </div>
+
+                <div id="portfolio-list"></div>
+
+            </div>
+
+
+
+            <div class="section-card">
+
+                <div class="section-title">
+                    交易紀錄
+                </div>
+
+                <div id="transaction-list"></div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =================================================
+             新聞
+        ================================================== -->
+
+        <section
+            id="page-news"
+            class="page"
+        >
+
+            <div class="page-title-row">
+
+                <div>
+
+                    <h2>
+                        📰 新聞
+                    </h2>
+
+                    <p>
+                        明月帝國企業與市場新聞
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="tabs">
+
+                <button
+                    class="tab active news-tab"
+                    onclick="filterNews('all', this)"
+                    type="button"
+                >
+                    全部
+                </button>
+
+                <button
+                    class="tab news-tab"
+                    onclick="filterNews('company', this)"
+                    type="button"
+                >
+                    企業新聞
+                </button>
+
+            </div>
+
+
+            <div
+                class="news-list"
+                id="news-list"
+            ></div>
+
+        </section>
+
+
+
+        <!-- =================================================
+             個人
+        ================================================== -->
+
+        <section
+            id="page-profile"
+            class="page"
+        >
+
+            <div class="page-title-row">
+
+                <div>
+
+                    <h2>
+                        👤 個人
+                    </h2>
+
+                    <p>
+                        帳戶與企業管理
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="profile-card">
+
+                <div
+                    class="avatar"
+                    id="profile-avatar"
+                >
+                    F
+                </div>
+
+
+                <div>
+
+                    <div
+                        class="profile-name"
+                        id="profile-name"
+                    >
+                        Fisher
+                    </div>
+
+                    <div
+                        class="profile-id"
+                        id="profile-account"
+                    >
+                        MYS-000184
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="profile-menu">
+
+
+                <button
+                    class="profile-menu-item"
+                    onclick="googleLogin()"
+                    type="button"
+                >
+
+                    <div class="menu-icon">
+                        🔐
+                    </div>
+
+                    <div class="menu-content">
+
+                        <strong>
+                            Google 實名認證
+                        </strong>
+
+                        <span id="google-status">
+                            Demo
+                        </span>
+
+                    </div>
+
+                    <div>
+                        ›
+                    </div>
+
+                </button>
+
+
+
+                <button
+                    class="profile-menu-item"
+                    onclick="openCompanyModal()"
+                    type="button"
+                >
+
+                    <div class="menu-icon">
+                        🏢
+                    </div>
+
+                    <div class="menu-content">
+
+                        <strong>
+                            註冊公司
+                        </strong>
+
+                        <span>
+                            成立你的企業
+                        </span>
+
+                    </div>
+
+                    <div>
+                        ›
+                    </div>
+
+                </button>
+
+
+
+                <button
+                    class="profile-menu-item"
+                    onclick="openMyCompany()"
+                    type="button"
+                >
+
+                    <div class="menu-icon">
+                        🏭
+                    </div>
+
+                    <div class="menu-content">
+
+                        <strong>
+                            我的公司
+                        </strong>
+
+                        <span>
+                            管理你的企業
+                        </span>
+
+                    </div>
+
+                    <div>
+                        ›
+                    </div>
+
+                </button>
+
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =================================================
+             公司
+        ================================================== -->
+
+        <section
+            id="page-company"
+            class="page"
+        >
+
+            <button
+                class="back-button"
+                onclick="showPage('profile')"
+                type="button"
+            >
+                ← 返回個人
+            </button>
+
+
+            <div class="page-title-row">
+
+                <div>
+
+                    <h2>
+                        🏢 我的公司
+                    </h2>
+
+                    <p>
+                        管理你註冊的企業
+                    </p>
+
+                </div>
+
+
+                <button
+                    class="primary-button"
+                    onclick="openCompanyModal()"
+                    type="button"
+                >
+                    ＋ 註冊公司
+                </button>
+
+            </div>
+
+
+            <div
+                class="company-list"
+                id="company-page"
+            ></div>
+
+        </section>
+
+    </main>
+
+
+
+    <!-- =====================================================
+         底部導航
+    ====================================================== -->
+
+    <nav class="bottom-nav">
+
+
+        <button
+            class="nav-item active"
+            data-page="home"
+            onclick="showPage('home')"
+            type="button"
+        >
+
+            <span>🏠</span>
+            <small>首頁</small>
+
+        </button>
+
+
+
+        <button
+            class="nav-item"
+            data-page="market"
+            onclick="showPage('market')"
+            type="button"
+        >
+
+            <span>📈</span>
+            <small>行情</small>
+
+        </button>
+
+
+
+        <button
+            class="nav-item"
+            data-page="portfolio"
+            onclick="showPage('portfolio')"
+            type="button"
+        >
+
+            <span>💼</span>
+            <small>投資</small>
+
+        </button>
+
+
+
+        <button
+            class="nav-item"
+            data-page="news"
+            onclick="showPage('news')"
+            type="button"
+        >
+
+            <span>📰</span>
+            <small>新聞</small>
+
+        </button>
+
+
+
+        <button
+            class="nav-item"
+            data-page="profile"
+            onclick="showPage('profile')"
+            type="button"
+        >
+
+            <span>👤</span>
+            <small>我的</small>
+
+        </button>
+
+
+    </nav>
+
+
+
+    <!-- =====================================================
+         儲值 Modal
+    ====================================================== -->
+
+    <div
+        class="modal"
+        id="deposit-modal"
+    >
+
+        <div class="modal-box">
+
+            <div class="modal-header">
+
+                <div>
+
+                    <h3>
+                        💰 儲值到證券系統
+                    </h3>
+
+                    <p>
+                        從遊戲錢包轉入證券餘額。
+                    </p>
+
+                </div>
+
+
+                <button
+                    class="modal-close"
+                    onclick="closeModal('deposit-modal')"
+                    type="button"
+                >
+                    ×
+                </button>
+
+            </div>
+
+
+            <div class="modal-body">
+
+                <div class="deposit-info">
+
+                    <div>
+                        遊戲錢包
+                    </div>
+
+                    <strong id="deposit-wallet">
+                        ¥500,000
+                    </strong>
+
+                </div>
+
+
+                <label>
+                    儲值金額
+                </label>
+
+                <input
+                    id="deposit-amount"
+                    type="number"
+                    min="1"
+                    placeholder="輸入金額"
+                >
+
+            </div>
+
+
+            <div class="modal-footer">
+
+                <button
+                    class="secondary-button"
+                    onclick="closeModal('deposit-modal')"
+                    type="button"
+                >
+                    取消
+                </button>
+
+                <button
+                    class="primary-button"
+                    onclick="deposit()"
+                    type="button"
+                >
+                    確認儲值
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- =====================================================
+         公司註冊 Modal
+    ====================================================== -->
+
+    <div
+        class="modal"
+        id="company-modal"
+    >
+
+        <div class="modal-box">
+
+            <div class="modal-header">
+
+                <div>
+
+                    <h3>
+                        🏢 註冊公司
+                    </h3>
+
+                    <p>
+                        建立你的明月帝國企業。
+                    </p>
+
+                </div>
+
+                <button
+                    class="modal-close"
+                    onclick="closeModal('company-modal')"
+                    type="button"
+                >
+                    ×
+                </button>
+
+            </div>
+
+
+            <div class="modal-body">
+
+                <label>
+                    公司名稱
+                </label>
+
+                <input
+                    id="company-name"
+                    type="text"
+                    placeholder="例如：明月科技股份有限公司"
+                >
+
+
+                <label>
+                    公司代號
+                </label>
+
+                <input
+                    id="company-symbol"
+                    type="text"
+                    placeholder="例如：MYT"
+                    maxlength="5"
+                >
+
+
+                <label>
+                    產業
+                </label>
+
+                <select id="company-industry">
+
+                    <option value="科技">
+                        科技
+                    </option>
+
+                    <option value="金融">
+                        金融
+                    </option>
+
+                    <option value="工業">
+                        工業
+                    </option>
+
+                    <option value="交通">
+                        交通
+                    </option>
+
+                    <option value="醫療">
+                        醫療
+                    </option>
+
+                    <option value="能源">
+                        能源
+                    </option>
+
+                    <option value="消費">
+                        消費
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <div class="modal-footer">
+
+                <button
+                    class="secondary-button"
+                    onclick="closeModal('company-modal')"
+                    type="button"
+                >
+                    取消
+                </button>
+
+                <button
+                    class="primary-button"
+                    onclick="registerCompany()"
+                    type="button"
+                >
+                    確認註冊
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- =====================================================
+         Toast
+    ====================================================== -->
+
+    <div
+        id="toast"
+        class="toast"
+    ></div>
+
+
+</div>
+
+
+<script
+    type="module"
+    src="plugin-adapter.js"
+></script>
+
+<script
+    type="module"
+    src="script.js"
+></script>
+
+
 </body>
 </html>
