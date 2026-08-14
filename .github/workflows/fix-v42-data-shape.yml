@@ -1,0 +1,92 @@
+name: Fix v4.2 Firebase data shape
+
+on:
+  push:
+    paths:
+      - .github/workflows/fix-v42-data-shape.yml
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Normalize Firebase object data before v4.2 uses it
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+          import re
+
+          p = Path('script.js')
+          s = p.read_text(encoding='utf-8')
+
+          marker = '/* v4.2 Firebase data-shape compatibility */'
+          helper = r'''/* v4.2 Firebase data-shape compatibility */
+          function toArrayData(value) {
+              if (Array.isArray(value)) return value.filter(Boolean);
+              if (value && typeof value === "object") {
+                  return Object.entries(value)
+                      .filter(([key, item]) => item && typeof item === "object")
+                      .map(([key, item]) => ({
+                          ...item,
+                          id: String(item.id ?? item.code ?? key)
+                      }));
+              }
+              return [];
+          }
+
+          function normalizeStockData(value) {
+              return toArrayData(value).map(item => ({
+                  ...item,
+                  id: String(item.id ?? item.code ?? "").trim(),
+                  name: String(item.name ?? item.company ?? ""),
+                  company: String(item.company ?? item.name ?? ""),
+                  industry: String(item.industry ?? "其他"),
+                  price: Number(item.price ?? 0),
+                  previous: Number(item.previous ?? item.price ?? 0),
+                  volume: Number(item.volume ?? 0)
+              })).filter(item => item.id);
+          }
+
+          function normalizeCompanyData(value) {
+              return toArrayData(value).map(item => ({
+                  ...item,
+                  id: String(item.id ?? item.code ?? "").trim(),
+                  code: String(item.code ?? item.id ?? "").trim().toUpperCase()
+              })).filter(item => item.id || item.code);
+          }
+          '''
+
+          if marker not in s:
+              anchor = '/* =========================================================\n   13. LocalStorage 儲存\n   ========================================================= */'
+              if anchor not in s:
+                  raise SystemExit('anchor not found')
+              s = s.replace(anchor, helper + '\n\n' + anchor, 1)
+
+          stock_pat = re.compile(r'''if \(\n\s*Array\.isArray\(data\.stocks\) &&\n\s*data\.stocks\.length > 0\n\s*\) \{\n\n\s*stocks =\n\s*data\.stocks;\n\n\s*\}''')
+          stock_rep = '''const cloudStocks = normalizeStockData(data.stocks);\n\n        if (cloudStocks.length > 0) {\n\n            stocks = cloudStocks;\n\n        }'''
+          s, n1 = stock_pat.subn(stock_rep, s, count=1)
+
+          company_pat = re.compile(r'''if \(\n\s*Array\.isArray\(data\.companies\) &&\n\s*data\.companies\.length > 0\n\s*\) \{\n\n\s*companies =\n\s*data\.companies;\n\n\s*\}''')
+          company_rep = '''const cloudCompanies = normalizeCompanyData(data.companies);\n\n        if (cloudCompanies.length > 0) {\n\n            companies = cloudCompanies;\n\n        }'''
+          s, n2 = company_pat.subn(company_rep, s, count=1)
+
+          if n1 != 1 or n2 != 1:
+              raise SystemExit(f'replacements failed: stocks={n1}, companies={n2}')
+
+          p.write_text(s, encoding='utf-8')
+          PY
+
+      - name: Commit fix
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add script.js
+          git diff --cached --quiet && exit 0
+          git commit -m "fix v4.2 Firebase object data compatibility"
+          git push
