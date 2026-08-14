@@ -12,11 +12,20 @@ const db = getDatabase(getApps()[0]);
 const provider = new GoogleAuthProvider();
 provider.setCustomParameters({ prompt: "select_account" });
 
+let authResolved = false;
+let authBusy = false;
+
+try { await setPersistence(auth, browserLocalPersistence); }
+catch (e) { console.warn("Firebase Auth 持久化設定失敗", e); }
+
 window.MingyueAuth = {
     version: "4.3.3",
     ready: false,
     user: null,
+    resolved: false,
     signIn: async () => {
+        if (authBusy) return;
+        authBusy = true;
         try {
             await setPersistence(auth, browserLocalPersistence);
             try {
@@ -24,17 +33,19 @@ window.MingyueAuth = {
                 if (result?.user) await completeLogin(result.user);
                 return;
             } catch (e) {
-                console.warn("Google Popup 失敗，改用 Redirect", e);
-                if (e.code === "auth/popup-closed-by-user") return;
+                if (e?.code === "auth/popup-closed-by-user") return;
+                if (e?.code !== "auth/popup-blocked" && e?.code !== "auth/operation-not-supported-in-this-environment") console.warn("Google Popup 失敗，改用 Redirect", e);
             }
             await signInWithRedirect(auth, provider);
         } catch (e) { reportAuthError("Google 登入失敗", e); }
+        finally { authBusy = false; }
     },
     signOut: async () => {
         try { await signOut(auth); publish(null, null); }
         catch (e) { reportAuthError("Google 登出失敗", e); }
     },
-    getUser: () => auth.currentUser || null
+    getUser: () => auth.currentUser || null,
+    isResolved: () => authResolved
 };
 window.googleLogin = () => window.MingyueAuth.signIn();
 window.googleLogout = () => window.MingyueAuth.signOut();
@@ -81,10 +92,7 @@ async function ensureSecuritiesAccount(user) {
         createdAt,
         lastLoginAt: Date.now()
     };
-    const patch = {
-        [`users/${uid}`]: account,
-        [`authUsers/${uid}`]: authProfile
-    };
+    const patch = { [`users/${uid}`]: account, [`authUsers/${uid}`]: authProfile };
     if (!portfolioSnap.exists()) patch[`portfolios/${uid}`] = {};
     if (!transactionSnap.exists()) patch[`transactions/${uid}`] = [];
     await update(ref(db), patch);
@@ -107,8 +115,7 @@ function publish(user, account) {
 function updateGoogleUI(user, account) {
     const status = document.getElementById("google-status");
     if (!status) return;
-    if (!user) { status.textContent = "尚未登入 · 點擊登入"; return; }
-    status.textContent = `已登入 · ${user.email || user.displayName || "Google 帳戶"}`;
+    status.textContent = user ? `已登入 · ${user.email || user.displayName || "Google 帳戶"}` : "尚未登入 · 點擊登入";
 }
 
 function updateProfileUI(user, account) {
@@ -131,7 +138,6 @@ async function handleRedirectResult() {
     try {
         const result = await getRedirectResult(auth);
         if (result?.user) await completeLogin(result.user);
-        else if (auth.currentUser) await completeLogin(auth.currentUser);
     } catch (e) { reportAuthError("Google Redirect 處理失敗", e); }
 }
 
@@ -140,13 +146,21 @@ onAuthStateChanged(auth, async user => {
         if (user) await completeLogin(user);
         else publish(null, null);
     } catch (e) { reportAuthError("登入使用者同步失敗", e); }
+    finally {
+        authResolved = true;
+        window.MingyueAuth.resolved = true;
+        window.dispatchEvent(new CustomEvent("mingyue-auth-ready", { detail: { user: auth.currentUser } }));
+    }
 });
 
 window.addEventListener("pageshow", async () => {
-    if (auth.currentUser) try { await completeLogin(auth.currentUser); } catch (e) { reportAuthError("pageshow 同步失敗", e); }
+    if (auth.currentUser && !authBusy) {
+        try { await completeLogin(auth.currentUser); } catch (e) { reportAuthError("pageshow 同步失敗", e); }
+    }
 });
+
 document.addEventListener("visibilitychange", async () => {
-    if (document.visibilityState === "visible" && auth.currentUser) {
+    if (document.visibilityState === "visible" && auth.currentUser && !authBusy) {
         try { await completeLogin(auth.currentUser); } catch (e) { reportAuthError("visibility 同步失敗", e); }
     }
 });
@@ -158,5 +172,6 @@ function reportAuthError(message, error) {
 window.addEventListener("mingyue-auth-error", () => {
     if (typeof window.showToast === "function") window.showToast("Google 登入失敗，請稍後再試");
 });
+
 handleRedirectResult();
 console.log("明月證券 v4.3.3 Google Authentication 已載入");
