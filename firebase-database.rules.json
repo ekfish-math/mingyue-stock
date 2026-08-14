@@ -1,0 +1,30 @@
+{
+  "rules": {
+    ".read": true,
+    ".write": false,
+    "users": {
+      "$uid": {
+        ".read": "auth != null && (auth.uid === $uid || root.child('admins').child(auth.uid).child('active').val() === true || root.child('admins').child(auth.uid).child('role').val() === 'admin')",
+        ".write": "auth != null && (root.child('admins').child(auth.uid).child('active').val() === true || root.child('admins').child(auth.uid).child('role').val() === 'admin' || (auth.uid === $uid && newData.child('balance').val() === data.child('balance').val()))"
+      }
+    },
+    "depositRequests": {
+      "$id": {
+        ".read": "auth != null",
+        ".write": "auth != null && (root.child('admins').child(auth.uid).child('active').val() === true || root.child('admins').child(auth.uid).child('role').val() === 'admin' || (!data.exists() && newData.child('accountId').val() === auth.uid && newData.child('status').val() === 'pending'))"
+      }
+    },
+    "ipoRequests": {
+      "$id": {
+        ".read": "auth != null",
+        ".write": "auth != null && (root.child('admins').child(auth.uid).child('active').val() === true || root.child('admins').child(auth.uid).child('role').val() === 'admin' || (!data.exists() && newData.child('owner').val() === auth.uid && newData.child('status').val() === 'pending'))"
+      }
+    },
+    "admins": {
+      "$uid": {
+        ".read": "auth != null && (auth.uid === $uid || root.child('admins').child(auth.uid).child('role').val() === 'admin')",
+        ".write": "auth != null && root.child('admins').child(auth.uid).child('role').val() === 'admin'"
+      }
+    }
+  }
+}
