@@ -9,13 +9,33 @@
         if (!user || !user.uid) return;
         const uid = String(user.uid);
         let account = String(accountId || uid);
-
-        // Never let the legacy demo account become the active Google account.
         if (account === LEGACY_ACCOUNT) account = uid;
+
+        const cached = {
+            name: user.displayName || user.email || "Google 使用者",
+            accountId: account,
+            googleUid: uid,
+            email: user.email || "",
+            photoURL: user.photoURL || ""
+        };
 
         localStorage.setItem(UID_KEY, uid);
         localStorage.setItem(ACCOUNT_KEY, account);
-        localStorage.removeItem("mingyue_user_v42");
+        // script.js still reads mingyue_user_v42 during its startup.
+        // Keep that key and replace its identity with the authenticated Google account.
+        try {
+            const old = JSON.parse(localStorage.getItem("mingyue_user_v42") || "null");
+            const merged = old && typeof old === "object" ? { ...old, ...cached } : cached;
+            merged.accountId = account;
+            merged.googleUid = uid;
+            merged.name = cached.name;
+            merged.email = cached.email;
+            merged.photoURL = cached.photoURL;
+            localStorage.setItem("mingyue_user_v42", JSON.stringify(merged));
+        } catch (_) {
+            localStorage.setItem("mingyue_user_v42", JSON.stringify(cached));
+        }
+
         localStorage.removeItem("mingyue_account_v42");
         localStorage.removeItem("mingyue_current_account");
 
@@ -33,6 +53,7 @@
         localStorage.removeItem(UID_KEY);
         localStorage.removeItem(ACCOUNT_KEY);
         localStorage.removeItem("mingyue_user_v43");
+        localStorage.removeItem("mingyue_user_v42");
         window.MINGYUE_CURRENT_UID = null;
         window.MINGYUE_ACCOUNT_ID = null;
         window.MingyueCurrentUser = null;
