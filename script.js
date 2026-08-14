@@ -760,24 +760,20 @@ async function loadAllFromFirebase() {
         }
 
 
-        if (
-            Array.isArray(data.stocks) &&
-            data.stocks.length > 0
-        ) {
+        const cloudStocks = normalizeStockData(data.stocks);
 
-            stocks =
-                data.stocks;
+        if (cloudStocks.length > 0) {
+
+            stocks = cloudStocks;
 
         }
 
 
-        if (
-            Array.isArray(data.companies) &&
-            data.companies.length > 0
-        ) {
+        const cloudCompanies = normalizeCompanyData(data.companies);
 
-            companies =
-                data.companies;
+        if (cloudCompanies.length > 0) {
+
+            companies = cloudCompanies;
 
         }
 
@@ -857,6 +853,42 @@ async function loadAllFromFirebase() {
 
     }
 
+}
+
+
+/* v4.2 Firebase data-shape compatibility */
+function toArrayData(value) {
+    if (Array.isArray(value)) return value.filter(Boolean);
+    if (value && typeof value === "object") {
+        return Object.entries(value)
+            .filter(([key, item]) => item && typeof item === "object")
+            .map(([key, item]) => ({
+                ...item,
+                id: String(item.id ?? item.code ?? key)
+            }));
+    }
+    return [];
+}
+
+function normalizeStockData(value) {
+    return toArrayData(value).map(item => ({
+        ...item,
+        id: String(item.id ?? item.code ?? "").trim(),
+        name: String(item.name ?? item.company ?? ""),
+        company: String(item.company ?? item.name ?? ""),
+        industry: String(item.industry ?? "其他"),
+        price: Number(item.price ?? 0),
+        previous: Number(item.previous ?? item.price ?? 0),
+        volume: Number(item.volume ?? 0)
+    })).filter(item => item.id);
+}
+
+function normalizeCompanyData(value) {
+    return toArrayData(value).map(item => ({
+        ...item,
+        id: String(item.id ?? item.code ?? "").trim(),
+        code: String(item.code ?? item.id ?? "").trim().toUpperCase()
+    })).filter(item => item.id || item.code);
 }
 
 
