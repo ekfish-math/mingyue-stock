@@ -29,3 +29,4 @@ console.log("明月證券 v4.4 Plugin Data Adapter 已載入");await preload();
 try{await import("./google-auth.js?v=4.4");window.MINGYUE_V43=true;console.log("明月證券 v4.4 Google Account 模組已接入")}catch(e){window.MINGYUE_V43=false;console.warn("Google Account 模組載入失敗",e)}
 try{await import("./approval-bridge.js?v=4.4");window.MINGYUE_V44=true;console.log("明月證券 v4.4 儲值/IPO 審核模組已接入")}catch(e){window.MINGYUE_V44=false;console.warn("v4.4 Approval Bridge 載入失敗",e)}
 try{await import("./stock-sync.js?v=4.4");window.MINGYUE_STOCK_SYNC=true;console.log("明月證券 v4.4 上市股票同步模組已接入")}catch(e){window.MINGYUE_STOCK_SYNC=false;console.warn("v4.4 Stock Sync 模組載入失敗",e)}
+try{await import("./company-status-sync.js?v=4.4");window.MINGYUE_COMPANY_STATUS_SYNC=true;console.log("明月證券 v4.4 公司上市狀態同步模組已接入")}catch(e){window.MINGYUE_COMPANY_STATUS_SYNC=false;console.warn("v4.4 Company Status Sync 模組載入失敗",e)}
