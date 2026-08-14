@@ -3,19 +3,30 @@
     "use strict";
     const UID_KEY = "mingyue_current_google_uid";
     const ACCOUNT_KEY = "mingyue_active_account_id";
+    const LEGACY_ACCOUNT = "MYS-000184";
 
     function apply(user, accountId) {
         if (!user || !user.uid) return;
         const uid = String(user.uid);
-        const account = String(accountId || uid);
+        let account = String(accountId || uid);
+
+        // Never let the legacy demo account become the active Google account.
+        if (account === LEGACY_ACCOUNT) account = uid;
+
         localStorage.setItem(UID_KEY, uid);
         localStorage.setItem(ACCOUNT_KEY, account);
+        localStorage.removeItem("mingyue_user_v42");
+        localStorage.removeItem("mingyue_account_v42");
+        localStorage.removeItem("mingyue_current_account");
+
         window.MINGYUE_CURRENT_UID = uid;
         window.MINGYUE_ACCOUNT_ID = account;
         window.MingyueCurrentUser = user;
         window.MingyueCurrentAccount = account;
-        window.dispatchEvent(new CustomEvent("mingyue-user-ready", { detail: { uid, accountId: account, user } }));
-        console.log("明月證券 Auth Bridge：帳號已同步", account);
+        window.dispatchEvent(new CustomEvent("mingyue-user-ready", {
+            detail: { uid, accountId: account, user }
+        }));
+        console.log("明月證券 Auth Bridge：Google 帳號已同步", account);
     }
 
     function clear() {
