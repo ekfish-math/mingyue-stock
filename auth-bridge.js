@@ -6,6 +6,27 @@
     const LEGACY_ACCOUNT = "MYS-000184";
     const RELOAD_KEY = "mingyue_auth_identity_reloaded";
 
+    // script.js v4.2 reads mingyue_user_v42 immediately at startup.
+    // Migrate the already-known Google UID before that startup happens.
+    function migrateLegacyCacheFromStoredUid() {
+        const uid = localStorage.getItem(UID_KEY);
+        if (!uid || uid === LEGACY_ACCOUNT) return;
+        try {
+            const raw = localStorage.getItem("mingyue_user_v42");
+            const old = raw ? JSON.parse(raw) : {};
+            const merged = old && typeof old === "object" && !Array.isArray(old) ? { ...old } : {};
+            merged.accountId = String(uid);
+            merged.googleUid = String(uid);
+            if (!Number.isFinite(Number(merged.balance))) merged.balance = 0;
+            localStorage.setItem("mingyue_user_v42", JSON.stringify(merged));
+            localStorage.setItem(ACCOUNT_KEY, String(uid));
+        } catch (e) {
+            console.warn("明月證券：舊版帳號快取遷移失敗", e);
+        }
+    }
+
+    migrateLegacyCacheFromStoredUid();
+
     function apply(user, accountId) {
         if (!user || !user.uid) return;
         const uid = String(user.uid);
@@ -18,28 +39,20 @@
             previousAccount = previous?.accountId || null;
         } catch (_) {}
 
-        const cached = {
-            name: user.displayName || user.email || "Google 使用者",
-            accountId: account,
-            googleUid: uid,
-            email: user.email || "",
-            photoURL: user.photoURL || ""
-        };
-
         localStorage.setItem(UID_KEY, uid);
         localStorage.setItem(ACCOUNT_KEY, account);
+
         try {
             const old = JSON.parse(localStorage.getItem("mingyue_user_v42") || "null");
-            const merged = old && typeof old === "object" ? { ...old, ...cached } : cached;
+            const merged = old && typeof old === "object" && !Array.isArray(old) ? { ...old } : {};
             merged.accountId = account;
             merged.googleUid = uid;
-            merged.name = cached.name;
-            merged.email = cached.email;
-            merged.photoURL = cached.photoURL;
+            merged.name = user.displayName || user.email || merged.name || "Google 使用者";
+            merged.email = user.email || merged.email || "";
+            merged.photoURL = user.photoURL || merged.photoURL || "";
+            if (!Number.isFinite(Number(merged.balance))) merged.balance = 0;
             localStorage.setItem("mingyue_user_v42", JSON.stringify(merged));
-        } catch (_) {
-            localStorage.setItem("mingyue_user_v42", JSON.stringify(cached));
-        }
+        } catch (_) {}
 
         localStorage.removeItem("mingyue_account_v42");
         localStorage.removeItem("mingyue_current_account");
@@ -53,8 +66,6 @@
         }));
         console.log("明月證券 Auth Bridge：Google 帳號已同步", account);
 
-        // script.js v4.2 reads mingyue_user_v42 only during startup.
-        // If it previously loaded the legacy account, reload once after replacing that identity.
         if (previousAccount && previousAccount !== account && previousAccount === LEGACY_ACCOUNT) {
             if (sessionStorage.getItem(RELOAD_KEY) !== uid) {
                 sessionStorage.setItem(RELOAD_KEY, uid);
