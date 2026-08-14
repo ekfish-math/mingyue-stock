@@ -134,6 +134,21 @@ function updateProfileUI(user, account) {
     if (avatar) avatar.textContent = (user.displayName || user.email || "G").trim().charAt(0).toUpperCase();
 }
 
+function keepUidDisplayed() {
+    const user = auth.currentUser || window.MingyueAuth?.user;
+    if (!user?.uid) return;
+    const id = document.getElementById("profile-account");
+    if (id) {
+        const expected = `證券帳號：${user.uid}`;
+        if (id.textContent !== expected) id.textContent = expected;
+    }
+}
+
+if (typeof MutationObserver !== "undefined") {
+    const observer = new MutationObserver(() => keepUidDisplayed());
+    observer.observe(document.documentElement, { subtree: true, childList: true, characterData: true });
+}
+
 async function handleRedirectResult() {
     try {
         const result = await getRedirectResult(auth);
@@ -150,6 +165,7 @@ onAuthStateChanged(auth, async user => {
         authResolved = true;
         window.MingyueAuth.resolved = true;
         window.dispatchEvent(new CustomEvent("mingyue-auth-ready", { detail: { user: auth.currentUser } }));
+        keepUidDisplayed();
     }
 });
 
@@ -157,11 +173,13 @@ window.addEventListener("pageshow", async () => {
     if (auth.currentUser && !authBusy) {
         try { await completeLogin(auth.currentUser); } catch (e) { reportAuthError("pageshow 同步失敗", e); }
     }
+    keepUidDisplayed();
 });
 
 document.addEventListener("visibilitychange", async () => {
     if (document.visibilityState === "visible" && auth.currentUser && !authBusy) {
         try { await completeLogin(auth.currentUser); } catch (e) { reportAuthError("visibility 同步失敗", e); }
+        keepUidDisplayed();
     }
 });
 
