@@ -7,7 +7,6 @@ const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getDatabase(app),pr
 const $=id=>document.getElementById(id);
 let data={stocks:[],companies:[],news:[],users:{},portfolios:{},transactions:{},history:{},system:{},depositRequests:{},ipoRequests:{}};
 let currentUser=null,isAdmin=false,stopLive=null;
-
 function toast(msg){const e=$("toast");if(!e)return;e.textContent=msg;e.classList.add("show");setTimeout(()=>e.classList.remove("show"),2500)}
 function esc(v){return String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;")}
 function money(v){return "¥"+Number(v||0).toLocaleString("zh-TW",{minimumFractionDigits:2,maximumFractionDigits:2})}
@@ -16,18 +15,25 @@ function asArray(v){if(Array.isArray(v))return v.filter(Boolean);if(v&&typeof v=
 function asMap(v){if(!v||typeof v!=="object"||Array.isArray(v))return{};return v}
 function keyForCompany(c){return String(c?.code||c?.id||"").trim().toUpperCase()}
 function keyForStock(s){return String(s?.id||s?.code||"").trim().toUpperCase()}
-function normalizeSnapshot(raw){
-  data=raw||{};
-  data.stocks=asArray(data.stocks);
-  data.companies=asArray(data.companies);
-  data.news=asArray(data.news);
-  data.users=asMap(data.users);data.portfolios=asMap(data.portfolios);data.transactions=asMap(data.transactions);
-  data.history=asMap(data.history);data.system=asMap(data.system);data.depositRequests=asMap(data.depositRequests);data.ipoRequests=asMap(data.ipoRequests);
+function normalizeSnapshot(raw){data=raw||{};data.stocks=asArray(data.stocks);data.companies=asArray(data.companies);data.news=asArray(data.news);data.users=asMap(data.users);data.portfolios=asMap(data.portfolios);data.transactions=asMap(data.transactions);data.history=asMap(data.history);data.system=asMap(data.system);data.depositRequests=asMap(data.depositRequests);data.ipoRequests=asMap(data.ipoRequests)}
+async function repairListedStocks(){
+  const existing=new Set(data.stocks.map(keyForStock).filter(Boolean));
+  const missing=data.companies.filter(c=>c?.listed===true).filter(c=>{const code=keyForCompany(c);return code&&!existing.has(code)});
+  if(!missing.length)return;
+  for(const c of missing){
+    const code=keyForCompany(c);
+    const price=Number(c.initialPrice||c.price||1);
+    const shares=Number(c.shares||0);
+    const stock={id:code,name:c.shortName||c.name||code,company:c.name||code,companyCode:code,companyId:c.id||`${code}-COMPANY`,industry:c.industry||"其他",type:"上市公司",price:Number.isFinite(price)&&price>0?price:1,previous:Number.isFinite(price)&&price>0?price:1,volume:0,capital:Number(c.capital||0),shares:Number.isFinite(shares)?shares:0,listed:true,listedAt:c.listedAt||Date.now(),createdAt:Date.now()};
+    await set(ref(db,"stocks/"+code),stock);
+    console.log("已補建立上市股票",code);
+  }
+  toast(`已自動補齊 ${missing.length} 支上市股票`);
 }
 async function checkAdmin(user){const s=await get(ref(db,"admins/"+user.uid));return s.exists()&&(s.val()===true||s.val()?.active===true||s.val()?.role==="admin")}
 async function login(){try{$("loginStatus").textContent="正在開啟 Google 登入…";await signInWithPopup(auth,provider)}catch(e){console.error(e);$("loginStatus").textContent="登入失敗："+(e?.message||"未知錯誤")}}
 async function boot(user){currentUser=user;try{isAdmin=await checkAdmin(user)}catch(e){console.error(e);isAdmin=false}if(!isAdmin){$("loginStatus").textContent=`這個 Google 帳號不是管理員。你的 UID：${user.uid}`;await signOut(auth);return}$('loginView').classList.add('hidden');$('appView').classList.remove('hidden');$('adminEmail').textContent=user.email||user.displayName||user.uid;$('adminInfo').innerHTML=`<div class="info-item"><small>Google 帳號</small><strong>${esc(user.email||"—")}</strong></div><div class="info-item"><small>UID</small><strong>${esc(user.uid)}</strong></div><div class="info-item"><small>權限</small><strong>Administrator</strong></div>`;subscribe()}
-function subscribe(){if(stopLive)stopLive();stopLive=onValue(ref(db),snap=>{normalizeSnapshot(snap.val());renderAll();renderApprovals();$('connectionBadge').textContent='Firebase 已連線'},e=>{console.error(e);$('connectionBadge').textContent='Firebase 讀取失敗';toast('Firebase 讀取失敗：'+(e?.message||''))})}
+function subscribe(){if(stopLive)stopLive();stopLive=onValue(ref(db),async snap=>{normalizeSnapshot(snap.val());try{await repairListedStocks()}catch(e){console.error("補建立上市股票失敗",e);toast("上市股票同步失敗："+(e?.message||"未知錯誤"))}renderAll();renderApprovals();$('connectionBadge').textContent='Firebase 已連線'},e=>{console.error(e);$('connectionBadge').textContent='Firebase 讀取失敗';toast('Firebase 讀取失敗：'+(e?.message||''))})}
 function emptyRow(cols,msg){return `<tr><td colspan="${cols}">${msg}</td></tr>`}
 function statusText(v){return v==='approved'?'已核准':v==='rejected'?'已拒絕':'待審核'}
 function requestStatusClass(v){return v==='approved'?'ok':v==='rejected'?'bad':'pending'}
@@ -52,11 +58,10 @@ async function deleteNews(i){if(!confirm('確定刪除此新聞？'))return;cons
 async function editUser(id){const u=data.users[id]||{};openModal('調整使用者餘額',userForm(id,u),async fd=>{try{const balance=Number(fd.get('balance'));if(!Number.isFinite(balance))throw new Error('餘額無效');await update(ref(db,'users/'+id),{balance,updatedAt:Date.now()});await log('調整餘額',id);closeModal();toast('餘額已更新')}catch(e){toast('更新失敗：'+(e?.message||''))}});bindCancel()}
 async function approveIPO(id){const r=data.ipoRequests[id];if(!r)return;if(!confirm(`確定核准 ${r.companyName||r.code} 上市？`))return;try{const code=String(r.code||'').trim().toUpperCase();let company=data.companies.find(c=>keyForCompany(c)===code);if(!company)company={id:`${code}-COMPANY`,code,name:r.companyName||code,shortName:r.shortName||r.companyName||code,industry:r.industry||'其他',capital:Number(r.capital||0),ownerName:r.ownerName||'',status:'上市公司',listed:true};else company={...company,listed:true,status:'上市公司',ipoStatus:'已上市'};await set(ref(db,'companies/'+code),company);const price=Number(r.price||r.initialPrice||1);await set(ref(db,'stocks/'+code),{id:code,name:company.shortName||company.name,company:company.name,companyCode:code,companyId:company.id,industry:company.industry||'其他',type:'上市公司',price,previous:price,volume:0,capital:Number(company.capital||0),shares:Number(r.shares||0),listed:true,listedAt:Date.now()});await update(ref(db,'ipoRequests/'+id),{status:'approved',approvedAt:Date.now(),approvedBy:currentUser?.uid||''});toast(`${company.name} 已正式上市`);await log('核准上市',code)}catch(e){console.error(e);toast('上市失敗：'+(e?.message||''))}}
 async function rejectIPO(id){try{await update(ref(db,'ipoRequests/'+id),{status:'rejected',rejectedAt:Date.now(),rejectedBy:currentUser?.uid||''});toast('IPO 已拒絕')}catch(e){toast('操作失敗：'+(e?.message||''))}}
-async function approveDeposit(id){const r=data.depositRequests[id];if(!r)return;try{await update(ref(db,'depositRequests/'+id),{status:'approved',approvedAt:Date.now(),approvedBy:currentUser?.uid||''});toast('儲值申請已核准')}catch(e){toast('操作失敗：'+(e?.message||''))}}
+async function approveDeposit(id){try{await update(ref(db,'depositRequests/'+id),{status:'approved',approvedAt:Date.now(),approvedBy:currentUser?.uid||''});toast('儲值申請已核准')}catch(e){toast('操作失敗：'+(e?.message||''))}}
 async function rejectDeposit(id){try{await update(ref(db,'depositRequests/'+id),{status:'rejected',rejectedAt:Date.now(),rejectedBy:currentUser?.uid||''});toast('儲值申請已拒絕')}catch(e){toast('操作失敗：'+(e?.message||''))}}
 async function saveSettings(){try{await update(ref(db,'system'),{marketEnabled:$('marketEnabled').checked,message:$('systemMessage').value.trim(),updatedAt:Date.now()});await log('修改系統設定','system');toast('系統設定已儲存')}catch(e){toast('儲存失敗：'+(e?.message||''))}}
-
 document.addEventListener('click',e=>{const nav=e.target.closest('.nav');if(nav){switchSection(nav.dataset.section);return}const b=e.target.closest('[data-action]');if(!b)return;const a=b.dataset.action,i=b.dataset.i,id=b.dataset.id;if(a==='company-edit')openCompany(Number(i));else if(a==='company-delete')deleteCompany(Number(i));else if(a==='stock-edit')openStock(Number(i));else if(a==='stock-delete')deleteStock(Number(i));else if(a==='news-edit')openNews(Number(i));else if(a==='news-delete')deleteNews(Number(i));else if(a==='user-edit')editUser(id);else if(a==='ipo-approve')approveIPO(id);else if(a==='ipo-reject')rejectIPO(id);else if(a==='deposit-approve')approveDeposit(id);else if(a==='deposit-reject')rejectDeposit(id)});
 $('addCompanyBtn')?.addEventListener('click',()=>openCompany());$('addStockBtn')?.addEventListener('click',()=>openStock());$('addNewsBtn')?.addEventListener('click',()=>openNews());$('modalClose')?.addEventListener('click',closeModal);$('refreshBtn')?.addEventListener('click',()=>location.reload());$('refreshApprovalsBtn')?.addEventListener('click',()=>renderApprovals());$('saveSettingsBtn')?.addEventListener('click',saveSettings);$('logoutBtn')?.addEventListener('click',()=>signOut(auth));$('googleLoginBtn')?.addEventListener('click',login);$('modal')?.addEventListener('click',e=>{if(e.target.id==='modal')closeModal()});
 onAuthStateChanged(auth,user=>{if(user)boot(user);else{$('loginView')?.classList.remove('hidden');$('appView')?.classList.add('hidden')}});
-console.log('明月證券管理後臺 v4.4.1 loaded');
+console.log('明月證券管理後臺 v4.4.2 loaded');
