@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>明月證券｜管理後臺 v4.4</title>
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+  <div id="loginView" class="center-screen">
+    <div class="login-card">
+      <div class="brand">明月證券</div>
+      <h1>管理後臺</h1>
+      <p>v4.4 · Firebase 管理中心</p>
+      <button id="googleLoginBtn" class="primary">使用 Google 管理員登入</button>
+      <div id="loginStatus" class="status"></div>
+      <div class="security-note">只有被加入 Firebase <code>admins</code> 清單的帳號才能進入。</div>
+    </div>
+  </div>
+
+  <div id="appView" class="hidden">
+    <header class="topbar">
+      <div><strong>明月證券管理後臺</strong><span id="adminEmail"></span></div>
+      <div class="top-actions"><span id="connectionBadge" class="badge">連線中…</span><button id="logoutBtn" class="ghost">登出</button></div>
+    </header>
+    <div class="layout">
+      <aside class="sidebar">
+        <button class="nav active" data-section="dashboard">📊 儀表板</button>
+        <button class="nav" data-section="stocks">📈 股票管理</button>
+        <button class="nav" data-section="companies">🏢 公司管理</button>
+        <button class="nav" data-section="news">📰 新聞管理</button>
+        <button class="nav" data-section="users">👥 使用者</button>
+        <button class="nav" data-section="approvals">🛡️ 審核中心</button>
+        <button class="nav" data-section="settings">⚙️ 系統</button>
+      </aside>
+      <main class="content">
+        <section id="dashboard" class="section active">
+          <div class="section-head"><div><h1>儀表板</h1><p>即時查看明月證券核心資料。</p></div><button id="refreshBtn" class="secondary">重新整理</button></div>
+          <div class="cards"><div class="stat-card"><span>股票</span><strong id="statStocks">0</strong></div><div class="stat-card"><span>公司</span><strong id="statCompanies">0</strong></div><div class="stat-card"><span>新聞</span><strong id="statNews">0</strong></div><div class="stat-card"><span>使用者</span><strong id="statUsers">0</strong></div></div>
+          <div class="panel"><h2>管理員資訊</h2><div id="adminInfo" class="info-grid"></div></div>
+          <div class="panel"><h2>最近操作</h2><div id="activityList" class="list"></div></div>
+        </section>
+        <section id="stocks" class="section"><div class="section-head"><div><h1>股票管理</h1><p>新增、修改、刪除上市股票。</p></div><button id="addStockBtn" class="primary">＋ 新增股票</button></div><div class="panel"><div class="table-wrap"><table><thead><tr><th>代號</th><th>名稱</th><th>產業</th><th>價格</th><th>昨收</th><th>成交量</th><th>操作</th></tr></thead><tbody id="stocksTable"></tbody></table></div></div></section>
+        <section id="companies" class="section"><div class="section-head"><div><h1>公司管理</h1><p>管理企業基本資料與上市狀態。</p></div><button id="addCompanyBtn" class="primary">＋ 新增公司</button></div><div class="panel"><div class="table-wrap"><table><thead><tr><th>代號</th><th>公司</th><th>產業</th><th>資本額</th><th>狀態</th><th>上市</th><th>操作</th></tr></thead><tbody id="companiesTable"></tbody></table></div></div></section>
+        <section id="news" class="section"><div class="section-head"><div><h1>新聞管理</h1><p>發布、修改或移除新聞。</p></div><button id="addNewsBtn" class="primary">＋ 發布新聞</button></div><div class="panel"><div id="newsList" class="news-list"></div></div></section>
+        <section id="users" class="section"><div class="section-head"><div><h1>使用者管理</h1><p>查看帳號並調整證券餘額。</p></div></div><div class="panel"><div class="table-wrap"><table><thead><tr><th>帳號</th><th>名稱</th><th>餘額</th><th>操作</th></tr></thead><tbody id="usersTable"></tbody></table></div></div></section>
+        <section id="approvals" class="section">
+          <div class="section-head"><div><h1>審核中心</h1><p>儲值與 IPO 必須由管理員審核後才會生效。</p></div><button id="refreshApprovalsBtn" class="secondary">重新整理</button></div>
+          <div class="panel"><h2>💰 儲值申請</h2><div class="table-wrap"><table><thead><tr><th>申請時間</th><th>帳號</th><th>金額</th><th>狀態</th><th>操作</th></tr></thead><tbody id="depositRequestsTable"></tbody></table></div></div>
+          <div class="panel"><h2>📈 IPO 上市申請</h2><div class="table-wrap"><table><thead><tr><th>申請時間</th><th>公司</th><th>代號</th><th>資本額</th><th>狀態</th><th>操作</th></tr></thead><tbody id="ipoRequestsTable"></tbody></table></div></div>
+        </section>
+        <section id="settings" class="section"><div class="section-head"><div><h1>系統</h1><p>明月證券 v4.4 管理設定。</p></div></div><div class="panel"><h2>市場狀態</h2><div class="setting-row"><div><strong>交易市場</strong><small>控制前臺是否允許交易。</small></div><label class="switch"><input id="marketEnabled" type="checkbox"><span></span></label></div><div class="setting-row"><div><strong>市場訊息</strong><small>顯示在前臺的管理員公告。</small></div><input id="systemMessage" class="text-input" placeholder="例如：今日市場正常交易"></div><button id="saveSettingsBtn" class="primary">儲存系統設定</button></div><div class="panel"><h2>Firebase 路徑</h2><div class="code-box">stocks<br>companies<br>news<br>users/{accountId}<br>portfolios/{accountId}<br>transactions/{accountId}<br>depositRequests/{requestId}<br>ipoRequests/{requestId}<br>adminLogs/{logId}<br>history<br>system<br>admins/{uid}</div></div></section>
+      </main>
+    </div>
+  </div>
+  <div id="modal" class="modal hidden"><div class="modal-card"><div class="modal-head"><h2 id="modalTitle">編輯</h2><button id="modalClose" class="icon">×</button></div><div id="modalBody"></div></div></div>
+  <div id="toast" class="toast"></div>
+  <script type="module" src="admin.js"></script>
+</body>
+</html>
