@@ -1,5 +1,5 @@
 /* =========================================================
-   明月證券 v4.3.4 - Google Authentication
+   明月證券 v4.3.5 - Google Authentication
    Google UID → Securities Account
    ========================================================= */
 import { getApps } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
@@ -17,7 +17,7 @@ let authBusy = false;
 try { await setPersistence(auth, browserLocalPersistence); } catch (e) { console.warn("Firebase Auth 持久化設定失敗", e); }
 
 window.MingyueAuth = {
-    version: "4.3.4", ready: false, user: null, resolved: false,
+    version: "4.3.5", ready: false, user: null, resolved: false,
     signIn: async () => {
         if (authBusy) return; authBusy = true;
         try {
@@ -55,7 +55,14 @@ async function ensureSecuritiesAccount(user) {
     if (!portfolioSnap.exists()) patch[`portfolios/${uid}`] = {};
     if (!transactionSnap.exists()) patch[`transactions/${uid}`] = [];
     await update(ref(db), patch);
-    try { localStorage.setItem("mingyue_current_google_uid", uid); localStorage.setItem("mingyue_user_v43", JSON.stringify(account)); } catch (e) { console.warn("帳號快取失敗", e); }
+    try {
+        localStorage.setItem("mingyue_current_google_uid", uid);
+        localStorage.setItem("mingyue_active_account_id", uid);
+        localStorage.setItem("mingyue_user_v43", JSON.stringify(account));
+        // v4.2 script.js still reads this legacy cache. Keep it synchronized
+        // so an existing page refresh cannot fall back to MYS-000184.
+        localStorage.setItem("mingyue_user_v42", JSON.stringify(account));
+    } catch (e) { console.warn("帳號快取失敗", e); }
     return account;
 }
 
@@ -95,4 +102,4 @@ document.addEventListener("visibilitychange", async () => { if (document.visibil
 function reportAuthError(message, error) { console.error(`明月證券：${message}`, error); window.dispatchEvent(new CustomEvent("mingyue-auth-error", { detail: error })); }
 window.addEventListener("mingyue-auth-error", () => { if (typeof window.showToast === "function") window.showToast("Google 登入失敗，請稍後再試"); });
 handleRedirectResult();
-console.log("明月證券 v4.3.4 Google Authentication 已載入");
+console.log("明月證券 v4.3.5 Google Authentication 已載入");
