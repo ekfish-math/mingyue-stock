@@ -1,0 +1,23 @@
+/* 明月證券 v4.4 Plugin Data Adapter */
+import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
+import { getAuth, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
+import { getDatabase, ref, get, update } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-database.js";
+const firebaseConfig={apiKey:"AIzaSyDWDaEZoZPwBe7wZX0aiDAGqs4b_EAkfgM",authDomain:"mingyue-stock.firebaseapp.com",databaseURL:"https://mingyue-stock-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"mingyue-stock",storageBucket:"mingyue-stock.firebasestorage.app",messagingSenderId:"774198660845",appId:"1:774198660845:web:93f4a725b6303aae9f86e4",measurementId:"G-Z7F6N0ZJYJ"};
+const app=getApps().length?getApps()[0]:initializeApp(firebaseConfig),auth=getAuth(app),db=getDatabase(app);
+const PATHS=["users","stocks","companies","news","ipo","portfolios","transactions","historyData","authUsers","depositRequests","ipoRequests"];
+const CACHE_KEYS={users:"mingyue_user_v43",stocks:"mingyue_stocks_v43",companies:"mingyue_companies_v43",news:"mingyue_news_v43",portfolios:"mingyue_portfolio_v43",transactions:"mingyue_transactions_v43",historyData:"mingyue_history_v43"};
+function validKey(k){return PATHS.includes(String(k))} function getCurrentUid(){return auth.currentUser?.uid||window.MingyueAuth?.user?.uid||localStorage.getItem("mingyue_current_google_uid")||null}
+function cacheData(data){try{const uid=getCurrentUid();for(const key of PATHS){const cacheKey=CACHE_KEYS[key];if(!cacheKey||data?.[key]===undefined)continue;const value=data[key];if(["users","portfolios","transactions"].includes(key)){const account=uid?value?.[uid]:null;if(account!=null)localStorage.setItem(cacheKey,JSON.stringify(account))}else localStorage.setItem(cacheKey,JSON.stringify(value))}}catch(e){console.warn("LocalStorage fallback 寫入失敗",e)}}
+async function read(key){if(!validKey(key))throw new Error("不允許的資料路徑："+key);try{const s=await get(ref(db,key));return s.exists()?s.val():null}catch(e){console.warn("Firebase 讀取失敗",key,e);return null}}
+async function write(key,value){if(!validKey(key))throw new Error("不允許的資料路徑："+key);await update(ref(db),{[key]:value});return true}
+async function writeMany(data){const patch={};for(const k of PATHS)if(data&&Object.prototype.hasOwnProperty.call(data,k))patch[k]=data[k];if(Object.keys(patch).length)await update(ref(db),patch);return Object.keys(patch)}
+async function readAll(){try{const s=await get(ref(db));const data=s.exists()?s.val():{};cacheData(data);return data}catch(e){console.warn("Firebase 全資料讀取失敗",e);return{}}}
+async function preload(){const data=await readAll();console.log(data&&Object.keys(data).length?"明月證券 v4.4：資料已預載入":"明月證券 v4.4：沒有遠端資料");return data}
+async function bootstrap(user){if(!user?.uid)return;const uid=String(user.uid);let account=null;try{const s=await get(ref(db,"users/"+uid));account=s.exists()?s.val():null}catch(e){}const existing=account&&typeof account==="object"?account:{};const legacy={...existing,accountId:uid,googleUid:uid,name:existing.name||user.displayName||user.email||"Google 使用者",email:existing.email||user.email||"",photoURL:existing.photoURL||user.photoURL||"",balance:Number.isFinite(Number(existing.balance))?Number(existing.balance):0};localStorage.setItem("mingyue_current_google_uid",uid);localStorage.setItem("mingyue_active_account_id",uid);localStorage.setItem("mingyue_user_v42",JSON.stringify(legacy));if(!account)await update(ref(db),{[`users/${uid}`]:{...legacy,createdAt:Date.now(),lastLoginAt:Date.now()},[`portfolios/${uid}`]:{},[`transactions/${uid}`]:[]});else await update(ref(db),{[`users/${uid}/lastLoginAt`]:Date.now()})}
+window.MingyueDataPlugin=Object.freeze({version:"4.4",paths:Object.freeze([...PATHS]),read,write,writeMany,readAll,preload,getCurrentUid,isReady:true});window.MingyueDataAdapter=window.MingyueDataPlugin;window.MINGYUE_V433=true;
+await setPersistence(auth,browserLocalPersistence).catch(()=>{});
+await new Promise(resolve=>{let done=false;const finish=()=>{if(!done){done=true;resolve()}};const unsub=onAuthStateChanged(auth,async user=>{try{if(user){await bootstrap(user);window.MINGYUE_CURRENT_UID=user.uid;window.MINGYUE_ACCOUNT_ID=user.uid}}finally{unsub();finish()}});setTimeout(finish,5000)});
+await preload();
+try{await import("./google-auth.js?v=4.4");window.MINGYUE_V43=true}catch(e){window.MINGYUE_V43=false;console.warn("Google Account 模組載入失敗",e)}
+try{await import("./approval-bridge.js?v=4.4");window.MINGYUE_V44=true}catch(e){window.MINGYUE_V44=false;console.warn("v4.4 Approval Bridge 載入失敗",e)}
+console.log("明月證券 v4.4 Plugin Data Adapter 已載入");
