@@ -7,7 +7,7 @@
   const plugin=()=>window.MingyueDataPlugin;
   function ensureWalletBridge(){if(window.MingyueWalletReview)return Promise.resolve();return new Promise(resolve=>{const s=document.createElement('script');s.src='wallet-review.js?v=4.3.4';s.onload=()=>resolve();s.onerror=()=>{console.warn('錢包審核模組載入失敗');resolve();};document.head.appendChild(s);});}
   async function read(key){if(plugin()?.read&&key!=='depositRequests')return await plugin().read(key);try{return JSON.parse(localStorage.getItem('mingyue_'+key+'_v43')||'null');}catch(e){return null;}}
-  async function write(key,value){if(plugin()?.write&&key!=='depositRequests')return await plugin().write(key,value);localStorage.setItem('mingyue_'+key+'_v43',JSON.stringify(value);}
+  async function write(key,value){if(plugin()?.write&&key!=='depositRequests')return await plugin().write(key,value);localStorage.setItem('mingyue_'+key+'_v43',JSON.stringify(value));}
   async function setStockPrice(code,price){if(!isAdmin())return{ok:false,error:'沒有管理員權限'};const p=Number(price);if(!Number.isFinite(p)||p<=0)return{ok:false,error:'股價必須大於 0'};const stocks=await read('stocks')||[];const s=stocks.find(x=>String(x.id)===String(code));if(!s)return{ok:false,error:'找不到股票'};s.price=Number(p.toFixed(2));await write('stocks',stocks);return{ok:true,stock:s};}
   async function approveIPO(code){if(!isAdmin())return{ok:false,error:'沒有管理員權限'};if(typeof window.approveIPO==='function'){await window.approveIPO(code);return{ok:true};}return{ok:false,error:'IPO 審核模組尚未載入'};}
   async function readDeposits(){await ensureWalletBridge();return window.MingyueWalletReview?.listDeposits?await window.MingyueWalletReview.listDeposits():{};}
