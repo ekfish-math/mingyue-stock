@@ -1,13 +1,24 @@
 /* =========================================================
-   明月證券 v4.2.1
-   CLICK HOTFIX
+   明月證券 v4.5
+   CLICK HOTFIX + WALLET REMOVAL
    ---------------------------------------------------------
-   目的：避免 module / inline onclick / 手機觸控互相影響。
-   若原本函式已存在，優先使用原本函式；只有缺少時才提供
-   最小相容實作。
+   目的：修復手機點擊相容性、統一版本號、徹底移除遊戲錢包 UI。
    ========================================================= */
 (function () {
     "use strict";
+
+    const VERSION = "4.5";
+
+    /* 將舊版 console 版本號統一成 v4.5。 */
+    const originalLog = console.log.bind(console);
+    console.log = function () {
+        const args = Array.prototype.slice.call(arguments).map(function (value) {
+            return typeof value === "string"
+                ? value.replaceAll("v4.2", "v4.5").replaceAll("v4.2.1", "v4.5")
+                : value;
+        });
+        originalLog.apply(console, args);
+    };
 
     function ready(fn) {
         if (document.readyState === "loading") {
@@ -57,29 +68,66 @@
         }, 2200);
     }
 
+    function removeWalletUI() {
+        /* 儲值按鈕 */
+        document.querySelectorAll('[onclick*="openDepositModal"], [onclick*="depositMoney"]').forEach(function (el) {
+            el.remove();
+        });
+
+        /* 遊戲錢包資產卡 */
+        document.querySelectorAll(".wallet, #home-wallet, #deposit-wallet").forEach(function (el) {
+            var box = el.closest(".asset-box, .form-group");
+            (box || el).remove();
+        });
+
+        /* 儲值 Modal */
+        var depositModal = byId("deposit-modal");
+        if (depositModal) depositModal.remove();
+
+        /* 後台錢包審核區塊 */
+        var depositList = byId("admin-deposit-list");
+        if (depositList) {
+            var group = depositList.closest(".form-group");
+            if (group) group.remove();
+            else depositList.remove();
+        }
+
+        var adminPage = byId("page-admin");
+        if (adminPage) {
+            adminPage.querySelectorAll("p, h2, .page-title-row").forEach(function (el) {
+                el.textContent = el.textContent
+                    .replaceAll("／錢包儲值審核", "")
+                    .replaceAll("與錢包儲值審核", "")
+                    .replaceAll("錢包儲值", "");
+            });
+        }
+    }
+
     ready(function () {
-        /* 只補缺少的全域函式，不覆蓋 v4.2 原功能。 */
         if (typeof window.showPage !== "function") window.showPage = fallbackShowPage;
         if (typeof window.closeModal !== "function") window.closeModal = fallbackCloseModal;
         if (typeof window.showToast !== "function") window.showToast = fallbackToast;
         if (typeof window.toast !== "function") window.toast = window.showToast;
 
-        if (typeof window.openDepositModal !== "function") {
-            window.openDepositModal = function () { fallbackOpenModal("deposit-modal"); };
-        }
-        if (typeof window.openDeposit !== "function") window.openDeposit = window.openDepositModal;
+        /* v4.5 已完全取消遊戲錢包。 */
+        window.openDepositModal = function () {
+            window.showToast?.("v4.5 已取消遊戲錢包系統");
+        };
+        window.depositMoney = function () {
+            window.showToast?.("v4.5 已取消遊戲錢包系統");
+        };
+        window.openDeposit = window.openDepositModal;
+
         if (typeof window.openCompanyModal !== "function") {
             window.openCompanyModal = function () { fallbackOpenModal("company-modal"); };
         }
         if (typeof window.openCompany !== "function") window.openCompany = window.openCompanyModal;
 
-        /* 手機觸控保險：互動元件明確允許 pointer/touch。 */
         document.querySelectorAll("button, a, input, select, textarea, [onclick]").forEach(function (el) {
             el.style.pointerEvents = "auto";
             el.style.touchAction = "manipulation";
         });
 
-        /* Modal 背景可關閉，但 modal-box 本身不能被背景事件誤判。 */
         document.addEventListener("click", function (event) {
             var target = event.target;
             if (target && target.classList && target.classList.contains("modal")) {
@@ -87,14 +135,15 @@
             }
         }, true);
 
-        /* 若 inline onclick 找不到函式，避免事件直接把整個 UI 弄死。 */
+        removeWalletUI();
+
         window.addEventListener("error", function (event) {
             var msg = String(event && event.message || "");
             if (/is not defined|undefined/.test(msg)) {
-                console.warn("明月證券 v4.2.1 點擊相容層：", msg);
+                console.warn("明月證券 v" + VERSION + " 點擊相容層：", msg);
             }
         });
 
-        console.log("明月證券 v4.2.1 click hotfix 已啟用");
+        console.log("明月證券 v" + VERSION + " click hotfix 已啟用；遊戲錢包已移除");
     });
 })();
