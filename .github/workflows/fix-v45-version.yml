@@ -1,0 +1,34 @@
+name: Fix Mingyue v4.5 version constant
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/fix-v45-version.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  fix-version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fix SYSTEM_VERSION
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+          p = Path('script.js')
+          s = p.read_text(encoding='utf-8')
+          s = s.replace('const SYSTEM_VERSION = "4.2";', 'const SYSTEM_VERSION = "4.5";')
+          s = s.replace('const SYSTEM_VERSION = \'4.2\';', "const SYSTEM_VERSION = '4.5';")
+          p.write_text(s, encoding='utf-8')
+          PY
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add script.js
+          git diff --cached --quiet && exit 0
+          git commit -m 'fix: set Mingyue script SYSTEM_VERSION to 4.5'
+          git push
