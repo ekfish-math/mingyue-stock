@@ -86,7 +86,7 @@ console.log(
    2. 系統
    ========================================================= */
 
-const SYSTEM_VERSION = "4.2";
+const SYSTEM_VERSION = "4.5";
 
 const ACCOUNT_ID = "MYS-000184";
 
