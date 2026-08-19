@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>明月證券｜金融後台 v4.6</title>
+<link rel="stylesheet" href="admin.css">
+</head>
+<body>
+<header class="topbar"><div><h1>明月證券</h1><span>金融管理後台 v4.6</span></div><div id="admin-status">Firebase 連線中…</div></header>
+<main class="wrap">
+<section class="cards">
+<div class="card"><b id="stat-accounts">0</b><span>帳戶</span></div>
+<div class="card"><b id="stat-pending">0</b><span>待審核提領</span></div>
+<div class="card"><b id="stat-pending-deposit">0</b><span>待審核儲值</span></div>
+<div class="card"><b id="stat-volume">¥0</b><span>待處理金額</span></div>
+</section>
+<nav class="tabs">
+<button data-tab="withdrawals">提領審核</button><button data-tab="deposits">儲值審核</button><button data-tab="accounts">帳戶</button><button data-tab="audit">操作紀錄</button>
+</nav>
+<section id="panel-withdrawals" class="panel"><h2>提領申請</h2><div id="withdrawal-list"></div></section>
+<section id="panel-deposits" class="panel hidden"><h2>儲值申請</h2><div id="deposit-list"></div></section>
+<section id="panel-accounts" class="panel hidden"><h2>帳戶管理</h2><div id="account-list"></div></section>
+<section id="panel-audit" class="panel hidden"><h2>操作紀錄</h2><div id="audit-list"></div></section>
+</main>
+<script type="module" src="admin.js"></script>
+</body>
+</html>
