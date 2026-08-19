@@ -1,11 +1,11 @@
 /* =========================================================
-   明月證券 v4.2
+   明月證券 v4.5
    Mingyue Securities
    ---------------------------------------------------------
    Firebase 全同步版
    股票交易 + 公司 + IPO + 新聞 + K線 + 折線圖
    ---------------------------------------------------------
-   v4.2
+   v4.5
    1. Firebase 正式同步
    2. 使用者資料同步
    3. 股票資料同步
@@ -13,7 +13,7 @@
    5. 新聞資料同步
    6. 交易紀錄同步
    7. 歷史 K 線同步
-   8. 移除遊戲錢包
+   8. 證券帳戶資金系統；不使用遊戲錢包
    9. 保留舊版 HTML 函式相容
    10. 修復全域 onclick
    11. 保留 IPO 系統
@@ -282,8 +282,8 @@ function saveData(key, value) {
 /* =========================================================
    6. 使用者
    ---------------------------------------------------------
-   v4.2：
-   不再使用 wallet
+   v4.5：
+   使用證券帳戶餘額；不使用遊戲錢包
    ========================================================= */
 
 let user =
@@ -856,7 +856,7 @@ async function loadAllFromFirebase() {
 }
 
 
-/* v4.2 Firebase data-shape compatibility */
+/* v4.5 Firebase data-shape compatibility */
 function toArrayData(value) {
     if (Array.isArray(value)) return value.filter(Boolean);
     if (value && typeof value === "object") {
@@ -3510,14 +3510,14 @@ function closeModal(id) {
 /* =========================================================
    36. 舊儲值 HTML 相容
    ---------------------------------------------------------
-   v4.2 已移除錢包。
+   v4.5 已移除錢包。
    保留函式避免舊 HTML onclick 報錯。
    ========================================================= */
 
 function openDepositModal() {
 
     showToast(
-        "v4.2 已取消遊戲錢包，無需儲值"
+        "v4.5 已取消遊戲錢包，無需儲值"
     );
 
 }
@@ -3526,7 +3526,7 @@ function openDepositModal() {
 function depositMoney() {
 
     showToast(
-        "v4.2 已取消遊戲錢包系統"
+        "v4.5 已取消遊戲錢包系統"
     );
 
 }
@@ -4947,7 +4947,7 @@ async function initMingyue() {
 
 
     console.log(
-        "明月證券 v4.2 初始化完成"
+        "明月證券 v4.5 初始化完成"
     );
 
 }
@@ -5164,3 +5164,197 @@ console.log(
 console.log(
     `明月證券 v${SYSTEM_VERSION} script.js 載入完成`
 );
+
+
+/* =========================================================
+   v4.5 證券帳戶資金模組
+   ---------------------------------------------------------
+   正數：增加證券帳戶餘額
+   負數：建立提領申請並扣除證券帳戶餘額
+   0：不執行
+   不允許餘額低於 0
+   Firebase：fundTransactions / withdrawalRequests
+   ========================================================= */
+(function () {
+    "use strict";
+
+    const FUND_STORAGE_KEY = "mingyue_fund_transactions_v45";
+    const WITHDRAWAL_STORAGE_KEY = "mingyue_withdrawal_requests_v45";
+
+    let fundTransactions = loadData(FUND_STORAGE_KEY, []);
+    if (!Array.isArray(fundTransactions)) fundTransactions = [];
+
+    let withdrawalRequests = loadData(WITHDRAWAL_STORAGE_KEY, []);
+    if (!Array.isArray(withdrawalRequests)) withdrawalRequests = [];
+
+    function fundId(prefix) {
+        return prefix + "-" + Date.now() + "-" + Math.random().toString(36).slice(2, 8);
+    }
+
+    function persistFunds() {
+        saveData(FUND_STORAGE_KEY, fundTransactions);
+        saveData(WITHDRAWAL_STORAGE_KEY, withdrawalRequests);
+        saveData("mingyue_user_v42", user);
+
+        if (firebaseReady) {
+            update(ref(db), {
+                ["users/" + user.accountId]: user,
+                ["fundTransactions/" + user.accountId]: fundTransactions,
+                ["withdrawalRequests/" + user.accountId]: withdrawalRequests
+            }).catch(function (error) {
+                console.error("證券資金 Firebase 同步失敗", error);
+            });
+        }
+    }
+
+    function showFundMessage(message) {
+        if (typeof window.showToast === "function") window.showToast(message);
+        else if (typeof window.toast === "function") window.toast(message);
+        else console.log(message);
+    }
+
+    function refreshBalanceText() {
+        const formatted = money(user.balance);
+        ["#balance", "#user-balance", "#asset-balance", "[data-user-balance]", ".user-balance", ".asset-balance"].forEach(function (selector) {
+            document.querySelectorAll(selector).forEach(function (el) {
+                el.textContent = formatted;
+            });
+        });
+    }
+
+    async function syncFundState() {
+        persistFunds();
+        refreshBalanceText();
+    }
+
+    async function changeSecuritiesBalance(amount) {
+        amount = Number(amount);
+
+        if (!Number.isFinite(amount)) {
+            showFundMessage("請輸入有效金額");
+            return { ok: false, error: "invalid_amount" };
+        }
+        if (amount === 0) {
+            showFundMessage("金額不能為 0");
+            return { ok: false, error: "zero_amount" };
+        }
+
+        const now = Date.now();
+        const id = fundId(amount > 0 ? "DEP" : "WDR");
+
+        if (amount > 0) {
+            user.balance = (Number(user.balance) || 0) + amount;
+            const record = {
+                id: id,
+                accountId: String(user.accountId),
+                type: "deposit",
+                amount: amount,
+                balanceAfter: user.balance,
+                status: "completed",
+                createdAt: now
+            };
+            fundTransactions.unshift(record);
+            await syncFundState();
+            showFundMessage("證券帳戶已增加 " + money(amount));
+            return { ok: true, record: record };
+        }
+
+        const withdrawAmount = Math.abs(amount);
+        const currentBalance = Number(user.balance) || 0;
+        if (withdrawAmount > currentBalance) {
+            showFundMessage("提領失敗：證券帳戶餘額不足");
+            return { ok: false, error: "insufficient_balance" };
+        }
+
+        user.balance = currentBalance - withdrawAmount;
+        const request = {
+            id: id,
+            accountId: String(user.accountId),
+            amount: withdrawAmount,
+            type: "withdrawal",
+            status: "pending",
+            createdAt: now,
+            balanceAfter: user.balance
+        };
+
+        withdrawalRequests.unshift(request);
+        fundTransactions.unshift(request);
+        await syncFundState();
+
+        if (firebaseReady) {
+            await set(ref(db, "withdrawalRequests/" + user.accountId + "/" + id), request)
+                .catch(function (error) { console.error("提領申請 Firebase 寫入失敗", error); });
+        }
+
+        showFundMessage("提領申請已建立，已扣除 " + money(withdrawAmount));
+        return { ok: true, record: request };
+    }
+
+    function createFundModal() {
+        if (document.getElementById("securities-fund-modal")) return;
+        const modal = document.createElement("div");
+        modal.id = "securities-fund-modal";
+        modal.style.cssText = "position:fixed;inset:0;z-index:99999;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.55);padding:20px;box-sizing:border-box;";
+        modal.innerHTML =
+            '<div style="width:min(420px,100%);background:#fff;border-radius:18px;padding:22px;box-sizing:border-box;box-shadow:0 18px 60px rgba(0,0,0,.25);">' +
+            '<div style="font-size:20px;font-weight:700;margin-bottom:8px;">證券帳戶資金</div>' +
+            '<div id="securities-fund-current" style="margin-bottom:16px;font-size:15px;">目前餘額：' + money(user.balance) + '</div>' +
+            '<input id="securities-fund-amount" type="number" step="0.01" placeholder="正數儲值／負數提領" style="width:100%;box-sizing:border-box;padding:12px;border:1px solid #ccc;border-radius:10px;font-size:16px;">' +
+            '<div style="font-size:12px;color:#777;margin-top:8px;">正數＝增加證券帳戶餘額；負數＝提領並扣除餘額。</div>' +
+            '<div style="display:flex;gap:10px;margin-top:18px;">' +
+            '<button id="securities-fund-confirm" style="flex:1;padding:11px;border:0;border-radius:10px;cursor:pointer;">確認</button>' +
+            '<button id="securities-fund-cancel" style="flex:1;padding:11px;border:0;border-radius:10px;cursor:pointer;">取消</button>' +
+            '</div></div>';
+        document.body.appendChild(modal);
+
+        document.getElementById("securities-fund-cancel").onclick = function () { modal.style.display = "none"; };
+        document.getElementById("securities-fund-confirm").onclick = async function () {
+            const input = document.getElementById("securities-fund-amount");
+            const result = await changeSecuritiesBalance(input.value);
+            if (result.ok) {
+                input.value = "";
+                document.getElementById("securities-fund-current").textContent = "目前餘額：" + money(user.balance);
+                modal.style.display = "none";
+            }
+        };
+        modal.addEventListener("click", function (event) {
+            if (event.target === modal) modal.style.display = "none";
+        });
+    }
+
+    function openSecuritiesFundModal() {
+        createFundModal();
+        const modal = document.getElementById("securities-fund-modal");
+        document.getElementById("securities-fund-current").textContent = "目前餘額：" + money(user.balance);
+        modal.style.display = "flex";
+        setTimeout(function () { document.getElementById("securities-fund-amount")?.focus(); }, 0);
+    }
+
+    window.changeSecuritiesBalance = changeSecuritiesBalance;
+    window.openSecuritiesFundModal = openSecuritiesFundModal;
+    window.MingyueSecuritiesFunds = Object.freeze({
+        changeBalance: changeSecuritiesBalance,
+        open: openSecuritiesFundModal,
+        getBalance: function () { return Number(user.balance) || 0; },
+        getTransactions: function () { return fundTransactions.slice(); },
+        getWithdrawals: function () { return withdrawalRequests.slice(); }
+    });
+
+    function installFundButton() {
+        if (!document.body || document.getElementById("securities-fund-button")) return;
+        const button = document.createElement("button");
+        button.id = "securities-fund-button";
+        button.type = "button";
+        button.textContent = "證券資金";
+        button.title = "證券帳戶儲值／提領";
+        button.onclick = openSecuritiesFundModal;
+        button.style.cssText = "position:fixed;right:16px;bottom:82px;z-index:9998;border:0;border-radius:999px;padding:11px 15px;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,.18);";
+        document.body.appendChild(button);
+    }
+
+    function bootFunds() { createFundModal(); installFundButton(); refreshBalanceText(); }
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", bootFunds, { once: true });
+    else bootFunds();
+
+    console.log("明月證券 v4.5 證券帳戶資金模組已啟用");
+})();
