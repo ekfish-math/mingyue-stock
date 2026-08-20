@@ -6,9 +6,10 @@ const {randomUUID}=require("crypto");
 initializeApp();
 const db=getDatabase();
 const LOCK_TTL_MS=60_000;
+const ADMIN_EMAIL="edisonkuo1030@gmail.com";
 
 function requireAuth(request){if(!request.auth)throw new HttpsError("unauthenticated","請先登入");return request.auth.uid;}
-async function requireAdmin(uid){const snap=await db.ref(`admins/${uid}`).get();if(!snap.exists()||snap.val()!==true)throw new HttpsError("permission-denied","沒有金融後台權限");}
+async function requireAdmin(request){const uid=requireAuth(request);const email=String(request.auth.token?.email||"").toLowerCase();if(email!==ADMIN_EMAIL)throw new HttpsError("permission-denied","沒有金融後台權限");return uid;}
 function amountOf(value){const n=Number(value);if(!Number.isFinite(n)||n<=0||n>1e15)throw new HttpsError("invalid-argument","金額必須大於 0 且在允許範圍內");return Math.round(n*100)/100;}
 
 exports.createWithdrawal=onCall(async request=>{
@@ -29,7 +30,7 @@ exports.createDepositRequest=onCall(async request=>{
 });
 
 exports.reviewFinancialRequest=onCall(async request=>{
- const adminId=requireAuth(request);await requireAdmin(adminId);
+ const adminId=await requireAdmin(request);
  const type=request.data?.type;const accountId=String(request.data?.accountId||"");const id=String(request.data?.id||"");const decision=request.data?.decision;
  if(!["withdrawal","deposit"].includes(type)||!accountId||!id||!["approve","reject"].includes(decision))throw new HttpsError("invalid-argument","審核參數錯誤");
  const requestPath=`${type==="withdrawal"?"withdrawalRequests":"depositRequests"}/${accountId}/${id}`;
@@ -44,7 +45,7 @@ exports.reviewFinancialRequest=onCall(async request=>{
    if(frozen<amount)throw new HttpsError("failed-precondition","凍結金額不足");
    if(decision==="reject")balance+=amount;
    frozen-=amount;
-  }else if(decision==="approve")balance+=amount;
+  }else if(decision==="approve") balance+=amount;
   if(balance<0||frozen<0)throw new HttpsError("failed-precondition","資金狀態無效");
   const status=decision==="approve"?"approved":"rejected";const txId=randomUUID();const auditId=randomUUID();
   const updates={};
