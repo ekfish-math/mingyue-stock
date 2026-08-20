@@ -1,0 +1,42 @@
+name: Repair v4.6 script
+on:
+  push:
+    branches: [agent/v46-financial-admin]
+    paths-ignore:
+      - '.github/workflows/repair-script-v46.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  repair:
+    if: ${{ github.event.head_commit.message != 'fix: restore script and mark v4.6' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Restore preserved script and update version
+        shell: bash
+        run: |
+          git show 3e659fe00fa8964cd1a1f46d4e498b73309dbdae:script.js > script.js
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('script.js')
+          s = p.read_text()
+          s = s.replace('明月證券 v4.5', '明月證券 v4.6', 1)
+          s = s.replace('   v4.5\n', '   v4.6\n', 1)
+          s = s.replace('const SYSTEM_VERSION = "4.5";', 'const SYSTEM_VERSION = "4.6";', 1)
+          s = s.replace('明月證券 v4.5 初始化完成', '明月證券 v4.6 初始化完成', 1)
+          s = s.replace('明月證券 v4.5 全域函式已掛載', '明月證券 v4.6 全域函式已掛載', 1)
+          s = s.replace('明月證券 v4.5 script.js 載入完成', '明月證券 v4.6 script.js 載入完成', 1)
+          s = s.replace('v4.5 證券帳戶資金模組', 'v4.6 證券帳戶資金模組', 1)
+          s = s.replace('明月證券 v4.5 證券帳戶資金模組已啟用', '明月證券 v4.6 證券帳戶資金模組已啟用', 1)
+          p.write_text(s)
+          PY
+      - name: Commit repaired script
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add script.js
+          git commit -m 'fix: restore script and mark v4.6' || exit 0
+          git push
