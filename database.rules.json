@@ -4,43 +4,43 @@
     ".write": false,
     "users": {
       "$uid": {
-        ".read": "auth != null && (auth.uid === $uid || root.child('admins').child(auth.uid).val() === true)",
-        ".write": "auth != null && (root.child('admins').child(auth.uid).val() === true || (auth.uid === $uid && ((!data.exists() && newData.child('balance').val() === 0 && newData.child('frozenBalance').val() === 0) || (data.exists() && newData.child('balance').val() === data.child('balance').val() && newData.child('frozenBalance').val() === data.child('frozenBalance').val())))"
+        ".read": "auth != null && (auth.uid === $uid || auth.token.email === 'edisonkuo1030@gmail.com')",
+        ".write": "auth != null && (auth.token.email === 'edisonkuo1030@gmail.com' || (auth.uid === $uid && ((!data.exists() && newData.child('balance').val() === 0 && newData.child('frozenBalance').val() === 0) || (data.exists() && newData.child('balance').val() === data.child('balance').val() && newData.child('frozenBalance').val() === data.child('frozenBalance').val()))))"
       }
     },
     "withdrawalRequests": {
       "$uid": {
-        ".read": "auth != null && (auth.uid === $uid || root.child('admins').child(auth.uid).val() === true)",
+        ".read": "auth != null && (auth.uid === $uid || auth.token.email === 'edisonkuo1030@gmail.com')",
         "$request": {
-          ".write": "auth != null && root.child('admins').child(auth.uid).val() === true",
+          ".write": "auth != null && auth.token.email === 'edisonkuo1030@gmail.com'",
           ".validate": "newData.hasChildren(['id','accountId','amount','status','createdAt']) && newData.child('accountId').val() === $uid && newData.child('amount').isNumber() && newData.child('amount').val() > 0 && newData.child('status').val() in ['pending','approved','rejected']"
         }
       }
     },
     "depositRequests": {
       "$uid": {
-        ".read": "auth != null && (auth.uid === $uid || root.child('admins').child(auth.uid).val() === true)",
+        ".read": "auth != null && (auth.uid === $uid || auth.token.email === 'edisonkuo1030@gmail.com')",
         "$request": {
-          ".write": "auth != null && root.child('admins').child(auth.uid).val() === true",
+          ".write": "auth != null && auth.token.email === 'edisonkuo1030@gmail.com'",
           ".validate": "newData.hasChildren(['id','accountId','amount','status','createdAt']) && newData.child('accountId').val() === $uid && newData.child('amount').isNumber() && newData.child('amount').val() > 0 && newData.child('status').val() in ['pending','approved','rejected']"
         }
       }
     },
     "fundTransactions": {
       "$uid": {
-        ".read": "auth != null && (auth.uid === $uid || root.child('admins').child(auth.uid).val() === true)",
-        ".write": "auth != null && root.child('admins').child(auth.uid).val() === true"
+        ".read": "auth != null && (auth.uid === $uid || auth.token.email === 'edisonkuo1030@gmail.com')",
+        ".write": "auth != null && auth.token.email === 'edisonkuo1030@gmail.com'"
       }
     },
     "adminAudit": {
       "$log": {
-        ".read": "auth != null && root.child('admins').child(auth.uid).val() === true",
-        ".write": "auth != null && root.child('admins').child(auth.uid).val() === true"
+        ".read": "auth != null && auth.token.email === 'edisonkuo1030@gmail.com'",
+        ".write": "auth != null && auth.token.email === 'edisonkuo1030@gmail.com'"
       }
     },
     "admins": {
       "$uid": {
-        ".read": "auth != null && root.child('admins').child(auth.uid).val() === true",
+        ".read": "auth != null && auth.token.email === 'edisonkuo1030@gmail.com'",
         ".write": false
       }
     },
