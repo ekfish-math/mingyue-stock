@@ -1,15 +1,17 @@
 const {onCall,HttpsError}=require("firebase-functions/v2/https");
+const {setGlobalOptions}=require("firebase-functions/v2");
 const {initializeApp}=require("firebase-admin/app");
 const {getDatabase,ServerValue}=require("firebase-admin/database");
 const {randomUUID}=require("crypto");
 
+setGlobalOptions({region:"asia-southeast1"});
 initializeApp();
 const db=getDatabase();
 const LOCK_TTL_MS=60_000;
 const ADMIN_EMAIL="edisonkuo1030@gmail.com";
 
 function requireAuth(request){if(!request.auth)throw new HttpsError("unauthenticated","請先登入");return request.auth.uid;}
-async function requireAdmin(request){const uid=requireAuth(request);const email=String(request.auth.token?.email||"").toLowerCase();if(email!==ADMIN_EMAIL)throw new HttpsError("permission-denied","沒有金融後台權限");return uid;}
+async function requireAdmin(request){const uid=requireAuth(request);const email=String(request.auth.token?.email||"").toLowerCase();const verified=request.auth.token?.email_verified===true;if(!verified||email!==ADMIN_EMAIL)throw new HttpsError("permission-denied","沒有金融後台權限");return uid;}
 function amountOf(value){const n=Number(value);if(!Number.isFinite(n)||n<=0||n>1e15)throw new HttpsError("invalid-argument","金額必須大於 0 且在允許範圍內");return Math.round(n*100)/100;}
 
 exports.createWithdrawal=onCall(async request=>{
