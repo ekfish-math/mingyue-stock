@@ -5,14 +5,14 @@
     "users": {
       "$uid": {
         ".read": "auth != null && (auth.uid === $uid || auth.token.email === 'edisonkuo1030@gmail.com')",
-        ".write": "auth != null && (auth.token.email === 'edisonkuo1030@gmail.com' || (auth.uid === $uid && ((!data.exists() && newData.child('balance').val() === 0 && newData.child('frozenBalance').val() === 0) || (data.exists() && newData.child('balance').val() === data.child('balance').val() && newData.child('frozenBalance').val() === data.child('frozenBalance').val()))))"
+        ".write": "auth != null && (auth.token.email === 'edisonkuo1030@gmail.com' || (auth.uid === $uid && ((!data.exists() && newData.child('balance').val() === 0 && newData.child('frozenBalance').val() === 0) || (data.exists() && newData.child('balance').val() === data.child('balance').val() && newData.child('frozenBalance').val() === data.child('frozenBalance').val()) || (data.exists() && newData.child('balance').val() === data.child('balance').val() - (newData.child('frozenBalance').val() - data.child('frozenBalance').val()) && newData.child('frozenBalance').val() >= data.child('frozenBalance').val() && newData.child('frozenBalance').val() <= data.child('balance').val()))))"
       }
     },
     "withdrawalRequests": {
       "$uid": {
         ".read": "auth != null && (auth.uid === $uid || auth.token.email === 'edisonkuo1030@gmail.com')",
         "$request": {
-          ".write": "auth != null && auth.token.email === 'edisonkuo1030@gmail.com'",
+          ".write": "auth != null && (auth.token.email === 'edisonkuo1030@gmail.com' || (auth.uid === $uid && ((!data.exists() && newData.child('status').val() === 'pending') || (data.exists() && data.child('status').val() === 'pending' && !newData.exists()))))",
           ".validate": "newData.hasChildren(['id','accountId','amount','status','createdAt']) && newData.child('accountId').val() === $uid && newData.child('amount').isNumber() && newData.child('amount').val() > 0 && newData.child('status').val() in ['pending','approved','rejected']"
         }
       }
@@ -21,7 +21,7 @@
       "$uid": {
         ".read": "auth != null && (auth.uid === $uid || auth.token.email === 'edisonkuo1030@gmail.com')",
         "$request": {
-          ".write": "auth != null && auth.token.email === 'edisonkuo1030@gmail.com'",
+          ".write": "auth != null && (auth.token.email === 'edisonkuo1030@gmail.com' || (auth.uid === $uid && ((!data.exists() && newData.child('status').val() === 'pending') || (data.exists() && data.child('status').val() === 'pending' && !newData.exists()))))",
           ".validate": "newData.hasChildren(['id','accountId','amount','status','createdAt']) && newData.child('accountId').val() === $uid && newData.child('amount').isNumber() && newData.child('amount').val() > 0 && newData.child('status').val() in ['pending','approved','rejected']"
         }
       }
