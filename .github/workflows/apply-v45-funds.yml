@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/apply-v45-funds.yml'
+      - 'script.js'
 
 permissions:
   contents: write
