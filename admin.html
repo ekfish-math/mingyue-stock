@@ -3,16 +3,18 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>明月證券｜管理後台 v4.7</title>
+<title>明月證券｜管理後台 v4.8</title>
 <link rel="stylesheet" href="admin.css">
 <style>
-.stock-admin-row{display:flex;justify-content:space-between;gap:18px;align-items:center;padding:14px 0;border-bottom:1px solid rgba(127,127,127,.18)}
-.stock-admin-info{min-width:180px}.stock-admin-fields{display:flex;align-items:end;gap:10px;flex-wrap:wrap}.stock-admin-fields label{display:flex;flex-direction:column;gap:5px;font-size:13px}.stock-admin-fields input{width:110px;padding:8px;border:1px solid #bbb;border-radius:7px;background:inherit;color:inherit}
-@media(max-width:700px){.stock-admin-row{display:block}.stock-admin-fields{margin-top:12px}.stock-admin-fields input{width:100px}}
+.stock-admin-row{padding:16px 0;border-bottom:1px solid rgba(127,127,127,.18)}
+.stock-admin-head{display:flex;justify-content:space-between;gap:18px;align-items:center}.stock-admin-info{min-width:220px}.stock-status{font-size:12px;margin-top:4px}.listed{font-weight:700}.unlisted{opacity:.65}
+.stock-admin-fields{display:grid;grid-template-columns:repeat(6,minmax(95px,1fr));align-items:end;gap:10px;margin-top:12px}.stock-admin-fields label{display:flex;flex-direction:column;gap:5px;font-size:13px}.stock-admin-fields input{width:100%;box-sizing:border-box;padding:8px;border:1px solid #bbb;border-radius:7px;background:inherit;color:inherit}.stock-admin-fields .listing-field{display:flex;align-items:center;gap:7px;height:35px}.stock-admin-fields .listing-field input{width:auto}.stock-admin-fields button{height:35px}
+@media(max-width:900px){.stock-admin-fields{grid-template-columns:repeat(3,minmax(100px,1fr))}}
+@media(max-width:600px){.stock-admin-head{display:block}.stock-admin-fields{grid-template-columns:repeat(2,minmax(110px,1fr))}.stock-admin-fields button{grid-column:span 2}}
 </style>
 </head>
 <body>
-<header class="topbar"><div><h1>明月證券</h1><span>管理後台 v4.7</span></div><div id="admin-status">正在驗證管理員身分…</div></header>
+<header class="topbar"><div><h1>明月證券</h1><span>管理後台 v4.8</span></div><div id="admin-status">正在驗證管理員身分…</div></header>
 <main class="wrap">
 <section class="cards">
 <div class="card"><b id="stat-accounts">0</b><span>帳戶</span></div>
@@ -23,7 +25,7 @@
 <nav class="tabs">
 <button data-tab="stocks">股票管理</button><button data-tab="withdrawals">提領審核</button><button data-tab="deposits">儲值審核</button><button data-tab="accounts">帳戶</button><button data-tab="audit">操作紀錄</button>
 </nav>
-<section id="panel-stocks" class="panel"><h2>📈 股票管理</h2><p class="meta">調整市場資料。更新後直接同步 Firebase。</p><div id="stock-list"></div></section>
+<section id="panel-stocks" class="panel"><h2>📈 股票管理</h2><p class="meta">可修改股票名稱、簡稱、代號、價格與成交量，並控制是否核准上市。內部股票 ID 不變，避免影響既有持股與交易紀錄。</p><div id="stock-list"></div></section>
 <section id="panel-withdrawals" class="panel hidden"><h2>提領申請</h2><div id="withdrawal-list"></div></section>
 <section id="panel-deposits" class="panel hidden"><h2>儲值申請</h2><div id="deposit-list"></div></section>
 <section id="panel-accounts" class="panel hidden"><h2>帳戶管理</h2><div id="account-list"></div></section>
