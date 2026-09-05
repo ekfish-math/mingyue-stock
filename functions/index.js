@@ -31,7 +31,7 @@ exports.createDepositRequest=onCall(async request=>{
  return {ok:true,id,status:"pending"};
 });
 
-exports.reviewFinancialRequest=onCall(async request=>{
+exports.reviewFinancialRequest=onCall({cors:["https://ekfish-math.github.io"]},async request=>{
  const adminId=await requireAdmin(request);
  const type=request.data?.type;const accountId=String(request.data?.accountId||"");const id=String(request.data?.id||"");const decision=request.data?.decision;
  if(!["withdrawal","deposit"].includes(type)||!accountId||!id||!["approve","reject"].includes(decision))throw new HttpsError("invalid-argument","審核參數錯誤");
