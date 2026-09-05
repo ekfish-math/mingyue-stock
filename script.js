@@ -653,9 +653,6 @@ async function syncAllToFirebase() {
                 ["users/" + user.accountId + "/accountId"]:
                     user.accountId,
 
-                stocks:
-                    stocks,
-
                 companies:
                     companies,
 
@@ -893,6 +890,16 @@ function normalizeCompanyData(value) {
         code: String(item.code ?? item.id ?? "").trim().toUpperCase()
     })).filter(item => item.id || item.code);
 }
+
+
+/* v4.7 financial balance bridge */
+window.addEventListener("mingyue-finance-balance-updated", event => {
+    const nextBalance = Number(event?.detail?.balance);
+    if (!Number.isFinite(nextBalance)) return;
+    user.balance = nextBalance;
+    saveData("mingyue_user_v42", user);
+    updateAllVisible();
+});
 
 
 /* =========================================================
