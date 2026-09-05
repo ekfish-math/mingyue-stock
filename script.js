@@ -1,11 +1,11 @@
 /* =========================================================
-   明月證券 v4.5
+   明月證券 v4.7
    Mingyue Securities
    ---------------------------------------------------------
    Firebase 全同步版
    股票交易 + 公司 + IPO + 新聞 + K線 + 折線圖
    ---------------------------------------------------------
-   v4.5
+   v4.7
    1. Firebase 正式同步
    2. 使用者資料同步
    3. 股票資料同步
@@ -86,7 +86,7 @@ console.log(
    2. 系統
    ========================================================= */
 
-const SYSTEM_VERSION = "4.2";
+const SYSTEM_VERSION = "4.7";
 
 const ACCOUNT_ID = "MYS-000184";
 
@@ -646,6 +646,15 @@ async function syncAllToFirebase() {
         await update(
             ref(db),
             {
+
+                ["users/" + user.accountId + "/name"]:
+                    user.name,
+
+                ["users/" + user.accountId + "/accountId"]:
+                    user.accountId,
+
+                stocks:
+                    stocks,
 
                 companies:
                     companies,
@@ -4941,7 +4950,7 @@ async function initMingyue() {
 
 
     console.log(
-        "明月證券 v4.5 初始化完成"
+        "明月證券 v4.7 初始化完成"
     );
 
 }
