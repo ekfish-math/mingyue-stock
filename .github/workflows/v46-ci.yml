@@ -1,0 +1,36 @@
+name: Mingyue Stock v4.6 CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [agent/v46-financial-admin]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Functions dependencies
+        working-directory: functions
+        run: npm install
+
+      - name: Syntax check Functions
+        working-directory: functions
+        run: node --check index.js
+
+      - name: Verify required v4.6 files
+        run: |
+          test -f admin.html
+          test -f admin.css
+          test -f admin-finance.js
+          test -f functions/index.js
+          test -f database.rules.json
+          node --check admin-finance.js
