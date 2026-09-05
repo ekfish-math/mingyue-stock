@@ -1,5 +1,5 @@
 import {initializeApp,getApps,getApp} from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
-import {getAuth} from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
+import {getAuth,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
 import {getDatabase,ref,get,set,runTransaction,serverTimestamp,onValue} from "https://www.gstatic.com/firebasejs/12.17.1/firebase-database.js";
 
 const config={apiKey:"AIzaSyDWDaEZoZPwBe7wZX0aiDAGqs4b_EAkfgM",authDomain:"mingyue-stock.firebaseapp.com",databaseURL:"https://mingyue-stock-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"mingyue-stock",storageBucket:"mingyue-stock.firebasestorage.app",messagingSenderId:"774198660845",appId:"1:774198660845:web:93f4a725b6303aae9f86e4"};
@@ -20,13 +20,10 @@ function startBalanceListener(){
   if(balanceListenerStarted||!auth.currentUser)return;
   balanceListenerStarted=true;
   const userRef=ref(db,`users/${auth.currentUser.uid}`);
-  onValue(userRef,snap=>{
-    if(!snap.exists())return;
-    const data=snap.val()||{};
-    refreshPlayerBalance(data.balance);
-  },err=>console.error("玩家資產即時同步失敗",err));
+  onValue(userRef,snap=>{if(!snap.exists())return;refreshPlayerBalance((snap.val()||{}).balance);},err=>console.error("玩家資產即時同步失敗",err));
 }
 
+onAuthStateChanged(auth,user=>{if(user)startBalanceListener();});
 async function currentUser(){if(!auth.currentUser)throw new Error("請先完成 Google 登入");startBalanceListener();return auth.currentUser;}
 
 async function ensureFinanceUI(){
@@ -47,11 +44,7 @@ function modal(id,title,desc,submit){
 async function openDepositModal(){
   modal("finance-deposit-modal","💰 證券帳戶儲值","送出後進入金融後台審核，核准後才增加餘額。",async(amount,m)=>{
     if(!Number.isFinite(amount)||amount<=0)return toast("請輸入有效金額");
-    try{
-      const u=await currentUser();const id=makeId("DEP");
-      await set(ref(db,`depositRequests/${u.uid}/${id}`),{id,accountId:u.uid,amount,status:"pending",createdAt:serverTimestamp()});
-      m.remove();toast(`儲值申請已送出：${money(amount)}\n等待金融後台審核。`);
-    }catch(e){console.error("建立儲值申請失敗",e);toast(e?.message||"儲值申請失敗");}
+    try{const u=await currentUser();const id=makeId("DEP");await set(ref(db,`depositRequests/${u.uid}/${id}`),{id,accountId:u.uid,amount,status:"pending",createdAt:serverTimestamp()});m.remove();toast(`儲值申請已送出：${money(amount)}\n等待金融後台審核。`);}catch(e){console.error("建立儲值申請失敗",e);toast(e?.message||"儲值申請失敗");}
   });
 }
 
@@ -59,22 +52,12 @@ async function openWithdrawalModal(){
   modal("finance-withdraw-modal","－ 證券帳戶提領","提領金額會先凍結；只有後台核准後才完成提領。",async(amount,m)=>{
     if(!Number.isFinite(amount)||amount<=0)return toast("請輸入有效金額");
     try{
-      const u=await currentUser();
-      const userRef=ref(db,`users/${u.uid}`);
-      const tx=await runTransaction(userRef,user=>{
-        if(!user)return user;
-        const balance=Number(user.balance||0),frozen=Number(user.frozenBalance||0);
-        if(balance-frozen<amount)return;
-        return {...user,frozenBalance:frozen+amount};
-      });
+      const u=await currentUser(),userRef=ref(db,`users/${u.uid}`);
+      const tx=await runTransaction(userRef,user=>{if(!user)return user;const balance=Number(user.balance||0),frozen=Number(user.frozenBalance||0);if(balance-frozen<amount)return;return {...user,frozenBalance:frozen+amount};});
       if(!tx.committed){const snap=await get(userRef);if(!snap.exists())throw new Error("帳戶不存在");throw new Error("可用餘額不足");}
       const id=makeId("WDR");
-      try{
-        await set(ref(db,`withdrawalRequests/${u.uid}/${id}`),{id,accountId:u.uid,amount,status:"pending",createdAt:serverTimestamp()});
-      }catch(e){
-        await runTransaction(userRef,user=>{if(!user)return user;return {...user,frozenBalance:Math.max(0,Number(user.frozenBalance||0)-amount)};});
-        throw e;
-      }
+      try{await set(ref(db,`withdrawalRequests/${u.uid}/${id}`),{id,accountId:u.uid,amount,status:"pending",createdAt:serverTimestamp()});}
+      catch(e){await runTransaction(userRef,user=>{if(!user)return user;return {...user,frozenBalance:Math.max(0,Number(user.frozenBalance||0)-amount)};});throw e;}
       m.remove();toast(`提領申請已送出：${money(amount)}\n金額已凍結，等待金融後台審核。`);
     }catch(e){console.error("建立提領申請失敗",e);toast(e?.message||"提領申請失敗");}
   });
@@ -83,5 +66,4 @@ async function openWithdrawalModal(){
 window.openDepositModal=openDepositModal;window.openWithdrawalModal=openWithdrawalModal;window.depositMoney=()=>openDepositModal();window.withdrawMoney=()=>openWithdrawalModal();
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",()=>setTimeout(ensureFinanceUI,350),{once:true});else setTimeout(ensureFinanceUI,350);
 setTimeout(ensureFinanceUI,1500);
-if(auth.currentUser)startBalanceListener();
 console.log("明月證券 v4.6 RTDB 玩家金融模組已載入");
