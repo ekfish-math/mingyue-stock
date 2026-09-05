@@ -29,15 +29,29 @@ jobs:
           p = Path('script.js')
           s = p.read_text(encoding='utf-8')
 
+          # Remove the obsolete client-side fund module; finance-client.js owns this UI now.
           marker = '/* =========================================================\n   v4.5 證券帳戶資金模組'
           if marker in s:
               s = s.split(marker, 1)[0].rstrip() + '\n'
 
-          old = '''                ["users/" + user.accountId]:\n                    user,\n\n'''
-          new = '''                ["users/" + user.accountId + "/name"]:\n                    user.name,\n\n                ["users/" + user.accountId + "/accountId"]:\n                    user.accountId,\n\n'''
-          if old not in s:
+          # Player sync must never overwrite server-managed money or stock prices.
+          old_user = '''                ["users/" + user.accountId]:\n                    user,\n\n'''
+          new_user = '''                ["users/" + user.accountId + "/name"]:\n                    user.name,\n\n                ["users/" + user.accountId + "/accountId"]:\n                    user.accountId,\n\n'''
+          if old_user not in s:
               raise SystemExit('expected user sync block not found')
-          s = s.replace(old, new, 1)
+          s = s.replace(old_user, new_user, 1)
+
+          old_stocks = '''                stocks:\n                    stocks,\n\n'''
+          if old_stocks not in s:
+              raise SystemExit('expected stock sync block not found')
+          s = s.replace(old_stocks, '', 1)
+
+          # finance-client.js updates the DOM; this listener also updates script.js's in-memory user.
+          anchor = '''/* =========================================================\n   13. LocalStorage 儲存\n   ========================================================= */'''
+          listener = '''/* v4.7 financial balance bridge */\nwindow.addEventListener("mingyue-finance-balance-updated", event => {\n    const nextBalance = Number(event?.detail?.balance);\n    if (!Number.isFinite(nextBalance)) return;\n    user.balance = nextBalance;\n    saveData("mingyue_user_v42", user);\n    updateAllVisible();\n});\n\n\n'''
+          if anchor not in s:
+              raise SystemExit('local storage anchor not found')
+          s = s.replace(anchor, listener + anchor, 1)
 
           s = s.replace('const SYSTEM_VERSION = "4.2";', 'const SYSTEM_VERSION = "4.7";', 1)
           s = s.replace('明月證券 v4.5 初始化完成', '明月證券 v4.7 初始化完成', 1)
@@ -51,5 +65,5 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add script.js
           if git diff --cached --quiet; then exit 0; fi
-          git commit -m 'fix: restore player core and protect financial balance'
+          git commit -m 'fix: protect financial balance and stock data'
           git push
