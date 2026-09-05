@@ -19,7 +19,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Restore full v4.5 core files
+      - name: Restore full v4.7-compatible core
         run: |
           git checkout c7e7750a6488b6eea7ea3634ca2fb8097a30563c -- script.js admin.js
           python3 <<'PY'
@@ -29,8 +29,13 @@ jobs:
           marker = '/* =========================================================\n   v4.5 證券帳戶資金模組'
           if marker in s:
               s = s.split(marker, 1)[0].rstrip() + '\n'
-          s = s.replace('const SYSTEM_VERSION = "4.5";', 'const SYSTEM_VERSION = "4.6";')
-          s = s.replace('const SYSTEM_VERSION = \'4.5\';', "const SYSTEM_VERSION = '4.6';")
+          s = s.replace('const SYSTEM_VERSION = "4.5";', 'const SYSTEM_VERSION = "4.7";')
+          s = s.replace('const SYSTEM_VERSION = \'4.5\';', "const SYSTEM_VERSION = '4.7';")
+          # Financial balance/frozenBalance are server-managed by admin-finance.js.
+          # Never let normal player saveAll() overwrite them with stale local values.
+          s = s.replace('                ["users/" + user.accountId]:\n                    user,\n\n', '')
+          # Keep stock data admin-owned; player sync must not overwrite it.
+          s = s.replace('                stocks:\n                    stocks,\n\n', '')
           p.write_text(s, encoding='utf-8')
           PY
 
@@ -40,5 +45,5 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add script.js admin.js
           git diff --cached --quiet && exit 0
-          git commit -m 'fix: restore Mingyue player core and admin module'
+          git commit -m 'fix: protect financial balance and stock data from player sync'
           git push
