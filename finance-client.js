@@ -1,6 +1,6 @@
 import {initializeApp,getApps,getApp} from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
 import {getAuth} from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
-import {getDatabase,ref,get,set,update,runTransaction,ServerValue} from "https://www.gstatic.com/firebasejs/12.17.1/firebase-database.js";
+import {getDatabase,ref,get,set,runTransaction,serverTimestamp} from "https://www.gstatic.com/firebasejs/12.17.1/firebase-database.js";
 
 const config={apiKey:"AIzaSyDWDaEZoZPwBe7wZX0aiDAGqs4b_EAkfgM",authDomain:"mingyue-stock.firebaseapp.com",databaseURL:"https://mingyue-stock-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"mingyue-stock",storageBucket:"mingyue-stock.firebasestorage.app",messagingSenderId:"774198660845",appId:"1:774198660845:web:93f4a725b6303aae9f86e4"};
 const app=getApps().length?getApp():initializeApp(config);const auth=getAuth(app);const db=getDatabase(app);
@@ -30,7 +30,7 @@ async function openDepositModal(){
     if(!Number.isFinite(amount)||amount<=0)return toast("請輸入有效金額");
     try{
       const u=await currentUser();const id=makeId("DEP");
-      await set(ref(db,`depositRequests/${u.uid}/${id}`),{id,accountId:u.uid,amount,status:"pending",createdAt:ServerValue.TIMESTAMP});
+      await set(ref(db,`depositRequests/${u.uid}/${id}`),{id,accountId:u.uid,amount,status:"pending",createdAt:serverTimestamp()});
       m.remove();toast(`儲值申請已送出：${money(amount)}\n等待金融後台審核。`);
     }catch(e){console.error("建立儲值申請失敗",e);toast(e?.message||"儲值申請失敗");}
   });
@@ -53,7 +53,7 @@ async function openWithdrawalModal(){
       frozenAdded=true;
       const id=makeId("WDR");
       try{
-        await set(ref(db,`withdrawalRequests/${u.uid}/${id}`),{id,accountId:u.uid,amount,status:"pending",createdAt:ServerValue.TIMESTAMP});
+        await set(ref(db,`withdrawalRequests/${u.uid}/${id}`),{id,accountId:u.uid,amount,status:"pending",createdAt:serverTimestamp()});
       }catch(e){
         await runTransaction(userRef,user=>{if(!user)return user;return {...user,frozenBalance:Math.max(0,Number(user.frozenBalance||0)-amount)};});
         frozenAdded=false;throw e;
