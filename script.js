@@ -1,11 +1,11 @@
 /* =========================================================
-   明月證券 v4.7
+   明月證券 v4.8
    Mingyue Securities
    ---------------------------------------------------------
    Firebase 全同步版
    股票交易 + 公司 + IPO + 新聞 + K線 + 折線圖
    ---------------------------------------------------------
-   v4.7
+   v4.8
    1. Firebase 正式同步
    2. 使用者資料同步
    3. 股票資料同步
@@ -86,7 +86,7 @@ console.log(
    2. 系統
    ========================================================= */
 
-const SYSTEM_VERSION = "4.7";
+const SYSTEM_VERSION = "4.8";
 
 const ACCOUNT_ID = "MYS-000184";
 
@@ -892,16 +892,6 @@ function normalizeCompanyData(value) {
 }
 
 
-/* v4.7 financial balance bridge */
-window.addEventListener("mingyue-finance-balance-updated", event => {
-    const nextBalance = Number(event?.detail?.balance);
-    if (!Number.isFinite(nextBalance)) return;
-    user.balance = nextBalance;
-    saveData("mingyue_user_v42", user);
-    updateAllVisible();
-});
-
-
 /* =========================================================
    13. LocalStorage 儲存
    ========================================================= */
@@ -1165,6 +1155,15 @@ function updateHomeAssets() {
    17. 市場統計
    ========================================================= */
 
+
+function getListedStocks() {
+
+    return stocks.filter(
+        stock => stock.listed !== false
+    );
+
+}
+
 function getChange(stock) {
 
     const price =
@@ -1363,7 +1362,7 @@ function renderHotStocks() {
 
 
     const list =
-        [...stocks]
+        [...getListedStocks()]
             .sort(
                 (a, b) =>
                     Math.abs(getChange(b)) -
@@ -1385,11 +1384,11 @@ function renderHotStocks() {
                     <div>
 
                         <strong>
-                            ${escapeHTML(stock.name)}
+                            ${escapeHTML(stock.shortName || stock.name)}
                         </strong>
 
                         <small>
-                            ${escapeHTML(stock.id)}
+                            ${escapeHTML(stock.code || stock.id)}
                             ·
                             ${escapeHTML(stock.industry)}
                         </small>
@@ -1454,7 +1453,7 @@ function renderMarket() {
 
 
     let list =
-        [...stocks];
+        [...getListedStocks()];
 
 
     if (marketFilter === "up") {
@@ -1504,11 +1503,11 @@ function renderMarket() {
                     <div>
 
                         <strong>
-                            ${escapeHTML(stock.name)}
+                            ${escapeHTML(stock.shortName || stock.name)}
                         </strong>
 
                         <small>
-                            ${escapeHTML(stock.id)}
+                            ${escapeHTML(stock.code || stock.id)}
                             ·
                             ${escapeHTML(stock.industry)}
                         </small>
@@ -1548,9 +1547,10 @@ function renderMarket() {
 function openStock(id) {
 
     const stock =
-        stocks.find(
+        getListedStocks().find(
             item =>
-                item.id === id
+                item.id === id ||
+                String(item.code || item.id) === String(id)
         );
 
     if (!stock) {
@@ -4957,7 +4957,7 @@ async function initMingyue() {
 
 
     console.log(
-        "明月證券 v4.7 初始化完成"
+        "明月證券 v4.8 初始化完成"
     );
 
 }
