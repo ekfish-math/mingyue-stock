@@ -647,12 +647,6 @@ async function syncAllToFirebase() {
             ref(db),
             {
 
-                ["users/" + user.accountId]:
-                    user,
-
-                stocks:
-                    stocks,
-
                 companies:
                     companies,
 
