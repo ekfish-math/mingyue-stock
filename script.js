@@ -86,7 +86,7 @@ console.log(
    2. 系統
    ========================================================= */
 
-const SYSTEM_VERSION = "4.2";
+const SYSTEM_VERSION = "4.7";
 
 const ACCOUNT_ID = "MYS-000184";
 
@@ -649,9 +649,6 @@ async function syncAllToFirebase() {
 
                 ["users/" + user.accountId]:
                     user,
-
-                stocks:
-                    stocks,
 
                 companies:
                     companies,
