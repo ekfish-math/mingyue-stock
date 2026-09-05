@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/apply-v45-funds.yml'
+      - 'v4.8-stock-controls.trigger'
 
 permissions:
   contents: write
