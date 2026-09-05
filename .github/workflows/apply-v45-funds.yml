@@ -1,4 +1,4 @@
-name: Restore Mingyue core and protect finance state
+name: Restore Mingyue core and apply v4.8 stock controls
 
 on:
   push:
@@ -22,41 +22,47 @@ jobs:
         run: |
           git checkout c7e7750a6488b6eea7ea3634ca2fb8097a30563c -- script.js
 
-      - name: Patch finance ownership
+      - name: Patch finance and v4.8 stock ownership
         shell: python
         run: |
           from pathlib import Path
           p = Path('script.js')
           s = p.read_text(encoding='utf-8')
 
-          # Remove the obsolete client-side fund module; finance-client.js owns this UI now.
           marker = '/* =========================================================\n   v4.5 證券帳戶資金模組'
           if marker in s:
               s = s.split(marker, 1)[0].rstrip() + '\n'
 
-          # Player sync must never overwrite server-managed money or stock prices.
-          old_user = '''                ["users/" + user.accountId]:\n                    user,\n\n'''
-          new_user = '''                ["users/" + user.accountId + "/name"]:\n                    user.name,\n\n                ["users/" + user.accountId + "/accountId"]:\n                    user.accountId,\n\n'''
-          if old_user not in s:
+          old = '''                ["users/" + user.accountId]:\n                    user,\n\n'''
+          new = '''                ["users/" + user.accountId + "/name"]:\n                    user.name,\n\n                ["users/" + user.accountId + "/accountId"]:\n                    user.accountId,\n\n'''
+          if old not in s:
               raise SystemExit('expected user sync block not found')
-          s = s.replace(old_user, new_user, 1)
+          s = s.replace(old, new, 1)
 
-          old_stocks = '''                stocks:\n                    stocks,\n\n'''
-          if old_stocks not in s:
-              raise SystemExit('expected stock sync block not found')
-          s = s.replace(old_stocks, '', 1)
+          stock_write = '''                stocks:\n                    stocks,\n\n'''
+          if stock_write in s:
+              s = s.replace(stock_write, '', 1)
 
-          # finance-client.js updates the DOM; this listener also updates script.js's in-memory user.
-          anchor = '''/* =========================================================\n   13. LocalStorage 儲存\n   ========================================================= */'''
-          listener = '''/* v4.7 financial balance bridge */\nwindow.addEventListener("mingyue-finance-balance-updated", event => {\n    const nextBalance = Number(event?.detail?.balance);\n    if (!Number.isFinite(nextBalance)) return;\n    user.balance = nextBalance;\n    saveData("mingyue_user_v42", user);\n    updateAllVisible();\n});\n\n\n'''
-          if anchor not in s:
-              raise SystemExit('local storage anchor not found')
-          s = s.replace(anchor, listener + anchor, 1)
+          s = s.replace('const SYSTEM_VERSION = "4.2";', 'const SYSTEM_VERSION = "4.8";', 1)
+          s = s.replace('明月證券 v4.5 初始化完成', '明月證券 v4.8 初始化完成', 1)
+          s = s.replace('明月證券 v4.5', '明月證券 v4.8')
+          s = s.replace('   v4.5\n', '   v4.8\n', 1)
 
-          s = s.replace('const SYSTEM_VERSION = "4.2";', 'const SYSTEM_VERSION = "4.7";', 1)
-          s = s.replace('明月證券 v4.5 初始化完成', '明月證券 v4.7 初始化完成', 1)
-          s = s.replace('明月證券 v4.5', '明月證券 v4.7')
-          s = s.replace('   v4.5\n', '   v4.7\n', 1)
+          helper = '''\nfunction getListedStocks() {\n\n    return stocks.filter(\n        stock => stock.listed !== false\n    );\n\n}\n\n'''
+          anchor = 'function getChange(stock) {'
+          if 'function getListedStocks()' not in s:
+              if anchor not in s:
+                  raise SystemExit('getChange anchor not found')
+              s = s.replace(anchor, helper + anchor, 1)
+
+          s = s.replace('''        [...stocks]\n            .sort(\n                (a, b) =>\n                    Math.abs(getChange(b)) -\n                    Math.abs(getChange(a))\n            )''', '''        [...getListedStocks()]\n            .sort(\n                (a, b) =>\n                    Math.abs(getChange(b)) -\n                    Math.abs(getChange(a))\n            )''', 1)
+
+          s = s.replace('''    let list =\n        [...stocks];''', '''    let list =\n        [...getListedStocks()];''', 1)
+
+          s = s.replace('''    const stock =\n        stocks.find(\n            item =>\n                item.id === id\n        );''', '''    const stock =\n        getListedStocks().find(\n            item =>\n                item.id === id ||\n                String(item.code || item.id) === String(id)\n        );''', 1)
+
+          s = s.replace('''                            ${escapeHTML(stock.name)}\n                        </strong>\n\n                        <small>\n                            ${escapeHTML(stock.id)}''', '''                            ${escapeHTML(stock.shortName || stock.name)}\n                        </strong>\n\n                        <small>\n                            ${escapeHTML(stock.code || stock.id)}''')
+
           p.write_text(s, encoding='utf-8')
 
       - name: Commit restored core
@@ -65,5 +71,5 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add script.js
           if git diff --cached --quiet; then exit 0; fi
-          git commit -m 'fix: protect financial balance and stock data'
+          git commit -m 'feat: v4.8 stock identity and listing visibility'
           git push
