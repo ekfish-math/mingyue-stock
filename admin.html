@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>明月證券｜管理後台 v4.8</title>
+<title>明月證券｜管理後台 v4.9.1</title>
 <link rel="stylesheet" href="admin.css">
 <style>
 .stock-admin-row{padding:16px 0;border-bottom:1px solid rgba(127,127,127,.18)}
@@ -14,7 +14,7 @@
 </style>
 </head>
 <body>
-<header class="topbar"><div><h1>明月證券</h1><span>管理後台 v4.8</span></div><div id="admin-status">正在驗證管理員身分…</div></header>
+<header class="topbar"><div><h1>明月證券</h1><span>管理後台 v4.9.1</span></div><div id="admin-status">正在驗證管理員身分…</div></header>
 <main class="wrap">
 <section class="cards">
 <div class="card"><b id="stat-accounts">0</b><span>帳戶</span></div>
@@ -25,12 +25,12 @@
 <nav class="tabs">
 <button data-tab="stocks">股票管理</button><button data-tab="withdrawals">提領審核</button><button data-tab="deposits">儲值審核</button><button data-tab="accounts">帳戶</button><button data-tab="audit">操作紀錄</button>
 </nav>
-<section id="panel-stocks" class="panel"><h2>📈 股票管理</h2><p class="meta">可修改股票名稱、簡稱、代號、價格與成交量，並控制是否核准上市。內部股票 ID 不變，避免影響既有持股與交易紀錄。</p><div id="stock-list"></div></section>
+<section id="panel-stocks" class="panel"><h2>📈 股票管理</h2><p class="meta">v4.9.1 上市條件：<b>公司總市值必須超過 ¥10,000,000</b>。總市值＝創業金額＋所有股份數量 × 各批股份買入時股價。上市狀態由系統依市值判定，不再由管理員手動勾選。</p><div id="stock-list"></div></section>
 <section id="panel-withdrawals" class="panel hidden"><h2>提領申請</h2><div id="withdrawal-list"></div></section>
 <section id="panel-deposits" class="panel hidden"><h2>儲值申請</h2><div id="deposit-list"></div></section>
 <section id="panel-accounts" class="panel hidden"><h2>帳戶管理</h2><div id="account-list"></div></section>
 <section id="panel-audit" class="panel hidden"><h2>操作紀錄</h2><div id="audit-list"></div></section>
 </main>
-<script type="module" src="admin-finance.js"></script>
+<script type="module" src="admin-finance.js"></script><script type="module" src="v491-admin-cap-rule.js"></script>
 </body>
 </html>
