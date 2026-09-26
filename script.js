@@ -30,7 +30,7 @@
 
 import {
     initializeApp
-} from "https://cdnjs.cloudflare.com/ajax/libs/firebase/12.19.0/firebase-app.js";
+} from "https://esm.sh/firebase@12.19.0/app";
 
 import {
     getDatabase,
@@ -38,7 +38,7 @@ import {
     set,
     get,
     update
-} from "https://cdnjs.cloudflare.com/ajax/libs/firebase/12.19.0/firebase-database.js";
+} from "https://esm.sh/firebase@12.19.0/database";
 
 
 const firebaseConfig = {
