@@ -2,7 +2,7 @@
    明月證券 v4.3.4 - Google Authentication
    Google UID → Securities Account
    ========================================================= */
-import { getApps } from "https://esm.sh/firebase@12.17.1?bundle";
+import { getApps } from "https://cdn.jsdelivr.net/npm/firebase@12.17.1/+esm";
 import {
     getAuth,
     GoogleAuthProvider,
@@ -13,8 +13,8 @@ import {
     onAuthStateChanged,
     setPersistence,
     browserLocalPersistence
-} from "https://esm.sh/firebase@12.17.1?bundle";
-import { getDatabase, ref, get, update } from "https://esm.sh/firebase@12.17.1?bundle";
+} from "https://cdn.jsdelivr.net/npm/firebase@12.17.1/+esm";
+import { getDatabase, ref, get, update } from "https://cdn.jsdelivr.net/npm/firebase@12.17.1/+esm";
 
 if (!getApps().length) throw new Error("Firebase App 尚未初始化，請先載入 plugin-adapter.js");
 
