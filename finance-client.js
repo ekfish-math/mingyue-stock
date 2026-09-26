@@ -1,6 +1,6 @@
-import {initializeApp,getApps,getApp} from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
-import {getAuth,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
-import {getDatabase,ref,get,set,runTransaction,serverTimestamp,onValue} from "https://www.gstatic.com/firebasejs/12.17.1/firebase-database.js";
+import {initializeApp,getApps,getApp} from "https://esm.sh/firebase@12.17.1?bundle";
+import {getAuth,onAuthStateChanged} from "https://esm.sh/firebase@12.17.1?bundle";
+import {getDatabase,ref,get,set,runTransaction,serverTimestamp,onValue} from "https://esm.sh/firebase@12.17.1?bundle";
 
 const config={apiKey:"AIzaSyDWDaEZoZPwBe7wZX0aiDAGqs4b_EAkfgM",authDomain:"mingyue-stock.firebaseapp.com",databaseURL:"https://mingyue-stock-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"mingyue-stock",storageBucket:"mingyue-stock.firebasestorage.app",messagingSenderId:"774198660845",appId:"1:774198660845:web:93f4a725b6303aae9f86e4"};
 const app=getApps().length?getApp():initializeApp(config);const auth=getAuth(app);const db=getDatabase(app);
