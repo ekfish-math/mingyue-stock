@@ -637,57 +637,21 @@ async function loadFirebase(path) {
 
 async function syncAllToFirebase() {
 
-    if (!firebaseReady) {
-        return;
-    }
+    if (!firebaseReady) return;
 
     try {
+        // 只同步目前登入者自己的資料；避免以 root update 觸發整棵資料樹的權限檢查。
+        if (user?.accountId) {
+            await set(
+                ref(db, "users/" + user.accountId + "/name"),
+                user.name
+            );
+        }
 
-        await update(
-            ref(db),
-            {
-
-                ["users/" + user.accountId + "/name"]:
-                    user.name,
-
-                ["users/" + user.accountId + "/accountId"]:
-                    user.accountId,
-
-                companies:
-                    companies,
-
-                news:
-                    news,
-
-                history:
-                    historyData,
-
-                portfolios:
-                    {
-                        [user.accountId]:
-                            portfolio
-                    },
-
-                transactions:
-                    {
-                        [user.accountId]:
-                            transactions
-                    }
-
-            }
-        );
-
-        console.log(
-            "Firebase：全部資料同步完成"
-        );
+        console.log("Firebase：使用者資料同步完成");
 
     } catch (error) {
-
-        console.error(
-            "Firebase 全同步失敗：",
-            error
-        );
-
+        console.warn("Firebase 使用者同步略過：", error);
     }
 
 }
@@ -700,157 +664,59 @@ async function syncAllToFirebase() {
 async function loadAllFromFirebase() {
 
     try {
+        // 不再讀取 ref(db) 根節點；根節點讀取會被最小權限規則拒絕。
+        const paths = [
+            ["users/" + user.accountId, "user"],
+            ["stocks", "stocks"],
+            ["companies", "companies"],
+            ["news", "news"],
+            ["history", "history"],
+            ["portfolios/" + user.accountId, "portfolio"],
+            ["transactions/" + user.accountId, "transactions"]
+        ];
 
-        const snapshot =
-            await get(
-                ref(db)
-            );
+        const results = await Promise.all(
+            paths.map(async ([path, key]) => [key, await loadFirebase(path)])
+        );
+        const data = Object.fromEntries(results);
 
-        if (!snapshot.exists()) {
-
-            console.log(
-                "Firebase 尚無資料，建立初始資料"
-            );
-
-            firebaseReady = true;
-
-            await syncAllToFirebase();
-
-            return;
-
+        if (data.user && typeof data.user === "object") {
+            user = {
+                name: data.user.name || user.name,
+                accountId: data.user.accountId || user.accountId,
+                balance: Number(data.user.balance ?? user.balance)
+            };
         }
-
-        const data =
-            snapshot.val() || {};
-
-
-        if (
-            data.users &&
-            data.users[user.accountId]
-        ) {
-
-            const cloudUser =
-                data.users[user.accountId];
-
-            if (
-                cloudUser &&
-                typeof cloudUser === "object"
-            ) {
-
-                user = {
-
-                    name:
-                        cloudUser.name ||
-                        user.name,
-
-                    accountId:
-                        cloudUser.accountId ||
-                        user.accountId,
-
-                    balance:
-                        Number(
-                            cloudUser.balance ??
-                            user.balance
-                        )
-
-                };
-
-            }
-
-        }
-
 
         const cloudStocks = normalizeStockData(data.stocks);
-
-        if (cloudStocks.length > 0) {
-
-            stocks = cloudStocks;
-
-        }
-
+        if (cloudStocks.length > 0) stocks = cloudStocks;
 
         const cloudCompanies = normalizeCompanyData(data.companies);
+        if (cloudCompanies.length > 0) companies = cloudCompanies;
 
-        if (cloudCompanies.length > 0) {
+        if (Array.isArray(data.news)) news = data.news;
 
-            companies = cloudCompanies;
-
+        if (data.history && typeof data.history === "object") {
+            historyData = data.history;
         }
 
-
-        if (
-            Array.isArray(data.news)
-        ) {
-
-            news =
-                data.news;
-
+        if (data.portfolio && typeof data.portfolio === "object") {
+            portfolio = data.portfolio;
         }
 
-
-        if (
-            data.history &&
-            typeof data.history === "object"
-        ) {
-
-            historyData =
-                data.history;
-
+        if (Array.isArray(data.transactions)) {
+            transactions = data.transactions;
         }
 
-
-        if (
-            data.portfolios &&
-            data.portfolios[user.accountId]
-        ) {
-
-            portfolio =
-                data.portfolios[user.accountId];
-
-        }
-
-
-        if (
-            data.transactions &&
-            Array.isArray(
-                data.transactions[user.accountId]
-            )
-        ) {
-
-            transactions =
-                data.transactions[user.accountId];
-
-        }
-
-
-        if (
-            !portfolio ||
-            typeof portfolio !== "object"
-        ) {
-
-            portfolio = {};
-
-        }
-
+        if (!portfolio || typeof portfolio !== "object") portfolio = {};
 
         firebaseReady = true;
-
-        console.log(
-            "Firebase：雲端資料讀取完成"
-        );
-
-
+        console.log("Firebase：雲端資料讀取完成");
         saveLocalOnly();
 
     } catch (error) {
-
-        console.error(
-            "Firebase 初始化讀取失敗：",
-            error
-        );
-
+        console.warn("Firebase 初始化讀取部分失敗，已保留本機資料：", error);
         firebaseReady = true;
-
     }
 
 }
