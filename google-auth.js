@@ -300,7 +300,7 @@ window.addEventListener("mingyue-auth-error", event => {
     const text =
         code === "PERMISSION_DENIED"
             ? "Google 已登入，但帳戶資料權限不足。"
-            : "Google 登入失敗，請稍後再試。";
+            : `Google 登入失敗：${code}${event.detail?.message ? `｜${event.detail.message}` : ""}`;
 
     if (typeof window.showToast === "function") {
         window.showToast(text);
