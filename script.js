@@ -30,7 +30,7 @@
 
 import {
     initializeApp
-} from "https://cdn.jsdelivr.net/npm/firebase@12.17.1/app/+esm";
+} from "https://cdn.jsdelivr.net/npm/firebase@12.17.1/firebase-app.js";
 
 import {
     getDatabase,
@@ -38,7 +38,7 @@ import {
     set,
     get,
     update
-} from "https://cdn.jsdelivr.net/npm/firebase@12.17.1/database/+esm";
+} from "https://cdn.jsdelivr.net/npm/firebase@12.17.1/firebase-database.js";
 
 
 const firebaseConfig = {
