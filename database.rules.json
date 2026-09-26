@@ -1,11 +1,40 @@
 {
   "rules": {
-    ".read": false,
-    ".write": false,
     "users": {
       "$uid": {
         ".read": "auth != null && (auth.uid === $uid || auth.token.email === 'edisonkuo1030@gmail.com')",
-        ".write": "auth != null && (auth.token.email === 'edisonkuo1030@gmail.com' || (auth.uid === $uid && ((!data.exists() && newData.child('balance').val() === 0 && newData.child('frozenBalance').val() === 0) || (data.exists() && newData.child('balance').val() === data.child('balance').val() && newData.child('frozenBalance').val() === data.child('frozenBalance').val()) || (data.exists() && newData.child('balance').val() === data.child('balance').val() - (newData.child('frozenBalance').val() - data.child('frozenBalance').val()) && newData.child('frozenBalance').val() >= data.child('frozenBalance').val() && newData.child('frozenBalance').val() <= data.child('balance').val()))))"
+        ".write": "auth != null && (auth.token.email === 'edisonkuo1030@gmail.com' || (auth.uid === $uid && ((!data.exists() && newData.child('accountId').val() === $uid && newData.child('googleUid').val() === $uid && newData.child('balance').val() === 0 && newData.child('frozenBalance').val() === 0) || (data.exists() && newData.child('accountId').val() === data.child('accountId').val() && newData.child('googleUid').val() === data.child('googleUid').val() && newData.child('createdAt').val() === data.child('createdAt').val() && newData.child('balance').val() === data.child('balance').val() && newData.child('frozenBalance').val() === data.child('frozenBalance').val()))))",
+        "balance": {
+          ".validate": "newData.isNumber() && newData.val() >= 0"
+        },
+        "frozenBalance": {
+          ".validate": "newData.isNumber() && newData.val() >= 0"
+        },
+        "createdAt": {
+          ".validate": "newData.isNumber() && newData.val() > 0"
+        },
+        "lastLoginAt": {
+          ".validate": "newData.isNumber() && newData.val() > 0"
+        }
+      }
+    },
+    "authUsers": {
+      "$uid": {
+        ".read": "auth != null && (auth.uid === $uid || auth.token.email === 'edisonkuo1030@gmail.com')",
+        ".write": "auth != null && (auth.token.email === 'edisonkuo1030@gmail.com' || auth.uid === $uid)",
+        ".validate": "newData.hasChildren(['uid','accountId','provider','email','createdAt','lastLoginAt']) && newData.child('uid').val() === $uid && newData.child('accountId').val() === $uid && newData.child('provider').val() === 'google' && newData.child('email').isString() && newData.child('createdAt').isNumber() && newData.child('lastLoginAt').isNumber()"
+      }
+    },
+    "portfolios": {
+      "$uid": {
+        ".read": "auth != null && (auth.uid === $uid || auth.token.email === 'edisonkuo1030@gmail.com')",
+        ".write": "auth != null && auth.uid === $uid && !data.exists() && !newData.hasChildren()"
+      }
+    },
+    "transactions": {
+      "$uid": {
+        ".read": "auth != null && (auth.uid === $uid || auth.token.email === 'edisonkuo1030@gmail.com')",
+        ".write": "auth != null && auth.uid === $uid && !data.exists() && !newData.hasChildren()"
       }
     },
     "withdrawalRequests": {
