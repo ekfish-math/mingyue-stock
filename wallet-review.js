@@ -22,9 +22,9 @@
   async function ready() {
     if (readyPromise) return readyPromise;
     readyPromise = (async () => {
-      const appMod = await import("https://cdnjs.cloudflare.com/ajax/libs/firebase/12.19.0/firebase-app.js");
-      const authMod = await import("https://cdnjs.cloudflare.com/ajax/libs/firebase/12.19.0/firebase-auth.js");
-      const dbMod = await import("https://cdnjs.cloudflare.com/ajax/libs/firebase/12.19.0/firebase-database.js");
+      const appMod = await import("https://esm.sh/firebase@12.19.0/app");
+      const authMod = await import("https://esm.sh/firebase@12.19.0/auth");
+      const dbMod = await import("https://esm.sh/firebase@12.19.0/database");
       const apps = appMod.getApps();
       const app = apps.length ? appMod.getApp() : appMod.initializeApp(CONFIG);
       return {
