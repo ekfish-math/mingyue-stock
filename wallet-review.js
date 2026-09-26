@@ -22,9 +22,9 @@
   async function ready() {
     if (readyPromise) return readyPromise;
     readyPromise = (async () => {
-      const appMod = await import("https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js");
-      const authMod = await import("https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js");
-      const dbMod = await import("https://www.gstatic.com/firebasejs/12.17.1/firebase-database.js");
+      const appMod = await import("https://cdn.jsdelivr.net/npm/firebase@12.17.1/app/+esm");
+      const authMod = await import("https://cdn.jsdelivr.net/npm/firebase@12.17.1/auth/+esm");
+      const dbMod = await import("https://cdn.jsdelivr.net/npm/firebase@12.17.1/database/+esm");
       const apps = appMod.getApps();
       const app = apps.length ? appMod.getApp() : appMod.initializeApp(CONFIG);
       return {
