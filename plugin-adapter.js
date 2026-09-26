@@ -32,7 +32,26 @@ async function read(key){if(!validKey(key))throw new Error("不允許的資料�
 async function write(key,value){if(!validKey(key))throw new Error("不允許的資料路徑："+key);const externalOK=await externalWrite(key,value);try{await set(ref(db,key),value);}catch(e){if(!externalOK)throw e;console.warn("Firebase 鏡像失敗",key,e);}return true;}
 async function writeMany(data){const patch=filterPaths(data);if(!Object.keys(patch).length)return [];const externalOK=await externalWriteMany(patch);try{await update(ref(db),patch);}catch(e){if(!externalOK)throw e;console.warn("Firebase 批次鏡像失敗",e);}return Object.keys(patch);}
 async function readAll(){const external=await externalReadAll();if(external&&typeof external==="object"&&Object.keys(external).length){cacheData(external);return external;}try{const s=await get(ref(db));const data=s.exists()?s.val():{};cacheData(data);return data;}catch(e){console.warn("Firebase 全資料讀取失敗",e);return {};}}
-async function preload(){const data=await readAll();console.log(data&&Object.keys(data).length?"明月證券 v4.3.3：資料已預載入":"明月證券 v4.3.3：沒有遠端資料");return data;}
+async function preload(){
+    // 不在初始化時讀取 Firebase 根節點，避免觸發最小權限規則。
+    const uid = getCurrentUid();
+    if (!uid) {
+        console.log("明月證券 v4.3.3：等待 Google UID 後再同步帳戶資料");
+        return {};
+    }
+    try {
+        const data = {};
+        for (const key of ["users","portfolios","transactions","authUsers"]) {
+            data[key] = await read(key + "/" + uid);
+        }
+        cacheData(data);
+        console.log("明月證券 v4.3.3：帳戶資料預載入完成");
+        return data;
+    } catch (e) {
+        console.warn("明月證券 v4.3.3：帳戶資料預載入略過", e);
+        return {};
+    }
+}
 window.MingyueDataPlugin=Object.freeze({version:"4.3.3",paths:Object.freeze([...PATHS]),read,write,writeMany,readAll,preload,getCurrentUid,isReady:true});
 window.MingyueDataAdapter=window.MingyueDataPlugin;
 window.MINGYUE_V433=true;
