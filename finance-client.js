@@ -1,6 +1,6 @@
-import {initializeApp,getApps,getApp} from "https://cdnjs.cloudflare.com/ajax/libs/firebase/12.19.0/firebase-app.js";
-import {getAuth,initializeAuth,onAuthStateChanged,browserLocalPersistence} from "https://cdnjs.cloudflare.com/ajax/libs/firebase/12.19.0/firebase-auth.js";
-import {getDatabase,ref,get,set,runTransaction,serverTimestamp,onValue} from "https://cdnjs.cloudflare.com/ajax/libs/firebase/12.19.0/firebase-database.js";
+import {initializeApp,getApps,getApp} from "https://esm.sh/firebase@12.19.0/app";
+import {getAuth,initializeAuth,onAuthStateChanged,browserLocalPersistence} from "https://esm.sh/firebase@12.19.0/auth";
+import {getDatabase,ref,get,set,runTransaction,serverTimestamp,onValue} from "https://esm.sh/firebase@12.19.0/database";
 
 const config={apiKey:"AIzaSyDWDaEZoZPwBe7wZX0aiDAGqs4b_EAkfgM",authDomain:"mingyue-stock.firebaseapp.com",databaseURL:"https://mingyue-stock-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"mingyue-stock",storageBucket:"mingyue-stock.firebasestorage.app",messagingSenderId:"774198660845",appId:"1:774198660845:web:93f4a725b6303aae9f86e4"};
 const app=getApps().length?getApp():initializeApp(config);let auth;try{auth=getAuth(app);}catch(_){auth=null;}const db=getDatabase(app);
