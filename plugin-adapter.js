@@ -2,8 +2,8 @@
    明月證券 v4.3.3
    Plugin Data Adapter - Google UID Account Bridge
    ========================================================= */
-import { initializeApp, getApps } from "https://cdn.jsdelivr.net/npm/firebase@12.17.1/app/+esm";
-import { getDatabase, ref, get, set, update } from "https://cdn.jsdelivr.net/npm/firebase@12.17.1/database/+esm";
+import { initializeApp, getApps } from "https://cdn.jsdelivr.net/npm/firebase@12.17.1/firebase-app.js";
+import { getDatabase, ref, get, set, update } from "https://cdn.jsdelivr.net/npm/firebase@12.17.1/firebase-database.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyDWDaEZoZPwBe7wZX0aiDAGqs4b_EAkfgM",
