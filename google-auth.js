@@ -5,6 +5,7 @@
 import { getApps } from "https://cdn.jsdelivr.net/npm/firebase@12.17.1/app/+esm";
 import {
     getAuth,
+    initializeAuth,
     GoogleAuthProvider,
     signInWithPopup,
     signInWithRedirect,
@@ -18,7 +19,9 @@ import { getDatabase, ref, get, update } from "https://cdn.jsdelivr.net/npm/fire
 
 if (!getApps().length) throw new Error("Firebase App 尚未初始化，請先載入 plugin-adapter.js");
 
-const auth = getAuth(getApps()[0]);
+const app = getApps()[0];
+let auth;
+try { auth = getAuth(app); } catch (_) { auth = initializeAuth(app, { persistence: browserLocalPersistence }); }
 const db = getDatabase(getApps()[0]);
 const provider = new GoogleAuthProvider();
 provider.setCustomParameters({ prompt: "select_account" });
