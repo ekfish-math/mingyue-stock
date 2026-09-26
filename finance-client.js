@@ -1,9 +1,9 @@
 import {initializeApp,getApps,getApp} from "https://cdn.jsdelivr.net/npm/firebase@12.17.1/+esm";
-import {getAuth,onAuthStateChanged} from "https://cdn.jsdelivr.net/npm/firebase@12.17.1/+esm";
+import {getAuth,initializeAuth,onAuthStateChanged,browserLocalPersistence} from "https://cdn.jsdelivr.net/npm/firebase@12.17.1/auth/+esm";
 import {getDatabase,ref,get,set,runTransaction,serverTimestamp,onValue} from "https://cdn.jsdelivr.net/npm/firebase@12.17.1/+esm";
 
 const config={apiKey:"AIzaSyDWDaEZoZPwBe7wZX0aiDAGqs4b_EAkfgM",authDomain:"mingyue-stock.firebaseapp.com",databaseURL:"https://mingyue-stock-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"mingyue-stock",storageBucket:"mingyue-stock.firebasestorage.app",messagingSenderId:"774198660845",appId:"1:774198660845:web:93f4a725b6303aae9f86e4"};
-const app=getApps().length?getApp():initializeApp(config);const auth=getAuth(app);const db=getDatabase(app);
+const app=getApps().length?getApp():initializeApp(config);let auth;try{auth=getAuth(app);}catch(_){auth=initializeAuth(app,{persistence:browserLocalPersistence});}const db=getDatabase(app);
 const toast=m=>window.showToast?window.showToast(m):alert(m);
 const money=n=>"¥"+Number(n||0).toLocaleString("zh-TW",{minimumFractionDigits:2,maximumFractionDigits:2});
 const makeId=(prefix)=>`${prefix}-${Date.now()}-${Math.random().toString(36).slice(2,10)}`;
