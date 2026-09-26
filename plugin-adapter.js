@@ -2,8 +2,8 @@
    明月證券 v4.3.3
    Plugin Data Adapter - Google UID Account Bridge
    ========================================================= */
-import { initializeApp, getApps } from "https://esm.sh/firebase@12.17.1/app";
-import { getDatabase, ref, get, set, update } from "https://esm.sh/firebase@12.17.1/database";
+import { initializeApp, getApps } from "https://esm.sh/firebase@12.17.1?bundle";
+import { getDatabase, ref, get, set, update } from "https://esm.sh/firebase@12.17.1?bundle";
 
 const firebaseConfig = {
     apiKey: "AIzaSyDWDaEZoZPwBe7wZX0aiDAGqs4b_EAkfgM",
