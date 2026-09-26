@@ -3558,11 +3558,10 @@ const openDeposit =
    ========================================================= */
 
 function googleLogin() {
-
-    showToast(
-        "Google OAuth 將在正式後端版本接入"
-    );
-
+    if (window.MingyueAuth?.signIn) {
+        return window.MingyueAuth.signIn();
+    }
+    showToast("Google 登入模組尚未載入，請稍後再試");
 }
 
 
