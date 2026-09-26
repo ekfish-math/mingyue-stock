@@ -66,4 +66,4 @@ window.MingyueDataAdapter=window.MingyueDataPlugin;
 window.MINGYUE_V433=true;
 console.log("明月證券 v4.3.3 Plugin Data Adapter 已載入");
 await preload();
-try{await import("./google-auth.js?v=4.9.2");window.MINGYUE_V43=true;console.log("明月證券 v4.3.3 Google Account 模組已接入");}catch(e){window.MINGYUE_V43=false;console.warn("Google Account 模組載入失敗",e);}
+try{await import("./google-auth.js?v=4.9.3");window.MINGYUE_V43=true;console.log("明月證券 v4.3.3 Google Account 模組已接入");}catch(e){window.MINGYUE_V43=false;console.warn("Google Account 模組載入失敗",e);}
