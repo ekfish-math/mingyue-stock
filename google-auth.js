@@ -51,8 +51,6 @@ window.MingyueAuth = {
             } catch (e) {
                 if (e?.code === "auth/popup-closed-by-user") return;
 
-                // 只有 Popup 被瀏覽器擋下來或環境不支援時才切換 Redirect。
-                // 其他 OAuth 錯誤直接回報，避免把真正的設定錯誤再次導向。
                 if (
                     e?.code !== "auth/popup-blocked" &&
                     e?.code !== "auth/operation-not-supported-in-this-environment"
@@ -99,6 +97,26 @@ async function completeLogin(user) {
             accountId: account.accountId
         });
     } catch (e) {
+        // Firebase Auth 已經成功；如果只是 Realtime Database Rules 尚未部署，
+        // 不要把「資料庫權限」誤報成「Google 登入失敗」。
+        if (isDatabasePermissionError(e)) {
+            const fallbackAccount = {
+                accountId: user.uid,
+                googleUid: user.uid,
+                name: user.displayName || "Google 使用者",
+                email: user.email || "",
+                photoURL: user.photoURL || ""
+            };
+
+            publish(user, fallbackAccount);
+            console.warn("Google OAuth 已成功，但證券帳戶資料暫時無法同步：Realtime Database 權限尚未就緒。");
+
+            if (typeof window.showToast === "function") {
+                window.showToast("Google 登入成功；證券帳戶資料同步尚未完成");
+            }
+            return;
+        }
+
         reportAuthError("登入後帳戶同步失敗", e);
     }
 }
@@ -134,12 +152,8 @@ async function ensureSecuritiesAccount(user) {
         name: oldUser.name || user.displayName || "Google 使用者",
         email: oldUser.email || user.email || "",
         photoURL: oldUser.photoURL || user.photoURL || "",
-        balance: isNewAccount
-            ? 0
-            : (Number.isFinite(oldBalance) ? oldBalance : 0),
-        frozenBalance: isNewAccount
-            ? 0
-            : (Number.isFinite(oldFrozenBalance) ? oldFrozenBalance : 0),
+        balance: isNewAccount ? 0 : (Number.isFinite(oldBalance) ? oldBalance : 0),
+        frozenBalance: isNewAccount ? 0 : (Number.isFinite(oldFrozenBalance) ? oldFrozenBalance : 0),
         createdAt,
         lastLoginAt: Date.now()
     };
@@ -161,13 +175,8 @@ async function ensureSecuritiesAccount(user) {
         [`authUsers/${uid}`]: authProfile
     };
 
-    if (!portfolioSnap.exists()) {
-        patch[`portfolios/${uid}`] = {};
-    }
-
-    if (!transactionSnap.exists()) {
-        patch[`transactions/${uid}`] = [];
-    }
+    if (!portfolioSnap.exists()) patch[`portfolios/${uid}`] = {};
+    if (!transactionSnap.exists()) patch[`transactions/${uid}`] = [];
 
     await update(ref(db), patch);
 
@@ -179,6 +188,17 @@ async function ensureSecuritiesAccount(user) {
     }
 
     return account;
+}
+
+function isDatabasePermissionError(error) {
+    const code = String(error?.code || "").toLowerCase();
+    const message = String(error?.message || error || "").toLowerCase();
+    return (
+        code === "permission_denied" ||
+        code === "database/permission-denied" ||
+        message.includes("permission denied") ||
+        message.includes("permission_denied")
+    );
 }
 
 function publish(user, account) {
@@ -236,12 +256,8 @@ function updateProfileUI(user, account) {
 
 async function handleRedirectResult() {
     try {
-        // 讓 Firebase 完成 redirect credential 的處理；
-        // 真正的帳戶同步統一交給 onAuthStateChanged，避免重複寫入。
         const result = await getRedirectResult(auth);
-        if (result?.user) {
-            console.log("Google Redirect OAuth 驗證成功", result.user.uid);
-        }
+        if (result?.user) console.log("Google Redirect OAuth 驗證成功", result.user.uid);
     } catch (e) {
         reportAuthError("Google Redirect 處理失敗", e);
     }
@@ -249,11 +265,8 @@ async function handleRedirectResult() {
 
 onAuthStateChanged(auth, async user => {
     try {
-        if (user) {
-            await completeLogin(user);
-        } else {
-            publish(null, null);
-        }
+        if (user) await completeLogin(user);
+        else publish(null, null);
     } catch (e) {
         reportAuthError("登入使用者同步失敗", e);
     } finally {
@@ -268,9 +281,7 @@ onAuthStateChanged(auth, async user => {
 });
 
 window.addEventListener("pageshow", async () => {
-    if (auth.currentUser && !authBusy) {
-        await completeLogin(auth.currentUser);
-    }
+    if (auth.currentUser && !authBusy) await completeLogin(auth.currentUser);
 });
 
 document.addEventListener("visibilitychange", async () => {
@@ -282,11 +293,7 @@ document.addEventListener("visibilitychange", async () => {
 function reportAuthError(message, error) {
     const code = error?.code || "unknown";
     const detail = error?.message || String(error || "");
-    console.error(`明月證券：${message}`, {
-        code,
-        message: detail,
-        error
-    });
+    console.error(`明月證券：${message}`, { code, message: detail, error });
 
     window.dispatchEvent(
         new CustomEvent("mingyue-auth-error", {
@@ -302,9 +309,7 @@ window.addEventListener("mingyue-auth-error", event => {
             ? "Google 已登入，但帳戶資料權限不足。"
             : `Google 登入失敗：${code}${event.detail?.message ? `｜${event.detail.message}` : ""}`;
 
-    if (typeof window.showToast === "function") {
-        window.showToast(text);
-    }
+    if (typeof window.showToast === "function") window.showToast(text);
 });
 
 handleRedirectResult();
