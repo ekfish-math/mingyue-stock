@@ -30,7 +30,7 @@
 
 import {
     initializeApp
-} from "https://unpkg.com/firebase@12.19.0/firebase-app.js";
+} from "https://cdnjs.cloudflare.com/ajax/libs/firebase/12.19.0/firebase-app.js";
 
 import {
     getDatabase,
@@ -38,7 +38,7 @@ import {
     set,
     get,
     update
-} from "https://unpkg.com/firebase@12.19.0/firebase-database.js";
+} from "https://cdnjs.cloudflare.com/ajax/libs/firebase/12.19.0/firebase-database.js";
 
 
 const firebaseConfig = {
