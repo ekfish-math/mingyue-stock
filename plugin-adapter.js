@@ -28,7 +28,16 @@ async function externalReadAll(){const p=getExternalPlugin();if(!p)return undefi
 async function externalWriteMany(data){const p=getExternalPlugin();if(!p)return false;try{if(typeof p.writeMany==="function"){await p.writeMany(data||{});return true;}}catch(e){console.warn("外掛批次寫入失敗",e);}return false;}
 function filterPaths(data){const result={};for(const key of PATHS)if(Object.prototype.hasOwnProperty.call(data||{},key))result[key]=data[key];return result;}
 function cacheData(data){try{const uid=getCurrentUid();for(const key of PATHS){if(!Object.prototype.hasOwnProperty.call(data||{},key))continue;const value=data[key],cacheKey=CACHE_KEYS[key];if(!cacheKey)continue;if(["users","portfolios","transactions"].includes(key)){const account=uid?value?.[uid]:null;if(account!==undefined&&account!==null)localStorage.setItem(cacheKey,JSON.stringify(account));}else localStorage.setItem(cacheKey,JSON.stringify(value));}}catch(e){console.warn("LocalStorage fallback 寫入失敗",e);}}
-async function read(key){if(!validKey(key))throw new Error("不允許的資料路徑："+key);const external=await externalRead(key);if(external!==undefined&&external!==null)return external;try{const s=await get(ref(db,key));return s.exists()?s.val():null;}catch(e){console.warn("Firebase 讀取失敗",key,e);return null;}}
+async function read(key){
+    const path=String(key);
+    const root=path.split("/")[0];
+    const allowedNested=/^(users|portfolios|transactions|authUsers)\/[^/]+$/.test(path);
+    if(!validKey(path)&&!allowedNested)throw new Error("不允許的資料路徑："+path);
+    const external=allowedNested?undefined:await externalRead(path);
+    if(external!==undefined&&external!==null)return external;
+    try{const s=await get(ref(db,path));return s.exists()?s.val():null;}
+    catch(e){console.warn("Firebase 讀取失敗",path,e);return null;}
+}
 async function write(key,value){if(!validKey(key))throw new Error("不允許的資料路徑："+key);const externalOK=await externalWrite(key,value);try{await set(ref(db,key),value);}catch(e){if(!externalOK)throw e;console.warn("Firebase 鏡像失敗",key,e);}return true;}
 async function writeMany(data){const patch=filterPaths(data);if(!Object.keys(patch).length)return [];const externalOK=await externalWriteMany(patch);try{await update(ref(db),patch);}catch(e){if(!externalOK)throw e;console.warn("Firebase 批次鏡像失敗",e);}return Object.keys(patch);}
 async function readAll(){const external=await externalReadAll();if(external&&typeof external==="object"&&Object.keys(external).length){cacheData(external);return external;}try{const s=await get(ref(db));const data=s.exists()?s.val():{};cacheData(data);return data;}catch(e){console.warn("Firebase 全資料讀取失敗",e);return {};}}
