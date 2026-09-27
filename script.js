@@ -28,17 +28,7 @@
    1. Firebase
    ========================================================= */
 
-import {
-    initializeApp
-} from "https://esm.sh/firebase@12.19.0/app";
-
-import {
-    getDatabase,
-    ref,
-    set,
-    get,
-    update
-} from "https://esm.sh/firebase@12.19.0/database";
+import { initializeApp, getDatabase, ref, set, get, update } from "./firebase-local.js";
 
 
 const firebaseConfig = {
